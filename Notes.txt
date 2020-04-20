@@ -1,0 +1,40 @@
+Tsp
+
+1.    Deduplicate points 
+2.    Determine center of points 
+3.    Determine each point's distance from center
+4.    Determine the point farthest from the point in step 3
+5.    Create two line segments, one from 3 to 4 and one from 4 to 3
+6.    This doesn't matter yet, but track external, internal, and vertex points separately. Note: initially, all points other than 3 and 4 are considered external.
+7.    Determine the distance from each external point to the line segments of the polygon.
+8.    Find the point farthest from its closest line segment (note: ties do not matter when expanding the polygon).
+9.    Replace the line segment closest to the point from 8 with two line segments, with the new vertex being the point from step 8.
+10.   Find any external points that are now inside the polygon.
+11.   Update the lists of internal, external, and vertex points accordingly.
+12.   Repeat steps 7 through 11 until there are no external points 
+13.   New list to track internal points that have become vertices.
+14.   Determine the distance increase from each internal, non-vertex point to the each line segment. (A - B)^2 - ((A - C)^2 + (C - B)^2)
+15.   Find the point with the smallest distance increase. 
+    1.    If multiple points are tied, with at least 2 closest line segments, check (see subsequent steps) each point in parallel to determine optimal solution.
+16.   Split the closest line segment into two line segments, with the new vertex being the point from step 15.
+17.   For each internal vertex point (step 13) other than the vertices in the new line segments 
+    1.    Check if that point has a smaller distance increase to either of the new line segments than to the line segment made by its adjacent vertices.
+    2.    If so, 
+        1.    split the closest line segment into two line segments, with the new vertex being the point from step 17.1.
+        2.    repeat step 17 until all internal vertices are on their closest line segment.
+18.    Repeat 14 through 17 until all internal points are vertices.
+
+Alternative A (may not be 100% accurate, need to test):
+Rather than tracking internal points and internal vertices separately, track them together:
+1.    Step 14 gets updated to all internal points 
+2.    Step 15.1 may or may not be needed.
+3.    Step 16 needs to be updated to accommodate points that switch from one line segment to another (A -> C -> B and D -> E becomes A -> B and D -> C -> E)
+4.    Step 17 goes away.
+
+Alternative B:
+1.    Rather than recalculating each iteration, track the distance increase for each internal point to each line segment (other than any line segments it is a part of).
+2.    When a line segment is split, remove that line segment from each point's collection and add the new line segments.
+3.    If either of the new line segments is closer than its previous closest switch it to that line segment.
+
+
+Sent from my iPad
