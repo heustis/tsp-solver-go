@@ -2,6 +2,7 @@ package model2d
 
 import (
 	"container/heap"
+	"fmt"
 
 	"github.com/fealos/lee-tsp-go/model"
 )
@@ -25,6 +26,14 @@ type heapDistanceToEdge struct {
 func (h *heapDistanceToEdge) hasVertex(x interface{}) bool {
 	dist := x.(*heapDistanceToEdge)
 	return dist.vertex == h.vertex
+}
+
+func (h *heapDistanceToEdge) ToString() string {
+	return fmt.Sprintf(`{"vertex":{"x":%v,"y":%v},"edge":{"start":{"x":%v,"y":%v},"end":{"x":%v,"y":%v}},"distance":%v}`,
+		h.vertex.X, h.vertex.Y,
+		h.edge.GetStart().(*Vertex2D).X, h.edge.GetStart().(*Vertex2D).Y,
+		h.edge.GetEnd().(*Vertex2D).X, h.edge.GetEnd().(*Vertex2D).Y,
+		h.distance)
 }
 
 func getDistanceToEdgeForHeap(a interface{}) float64 {
@@ -239,7 +248,7 @@ func (c *HeapableCircuit2D) attachVertex(toAttach *heapDistanceToEdge) {
 	// 3. Retrieve the newly created edges
 	edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1%len(c.circuitEdges)]
 
-	c.closestEdges = c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
+	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
 		if current.vertex == toAttach.vertex {
 			// 4a. Remove any items in the heap with the vertex that was attached to the circuit.
@@ -277,3 +286,4 @@ func (c *HeapableCircuit2D) insertVertex(index int, vertex model.CircuitVertex) 
 }
 
 var _ model.HeapableCircuit = (*HeapableCircuit2D)(nil)
+var _ model.Printable = (*heapDistanceToEdge)(nil)

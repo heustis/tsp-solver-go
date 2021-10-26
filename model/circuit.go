@@ -35,6 +35,7 @@ type Circuit interface {
 
 // CircuitVertex provides an abstract representation of a single point (location, vertex) for the TSP solver to interact with.
 type CircuitVertex interface {
+	Equal
 	// DistanceTo returns the distance between the two vertices; this should always be a positive number.
 	DistanceTo(other CircuitVertex) float64
 	// FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
@@ -45,6 +46,7 @@ type CircuitVertex interface {
 
 // CircuitVertex provides an abstract representation of an edge for the TSP solver to interact with.
 type CircuitEdge interface {
+	Equal
 	// DistanceIncrease returns the difference in length between the edge
 	// and the two edges formed by inserting the vertex between the edge's start and end.
 	// For example, if start->end has a length of 5, start->vertex has a length of 3,

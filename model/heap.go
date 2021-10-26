@@ -2,12 +2,8 @@ package model
 
 import (
 	"container/heap"
+	"encoding/json"
 )
-
-// Deletable should be implemented by any struct that needs to be cleaned up (to prevent resource leaks) when the heap is deleted.
-type Deletable interface {
-	Delete()
-}
 
 // Heap is a min heap that implements heap.Interface.
 // It provides the methods PushHeap and PopHeap, so that clients don't need to use the heap package.
@@ -62,24 +58,26 @@ func (h *Heap) Delete() {
 	h.arr = []interface{}{}
 }
 
-// DeleteAll creates a copy of the heap, only containing items that match the supplied condition; this does not modify the original heap.
+// DeleteAll creates a copy of the heap, only containing items that match the supplied condition; this modifies the original heap.
+// This returns all items that were deleted in an array.
 // "shouldDelete" needs to return true if the item should be deleted, false if it should be included in the copy.
 // The complexity is O(n) due to needing to check each entry for inclusion, then re-heapifying the remaining data.
-func (h *Heap) DeleteAll(shouldDelete func(x interface{}) bool) *Heap {
-	updated := &Heap{
-		arr:   make([]interface{}, 0, h.Len()),
-		value: h.value,
-	}
+func (h *Heap) DeleteAll(shouldDelete func(x interface{}) bool) []interface{} {
+	updated := make([]interface{}, 0, h.Len())
+	deleted := []interface{}{}
 
 	for _, v := range h.arr {
-		if !shouldDelete(v) {
-			updated.arr = append(updated.arr, v)
+		if shouldDelete(v) {
+			deleted = append(deleted, v)
+		} else {
+			updated = append(updated, v)
 		}
 	}
 
-	heap.Init(updated)
+	h.arr = updated
+	heap.Init(h)
 
-	return updated
+	return deleted
 }
 
 // Push is required by heap.Interface, and is used by the heap package.
@@ -93,6 +91,12 @@ func (h *Heap) Push(x interface{}) {
 func (h *Heap) PushAll(x ...interface{}) {
 	h.arr = append(h.arr, x...)
 	heap.Init(h)
+}
+
+// PushAllFrom adds all the entries in the supplied heap to this heap.
+// The complexity is O(n), where n is the number elements already in the heap + the number of elements in the supplied array.
+func (h *Heap) PushAllFrom(other *Heap) {
+	h.PushAll(other.arr...)
 }
 
 // PushHeap adds the supplied item to the heap at the correct location.
@@ -139,31 +143,50 @@ func (h *Heap) Less(i int, j int) bool {
 	return h.value(h.arr[i]) < h.value(h.arr[j])
 }
 
-// ReplaceAll creates a copy of the heap, using the supplied function to replace items in the heap; this does not modify the original heap.
+// ReplaceAll creates a copy of the heap, using the supplied function to replace items in the heap; this modifies the original heap.
 // "replaceFunction" should return one of the following:
 //   - an empty array if the item should be excluded,
 //   - an array containing the original item if it should be retained unchanged, or
 //   - an array with one or more items if the original item should be replaced.
 // The complexity is O(n) due to needing to check each entry for replacement, then re-heapifying the updated data.
-func (h *Heap) ReplaceAll(replaceFunction func(x interface{}) []interface{}) *Heap {
-	updated := &Heap{
-		arr:   make([]interface{}, 0, h.Len()),
-		value: h.value,
-	}
+func (h *Heap) ReplaceAll(replaceFunction func(x interface{}) []interface{}) {
+	updated := make([]interface{}, 0, h.Len())
 
 	for _, v := range h.arr {
-		updated.arr = append(updated.arr, replaceFunction(v)...)
+		updated = append(updated, replaceFunction(v)...)
 	}
 
-	heap.Init(updated)
-
-	return updated
+	h.arr = updated
+	heap.Init(h)
 }
 
 // Swap is required by heap.Interface and is used swap items in the heap when sorting the heap. The complexity is O(1).
 func (h *Heap) Swap(i int, j int) {
 	if i >= 0 && j >= 0 {
 		h.arr[i], h.arr[j] = h.arr[j], h.arr[i]
+	}
+}
+
+func (h *Heap) ToString() string {
+	str := "{"
+
+	for i, entry := range h.arr {
+		if i == 0 {
+			str += toString(entry)
+		} else {
+			str += "," + toString(entry)
+		}
+	}
+	return str
+}
+
+func toString(value interface{}) string {
+	if p, okay := value.(Printable); okay {
+		return p.ToString()
+	} else if jsonBytes, err := json.Marshal(p); err == nil {
+		return string(jsonBytes)
+	} else {
+		return "{}"
 	}
 }
 

@@ -18,6 +18,17 @@ func (e *Edge2D) DistanceIncrease(vertex model.CircuitVertex) float64 {
 	return e.Start.DistanceTo(vertex) + e.End.DistanceTo(vertex) - e.length
 }
 
+func (v *Edge2D) Equals(other interface{}) bool {
+	// Compare pointers first, for performance, but then check start and end points, in case the same edge is created multiple times.
+	if v == other {
+		return true
+	} else if otherVertex, okay := other.(*Edge2D); okay {
+		return v.Start.Equals(otherVertex.Start) && v.End.Equals(otherVertex.End)
+	} else {
+		return false
+	}
+}
+
 // GetStart returns the start vertex of the edge
 func (e *Edge2D) GetStart() model.CircuitVertex {
 	return e.Start

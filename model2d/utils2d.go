@@ -1,7 +1,6 @@
 package model2d
 
 import (
-	"math"
 	"sort"
 
 	"github.com/fealos/lee-tsp-go/model"
@@ -25,8 +24,7 @@ func deduplicateVertices(vertices []*Vertex2D) []*Vertex2D {
 
 		nextIndex := sourceIndex + 1
 		for ; nextIndex < len(vertices); nextIndex++ {
-			v2 := vertices[nextIndex]
-			if math.Abs(v2.X-v.X) > model.Threshold || math.Abs(v2.Y-v.Y) > model.Threshold {
+			if !v.Equals(vertices[nextIndex]) {
 				break
 			}
 		}

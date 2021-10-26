@@ -1,6 +1,8 @@
 package model2d
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/model"
@@ -47,6 +49,14 @@ func TestBuildPerimeter_HeapMinClones(t *testing.T) {
 		expectedLength += edge.GetLength()
 	}
 	assert.InDelta(expectedLength, circuit.GetLength(), model.Threshold)
+
+	assert.NotNil(circuit.convexVertices)
+	assert.Len(circuit.convexVertices, 5)
+	assert.True(circuit.convexVertices[circuit.Vertices[0]])
+	assert.True(circuit.convexVertices[circuit.Vertices[1]])
+	assert.True(circuit.convexVertices[circuit.Vertices[4]])
+	assert.True(circuit.convexVertices[circuit.Vertices[6]])
+	assert.True(circuit.convexVertices[circuit.Vertices[7]])
 
 	assert.Len(circuit.unattachedVertices, 3)
 	assert.True(circuit.unattachedVertices[circuit.Vertices[2]])
@@ -121,6 +131,152 @@ func TestAttachAndDetach(t *testing.T) {
 	assert.Equal(8, circuit.closestEdges.Len())
 }
 
+func TestAttachAndDetachIndexZero(t *testing.T) {
+	assert := assert.New(t)
+
+	circuit := &HeapableCircuit2DMinClones{
+		Vertices: []*Vertex2D{
+			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+			NewVertex2D(0, 0),   // Index 0 after sorting
+			NewVertex2D(0, 3),   // Index 1 after sorting
+			NewVertex2D(3, 3),   // Index 5 after sorting
+			NewVertex2D(3, 0),   // Index 4 after sorting
+			NewVertex2D(1, 1),   // Index 2 after sorting
+			NewVertex2D(1, 2.1), // Index 3 after sorting
+		},
+	}
+	circuit.Prepare()
+	circuit.BuildPerimiter()
+
+	testVert := &heapDistanceToEdge{
+		vertex:   circuit.Vertices[2],
+		edge:     circuit.circuitEdges[0],
+		distance: circuit.circuitEdges[0].DistanceIncrease(circuit.Vertices[2]),
+	}
+	circuit.attachVertex(testVert)
+	assert.Equal([]model.CircuitEdge{
+		NewEdge2D(circuit.Vertices[4], circuit.Vertices[2]),
+		NewEdge2D(circuit.Vertices[2], circuit.Vertices[5]),
+		NewEdge2D(circuit.Vertices[5], circuit.Vertices[1]),
+		NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]),
+		NewEdge2D(circuit.Vertices[0], circuit.Vertices[4]),
+	}, circuit.circuitEdges)
+	assert.Equal([]model.CircuitVertex{
+		circuit.Vertices[4],
+		circuit.Vertices[2],
+		circuit.Vertices[5],
+		circuit.Vertices[1],
+		circuit.Vertices[0],
+	}, circuit.circuit)
+
+	circuit.detachVertex(testVert.vertex)
+	assert.Equal([]model.CircuitEdge{
+		NewEdge2D(circuit.Vertices[4], circuit.Vertices[5]),
+		NewEdge2D(circuit.Vertices[5], circuit.Vertices[1]),
+		NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]),
+		NewEdge2D(circuit.Vertices[0], circuit.Vertices[4]),
+	}, circuit.circuitEdges)
+	assert.Equal([]model.CircuitVertex{
+		circuit.Vertices[4],
+		circuit.Vertices[5],
+		circuit.Vertices[1],
+		circuit.Vertices[0],
+	}, circuit.circuit)
+
+	assert.Len(circuit.unattachedVertices, 2)
+	assert.True(circuit.unattachedVertices[circuit.Vertices[2]])
+	assert.True(circuit.unattachedVertices[circuit.Vertices[3]])
+
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[2]])
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[3]])
+
+	assert.Equal(12.0, circuit.length)
+	assert.Equal(7, circuit.closestEdges.Len())
+
+	circuit.attachVertex(testVert)
+	assert.Len(circuit.unattachedVertices, 1)
+	assert.True(circuit.unattachedVertices[circuit.Vertices[3]])
+
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[3]])
+	assert.InDelta(testVert.distance, circuit.distanceIncreases[circuit.Vertices[2]], model.Threshold)
+
+	assert.InDelta(12+testVert.distance, circuit.length, model.Threshold)
+	assert.Equal(8, circuit.closestEdges.Len())
+}
+
+func TestAttachAndDetachLastIndex(t *testing.T) {
+	assert := assert.New(t)
+
+	circuit := &HeapableCircuit2DMinClones{
+		Vertices: []*Vertex2D{
+			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+			NewVertex2D(0, 0),   // Index 0 after sorting
+			NewVertex2D(0, 3),   // Index 1 after sorting
+			NewVertex2D(3, 3),   // Index 5 after sorting
+			NewVertex2D(3, 0),   // Index 4 after sorting
+			NewVertex2D(1, 1),   // Index 2 after sorting
+			NewVertex2D(1, 2.1), // Index 3 after sorting
+		},
+	}
+	circuit.Prepare()
+	circuit.BuildPerimiter()
+
+	testVert := &heapDistanceToEdge{
+		vertex:   circuit.Vertices[2],
+		edge:     circuit.circuitEdges[3],
+		distance: circuit.circuitEdges[3].DistanceIncrease(circuit.Vertices[2]),
+	}
+	circuit.attachVertex(testVert)
+	assert.Equal([]model.CircuitEdge{
+		NewEdge2D(circuit.Vertices[4], circuit.Vertices[5]),
+		NewEdge2D(circuit.Vertices[5], circuit.Vertices[1]),
+		NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]),
+		NewEdge2D(circuit.Vertices[0], circuit.Vertices[2]),
+		NewEdge2D(circuit.Vertices[2], circuit.Vertices[4]),
+	}, circuit.circuitEdges)
+	assert.Equal([]model.CircuitVertex{
+		circuit.Vertices[4],
+		circuit.Vertices[5],
+		circuit.Vertices[1],
+		circuit.Vertices[0],
+		circuit.Vertices[2],
+	}, circuit.circuit)
+
+	circuit.detachVertex(testVert.vertex)
+	assert.Equal([]model.CircuitEdge{
+		NewEdge2D(circuit.Vertices[4], circuit.Vertices[5]),
+		NewEdge2D(circuit.Vertices[5], circuit.Vertices[1]),
+		NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]),
+		NewEdge2D(circuit.Vertices[0], circuit.Vertices[4]),
+	}, circuit.circuitEdges)
+	assert.Equal([]model.CircuitVertex{
+		circuit.Vertices[4],
+		circuit.Vertices[5],
+		circuit.Vertices[1],
+		circuit.Vertices[0],
+	}, circuit.circuit)
+
+	assert.Len(circuit.unattachedVertices, 2)
+	assert.True(circuit.unattachedVertices[circuit.Vertices[2]])
+	assert.True(circuit.unattachedVertices[circuit.Vertices[3]])
+
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[2]])
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[3]])
+
+	assert.Equal(12.0, circuit.length)
+	assert.Equal(7, circuit.closestEdges.Len())
+
+	circuit.attachVertex(testVert)
+	assert.Len(circuit.unattachedVertices, 1)
+	assert.True(circuit.unattachedVertices[circuit.Vertices[3]])
+
+	assert.Equal(0.0, circuit.distanceIncreases[circuit.Vertices[3]])
+	assert.InDelta(testVert.distance, circuit.distanceIncreases[circuit.Vertices[2]], model.Threshold)
+
+	assert.InDelta(12+testVert.distance, circuit.length, model.Threshold)
+	assert.Equal(8, circuit.closestEdges.Len())
+}
+
 func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert := assert.New(t)
 
@@ -155,7 +311,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[3],
 		vertex:   circuit.Vertices[5],
-		distance: 0.8651462421881799,
+		distance: 1.628650237136812,
 	}, circuit.closestEdges.Peek())
 
 	// Index 5 should attach to edge 9,6 -> 3,13, this requires cloning since index 5 is already attached.
@@ -168,7 +324,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Len(clone.circuit, 6)
 	assert.Len(circuit.circuitEdges, 6)
 	assert.Len(clone.circuitEdges, 6)
-	assert.Equal(15, circuit.closestEdges.Len())
+	assert.Equal(12, circuit.closestEdges.Len())
 	assert.Equal(15, clone.closestEdges.Len())
 
 	assert.Equal(&heapDistanceToEdge{
@@ -187,7 +343,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Nil(circuit.CloneAndUpdate())
 	assert.Nil(clone.CloneAndUpdate())
 	assert.Len(circuit.unattachedVertices, 1)
-	assert.Equal(15, circuit.closestEdges.Len())
+	assert.Equal(12, circuit.closestEdges.Len())
 	assert.Len(clone.unattachedVertices, 1)
 	assert.Equal(15, clone.closestEdges.Len())
 
@@ -200,7 +356,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Equal(&heapDistanceToEdge{
 		edge:     clone.circuitEdges[4],
 		vertex:   clone.Vertices[3],
-		distance: 4.782762261113314,
+		distance: 10.637086679808872,
 	}, clone.closestEdges.Peek())
 
 	// Index 2 should attach to edge 1, no cloning required
@@ -225,7 +381,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Equal(&heapDistanceToEdge{
 		edge:     cloneOfClone.circuitEdges[5],
 		vertex:   cloneOfClone.Vertices[3],
-		distance: 1.818261494148027,
+		distance: 12.4553481739569,
 	}, cloneOfClone.closestEdges.Peek())
 	assert.NotNil(cloneOfClone.CloneAndUpdate())
 }
@@ -270,7 +426,7 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert.Equal(8, circuit.closestEdges.Len())
 
 	assert.Equal(&heapDistanceToEdge{
-		distance: 0.1327694499764709,
+		distance: 0.6713030746299724,
 		vertex:   circuit.Vertices[3],
 		edge:     circuit.circuitEdges[3],
 	}, circuit.closestEdges.Peek())
@@ -286,7 +442,7 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert.InDelta(0.5385336246535019133711157158298, circuit.distanceIncreases[circuit.Vertices[3]], model.Threshold)
 
 	assert.InDelta(12.5385336246535019133711157158298, circuit.length, model.Threshold)
-	assert.Equal(7, circuit.closestEdges.Len())
+	assert.Equal(5, circuit.closestEdges.Len())
 
 	// Validate that the clone is updated correctly.
 	assert.Len(clone.unattachedVertices, 1)
@@ -308,7 +464,7 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert.InDelta(0.5385336246535019133711157158298, circuit.distanceIncreases[circuit.Vertices[3]], model.Threshold)
 
 	assert.InDelta(13.1888151645263866585819781087708, circuit.length, model.Threshold)
-	assert.Equal(7, circuit.closestEdges.Len())
+	assert.Equal(4, circuit.closestEdges.Len())
 
 	// No clone on first update of clone - vertex {1,1} to edge {0,0}->{1,2.1}
 	assert.Nil(clone.CloneAndUpdate())
@@ -353,8 +509,11 @@ func TestPrepare_HeapMinClones(t *testing.T) {
 		NewVertex2D(15, -15),
 	})
 
+	assert.NotNil(circuit.convexVertices)
+	assert.Len(circuit.convexVertices, 0)
+
 	assert.NotNil(circuit.unattachedVertices)
-	assert.Len(circuit.unattachedVertices, 7)
+	assert.Len(circuit.unattachedVertices, 0)
 
 	assert.Equal(0.0, circuit.length)
 	assert.Equal(0.0, circuit.GetLength())
@@ -408,4 +567,58 @@ func TestInsertVertex_HeapMinClones(t *testing.T) {
 	assert.Equal(NewVertex2D(0, 0), c.circuit[3])
 	assert.Equal(NewVertex2D(15, -15), c.circuit[4])
 	assert.Equal(NewVertex2D(-5, -5), c.circuit[5])
+}
+
+func TestSolve_HeapMinClones(t *testing.T) {
+	assert := assert.New(t)
+
+	testData := []struct {
+		len      int
+		vertices string
+	}{
+		{
+			len:      10,
+			vertices: `[{"x":449.0904385101078,"y":1163.6150486330282},{"x":2846.191007802421,"y":5564.992099820763},{"x":2961.377236141765,"y":2035.3395220031912},{"x":3102.158315380755,"y":6577.361560477899},{"x":3404.4109094786213,"y":3582.9840359952696},{"x":4111.1661756679205,"y":4054.9949515059243},{"x":4867.500584018192,"y":1366.616080844533},{"x":6533.580847366987,"y":4302.364845399589},{"x":8087.6596916825065,"y":5719.191723935985},{"x":8369.042936423306,"y":3826.201241779603}]`,
+		},
+	}
+
+	for i, t := range testData {
+		vertices := make([]*Vertex2D, t.len)
+		err := json.Unmarshal([]byte(t.vertices), &vertices)
+		assert.Nil(err, "Failed to unmarshal vertices for test=", i)
+		assert.NotNil(solveWithLogging_HeapMinClones(&HeapableCircuit2DMinClones{
+			Vertices: vertices,
+		}))
+	}
+}
+
+func solveWithLogging_HeapMinClones(circuit *HeapableCircuit2DMinClones) *HeapableCircuit2DMinClones {
+	circuit.Prepare()
+	circuit.BuildPerimiter()
+
+	circuitHeap := model.NewHeap(func(a interface{}) float64 {
+		return a.(*HeapableCircuit2DMinClones).GetLengthWithNext()
+	})
+	circuitHeap.PushHeap(circuit)
+
+	next := circuitHeap.PopHeap().(*HeapableCircuit2DMinClones)
+	for i := 0; len(next.GetUnattachedVertices()) > 0 || next.GetLengthWithNext() < next.GetLength(); next = circuitHeap.PopHeap().(*HeapableCircuit2DMinClones) {
+		toAttach := next.closestEdges.Peek()
+		clone := next.CloneAndUpdate()
+		circuitHeap.PushHeap(next)
+		if clone != nil {
+			circuitBytes, _ := json.Marshal(clone.(*HeapableCircuit2DMinClones).circuit)
+			fmt.Printf("Step %d: Created clone=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, clone, toAttach.(*heapDistanceToEdge).ToString(), string(circuitBytes), clone.(*HeapableCircuit2DMinClones).closestEdges.ToString())
+			circuitHeap.PushHeap(clone)
+		} else {
+			circuitBytes, _ := json.Marshal(next.circuit)
+			fmt.Printf("Step %d: Updated existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, next, toAttach.(*heapDistanceToEdge).ToString(), string(circuitBytes), next.closestEdges.ToString())
+		}
+		i++
+	}
+
+	// clean up the heap and each circuitHeap
+	circuitHeap.Delete()
+
+	return next
 }

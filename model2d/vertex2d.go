@@ -25,6 +25,17 @@ func (v *Vertex2D) DistanceToSquared(other *Vertex2D) float64 {
 	return xDiff*xDiff + yDiff*yDiff
 }
 
+func (v *Vertex2D) Equals(other interface{}) bool {
+	// Compare pointers first, for performance, but then check X and Y, in case the same vertex is created multiple times.
+	if v == other {
+		return true
+	} else if otherVertex, okay := other.(*Vertex2D); okay {
+		return math.Abs(v.X-otherVertex.X) < model.Threshold && math.Abs(v.Y-otherVertex.Y) < model.Threshold
+	} else {
+		return false
+	}
+}
+
 // FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
 func (v *Vertex2D) FindClosestEdge(currentCircuit []model.CircuitEdge) model.CircuitEdge {
 	var closest model.CircuitEdge = nil

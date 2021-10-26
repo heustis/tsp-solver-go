@@ -251,7 +251,7 @@ func (c *HeapableCircuit2DMinClonesMove) attachVertex(toAttach *heapDistanceToEd
 	// 4. Replace any items in the heap with the edge that was split, with one entry for each of the newly created edges.
 	//    Also, update the distance for each heapDistanceToEdge with a vertex affected by the attachment.
 	//    Note: need to create a copy of the heapDistanceToEdge, when updatign distance, so that other versions of the circuit are unaffected.
-	c.closestEdges = c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
+	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
 		if current.edge.GetStart() == toAttach.edge.GetStart() && current.edge.GetEnd() == toAttach.edge.GetEnd() {
 			return []interface{}{
@@ -317,7 +317,7 @@ func (c *HeapableCircuit2DMinClonesMove) MoveVertex(newLocation *heapDistanceToE
 	mergedEndDistanceDelta := c.updateDistanceIncrease(detachIndex)
 
 	// 8. Update the heap entries
-	c.closestEdges = c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
+	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
 		if current.edge.GetStart() == detachedEdgeA.GetStart() && current.edge.GetEnd() == detachedEdgeA.GetEnd() {
 			// 8a. For the merged edge, since we are going from 2 edges to 1 edge, only one of the two entries needs to be replace in the heap, so keep the entry.

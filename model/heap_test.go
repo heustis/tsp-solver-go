@@ -137,31 +137,31 @@ func TestDeleteAll(t *testing.T) {
 	h1.PushHeap(&testEntry{6})
 	h1.PushHeap(&testEntry{7})
 
-	h2 := h1.DeleteAll(func(x interface{}) bool {
+	h2 := h1.Clone()
+	h2.DeleteAll(func(x interface{}) bool {
 		return x.(*testEntry).val > 5.0
 	})
 	assert.Equal(7, h1.Len())
 	assert.Equal(5, h2.Len())
 
-	h3 := h1.DeleteAll(func(x interface{}) bool {
+	h3 := h1.Clone()
+	h3.DeleteAll(func(x interface{}) bool {
 		return x.(*testEntry).val >= 4.0
 	})
 	assert.Equal(7, h1.Len())
 	assert.Equal(3, h3.Len())
 
-	h4 := h2.DeleteAll(func(x interface{}) bool {
+	h2.DeleteAll(func(x interface{}) bool {
 		return x.(*testEntry).val <= 2.5
 	})
-	assert.Equal(5, h2.Len())
-	assert.Equal(3, h4.Len())
+	assert.Equal(3, h2.Len())
 
-	assert.Equal(&testEntry{3.45}, h4.PopHeap())
-	assert.Equal(&testEntry{4}, h4.PopHeap())
-	assert.Equal(&testEntry{5}, h4.PopHeap())
+	assert.Equal(&testEntry{3.45}, h2.PopHeap())
+	assert.Equal(&testEntry{4}, h2.PopHeap())
+	assert.Equal(&testEntry{5}, h2.PopHeap())
 	assert.Equal(7, h1.Len())
-	assert.Equal(5, h2.Len())
+	assert.Equal(0, h2.Len())
 	assert.Equal(3, h3.Len())
-	assert.Equal(0, h4.Len())
 }
 
 func TestReplaceAll(t *testing.T) {
@@ -176,7 +176,8 @@ func TestReplaceAll(t *testing.T) {
 	h1.PushHeap(&testEntry{6})
 	h1.PushHeap(&testEntry{7})
 
-	h2 := h1.ReplaceAll(func(x interface{}) []interface{} {
+	h2 := h1.Clone()
+	h2.ReplaceAll(func(x interface{}) []interface{} {
 		i := int(x.(*testEntry).val)
 		if i%3 == 0 {
 			return []interface{}{}

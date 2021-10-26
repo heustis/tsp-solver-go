@@ -78,7 +78,7 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []*Vertex2D) ([]mo
 
 		var edgeIndex int
 		circuitEdges, edgeIndex = model.SplitEdge(circuitEdges, farthestFromClosestEdge.edge, farthestFromClosestEdge.vertex)
-		insertVertex(circuit, edgeIndex+1, farthestFromClosestEdge.vertex)
+		circuit = insertVertex(circuit, edgeIndex+1, farthestFromClosestEdge.vertex)
 		delete(unattachedVertices, farthestFromClosestEdge.vertex)
 		delete(exteriorClosestEdges, farthestFromClosestEdge.vertex)
 

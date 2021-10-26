@@ -1,7 +1,7 @@
 package model
 
 // DeleteVertex removes the vertex at the specified index in the supplied array, and returns the updated array.
-// This may update the supplied array, so it should be updated with the returned array.
+// This may or may not update the supplied array, so it should be updated with the returned array.
 func DeleteVertex(vertices []CircuitVertex, index int) []CircuitVertex {
 	if lastIndex := len(vertices) - 1; lastIndex < 0 {
 		return vertices
@@ -14,13 +14,31 @@ func DeleteVertex(vertices []CircuitVertex, index int) []CircuitVertex {
 	}
 }
 
+// DeleteVertex2 removes the specified vertex from the supplied array, and returns the updated array.
+// This may or may not update the supplied array, so it should be updated with the returned array.
+func DeleteVertex2(vertices []CircuitVertex, toDelete CircuitVertex) []CircuitVertex {
+	updatedLen := len(vertices) - 1
+	if updatedLen < 0 {
+		return []CircuitVertex{}
+	}
+	updated := make([]CircuitVertex, updatedLen)
+	i := 0
+	for _, v := range vertices {
+		if !v.Equals(toDelete) {
+			if i >= updatedLen {
+				return vertices
+			}
+			updated[i] = v
+			i++
+		}
+	}
+	return updated
+}
+
 // IndexOfEdge returns the index (starting at 0) of the edge in the array. If the edge is not in the array, -1 will be returned.
 func IndexOfEdge(edges []CircuitEdge, edge CircuitEdge) int {
 	for index, e := range edges {
-		// Compare pointers first, for performance, but then check start and end points, in case the same edge is created multiple times.
-		if e == edge ||
-			((e.GetStart() == edge.GetStart() || e.GetStart().DistanceTo(edge.GetStart()) < Threshold) &&
-				(e.GetEnd() == edge.GetEnd() || e.GetEnd().DistanceTo(edge.GetEnd()) < Threshold)) {
+		if e.Equals(edge) {
 			return index
 		}
 	}
@@ -30,8 +48,7 @@ func IndexOfEdge(edges []CircuitEdge, edge CircuitEdge) int {
 // IndexOfVertex returns the index (starting at 0) of the vertex in the array. If the vertex is not in the array, -1 will be returned.
 func IndexOfVertex(vertices []CircuitVertex, vertex CircuitVertex) int {
 	for index, v := range vertices {
-		// Compare pointers first, for performance, but then check coordinates, in case the same vertex is created multiple times.
-		if v == vertex || v.DistanceTo(vertex) <= Threshold {
+		if v.Equals(vertex) {
 			return index
 		}
 	}
@@ -70,6 +87,40 @@ func MergeEdges(edges []CircuitEdge, vertexIndex int) ([]CircuitEdge, CircuitEdg
 	return edges, detachedEdgeA, detachedEdgeB
 }
 
+// MergeEdges2 combines the edges so that the supplied vertex is no longer used in the edges.
+// The array of CircuitEdge must be ordered so that the 0-th edge starts with the 0-th vertex in the GetAttachedVertices array.
+// This may or may not update the supplied array, so it should be updated with the returned array.
+// In addition to returning the updated array, this also returns the two detached edges and the merged edge.
+func MergeEdges2(edges []CircuitEdge, vertex CircuitVertex) ([]CircuitEdge, CircuitEdge, CircuitEdge, CircuitEdge) {
+	var detachedEdgeA CircuitEdge
+	var detachedEdgeB CircuitEdge
+	var mergedEdge CircuitEdge
+
+	lastIndex := len(edges) - 1
+
+	// There must be at least 2 edges to merge edges.
+	if lastIndex <= 0 {
+		return []CircuitEdge{}, nil, nil, nil
+	}
+
+	updated := make([]CircuitEdge, lastIndex)
+	updatedIndex := 0
+	for i, e := range edges {
+		if e.GetEnd().Equals(vertex) {
+			detachedEdgeA = e
+			detachedEdgeB = edges[(i+1)%len(edges)]
+			mergedEdge = detachedEdgeA.Merge(detachedEdgeB)
+			updated[updatedIndex] = mergedEdge
+			updatedIndex++
+		} else if !e.GetStart().Equals(vertex) {
+			updated[updatedIndex] = e
+			updatedIndex++
+		}
+	}
+
+	return updated, detachedEdgeA, detachedEdgeB, mergedEdge
+}
+
 // SplitEdge replaces the supplied edge with the two edges that are created by adding the supplied vertex to the edge.
 // This requires the supplied edge to exist in the array of circuit edges.
 // If it does not exist, the array will be returned unchanged, along with an index of -1.
@@ -88,4 +139,32 @@ func SplitEdge(edges []CircuitEdge, edgeToSplit CircuitEdge, vertexToAdd Circuit
 	edges[edgeIndex+1] = edgeB
 
 	return edges, edgeIndex
+}
+
+// SplitEdge2 replaces the supplied edge with the two edges that are created by adding the supplied vertex to the edge.
+// This requires the supplied edge to exist in the array of circuit edges.
+// This will return the updated array and the index of the first new edge.
+func SplitEdge2(edges []CircuitEdge, edgeToSplit CircuitEdge, vertexToAdd CircuitVertex) ([]CircuitEdge, int) {
+	updated := make([]CircuitEdge, len(edges)+1)
+	edgeIndex := -1
+
+	updatedIndex := 0
+	for _, e := range edges {
+		if e.Equals(edgeToSplit) {
+			edgeA, edgeB := edgeToSplit.Split(vertexToAdd)
+			edgeIndex = updatedIndex
+			updated[updatedIndex] = edgeA
+			updatedIndex++
+			updated[updatedIndex] = edgeB
+		} else {
+			updated[updatedIndex] = e
+		}
+		updatedIndex++
+	}
+
+	if edgeIndex == -1 {
+		return edges, edgeIndex
+	} else {
+		return updated, edgeIndex
+	}
 }
