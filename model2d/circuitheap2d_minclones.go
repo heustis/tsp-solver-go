@@ -74,8 +74,6 @@ func (c *HeapableCircuit2DMinClones) CloneAndUpdate() model.HeapableCircuit {
 			unattachedVertices: make(map[model.CircuitVertex]bool),
 			distanceIncreases:  make(map[model.CircuitVertex]float64),
 		}
-		clone.closestEdges = model.NewHeap(clone.heapValueFunction)
-		clone.closestEdges.PushAllFrom(c.closestEdges)
 
 		for i, v := range c.Vertices {
 			clone.Vertices[i] = v
@@ -92,6 +90,10 @@ func (c *HeapableCircuit2DMinClones) CloneAndUpdate() model.HeapableCircuit {
 		for k, v := range c.distanceIncreases {
 			clone.distanceIncreases[k] = v
 		}
+
+		// Need to update the heap after setting the distance increases, for the value function to properly heapify the data.
+		clone.closestEdges = model.NewHeap(clone.heapValueFunction)
+		clone.closestEdges.PushAllFrom(c.closestEdges)
 
 		// Update one of the circuits' heaps to no longer have entries for this vertex.
 		// The circuit chosen is the one which has the smaller distance increase for this vertex,
@@ -271,6 +273,12 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
 		if current.edge.Equals(detachedEdgeA) {
+			// Do not allow an entry to be created for either of the vertices of the merged edge.
+			// For example, if point B is detached from between points A & C, point C could have an existing entry for A-B, which would be replaced by A-C.
+			// The way that this scenario happens is that B and C are both internal points, B is attached first, C is attached between B and D, leaving an entry for A-B for vertex C.
+			if !current.vertex.Equals(detachedEdgeA.GetStart()) && !current.vertex.Equals(detachedEdgeA.GetEnd()) {
+				return []interface{}{}
+			}
 			return []interface{}{&heapDistanceToEdge{
 				vertex:   current.vertex,
 				edge:     mergedEdge,

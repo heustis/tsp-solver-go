@@ -31,7 +31,7 @@ func main() {
 
 	defer f.Close()
 
-	f.WriteString("np_len;np_nanos;heap_len;heap_nanos;heap_mc_len;heap_mc_nanos;np_circuit;heap_circuit;heap_mc_circuit;\r\n")
+	f.WriteString("np_len;np_nanos;heap_len;heap_nanos;heap_iterations;heap_mc_len;heap_mc_nanos;heap_mc_iterations;np_circuit;heap_circuit;heap_mc_circuit;\r\n")
 
 	numVertices := 10
 	numIterations := 1000
@@ -48,12 +48,12 @@ func main() {
 		t1 := time.Since(t0)
 
 		heapCircuit := &model2d.HeapableCircuit2D{Vertices: vertices}
-		shortestHeap := solver.FindShortestPathHeap(heapCircuit)
+		shortestHeap, numIterationsHeap := solver.FindShortestPathHeap(heapCircuit)
 
 		t2 := time.Since(t0)
 
 		heapCircuitMinClones := &model2d.HeapableCircuit2DMinClones{Vertices: vertices}
-		shortestHeapMinClones := solver.FindShortestPathHeap(heapCircuitMinClones)
+		shortestHeapMinClones, numIterationsMinClones := solver.FindShortestPathHeap(heapCircuitMinClones)
 
 		t3 := time.Since(t0)
 
@@ -61,10 +61,10 @@ func main() {
 		// initialJson, _ := json.Marshal(vertices)
 		shortestHeapJson, _ := json.Marshal(shortestHeap.GetAttachedVertices())
 		shortestHeapMinClonesJson, _ := json.Marshal(shortestHeapMinClones.GetAttachedVertices())
-		f.WriteString(fmt.Sprintf("%f;%d;%f;%d;%f;%d;%s;%s;%s;\r\n",
+		f.WriteString(fmt.Sprintf("%f;%d;%f;%d;%d;%f;%d;%d;%s;%s;%s;\r\n",
 			shortestNpLength, t1.Nanoseconds(),
-			shortestHeap.GetLength(), t2.Nanoseconds()-t1.Nanoseconds(),
-			shortestHeapMinClones.GetLength(), t3.Nanoseconds()-t2.Nanoseconds(),
+			shortestHeap.GetLength(), t2.Nanoseconds()-t1.Nanoseconds(), numIterationsHeap,
+			shortestHeapMinClones.GetLength(), t3.Nanoseconds()-t2.Nanoseconds(), numIterationsMinClones,
 			string(shortestNpJson),
 			// string(initialJson),
 			string(shortestHeapJson),
