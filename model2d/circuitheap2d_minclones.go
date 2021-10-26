@@ -3,7 +3,6 @@ package model2d
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/fealos/lee-tsp-go/model"
 )
@@ -226,31 +225,6 @@ func (c *HeapableCircuit2DMinClones) attachVertex(toAttach *heapDistanceToEdge) 
 			return []interface{}{x}
 		}
 	})
-
-	// deleted := c.closestEdges.DeleteAll(func(x interface{}) bool {
-	// 	current := x.(*heapDistanceToEdge)
-	// 	return current.edge.Equals(toAttach.edge)
-	// })
-
-	// for _, x := range deleted {
-	// 	current := x.(*heapDistanceToEdge)
-	// 	c.closestEdges.PushHeap(&heapDistanceToEdge{
-	// 		vertex:   current.vertex,
-	// 		edge:     edgeA,
-	// 		distance: edgeA.DistanceIncrease(current.vertex),
-	// 	})
-	// 	c.closestEdges.PushHeap(&heapDistanceToEdge{
-	// 		vertex:   current.vertex,
-	// 		edge:     edgeB,
-	// 		distance: edgeB.DistanceIncrease(current.vertex),
-	// 	})
-	// }
-
-	// 5. Add entries for each of the new edges - include any interior vertices, attached or unattached,
-	//    that are not to the right of the edge nor would result in a different vertex becoming exterior if the vertex were attached to this edge.
-	//    Complexity is O(n^2)
-	// newEntries := append(c.findCandidateVertices(edgeA.(*Edge2D), deleted), c.findCandidateVertices(edgeB.(*Edge2D), deleted)...)
-	// c.closestEdges.PushAll(newEntries...)
 }
 
 func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) {
@@ -290,87 +264,6 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 			return []interface{}{x}
 		}
 	})
-
-	// deleted := c.closestEdges.DeleteAll(func(x interface{}) bool {
-	// 	current := x.(*heapDistanceToEdge)
-	// 	return current.edge.Equals(detachedEdgeA) || current.edge.Equals(detachedEdgeB)
-	// })
-
-	// addedVertices := make(map[*Vertex2D]bool)
-	// for _, x := range deleted {
-	// 	current := x.(*heapDistanceToEdge)
-	// 	if !addedVertices[current.vertex] {
-	// 		addedVertices[current.vertex] = true
-	// 		c.closestEdges.PushHeap(&heapDistanceToEdge{
-	// 			vertex:   current.vertex,
-	// 			edge:     mergedEdge,
-	// 			distance: mergedEdge.DistanceIncrease(current.vertex),
-	// 		})
-	// 	}
-	// }
-
-	// 6. Add entries for the new edge - include any interior vertices, attached or unattached,
-	//    that are not to the right of the edge nor would result in a different vertex becoming exterior if the vertex were attached to this edge.
-	//    Complexity is O(n^2)
-	// newEntries := c.findCandidateVertices(mergedEdge.(*Edge2D), deleted)
-	// c.closestEdges.PushAll(newEntries...)
-}
-
-func (c *HeapableCircuit2DMinClones) findCandidateVertices(edge *Edge2D, initialCandidates []interface{}) []interface{} {
-	validCandidates := make(map[model.CircuitVertex]bool)
-	for _, c := range initialCandidates {
-		validCandidates[c.(*heapDistanceToEdge).vertex] = true
-	}
-	return c.findCandidateVertices2(edge, validCandidates)
-}
-
-func (c *HeapableCircuit2DMinClones) findCandidateVertices2(edge *Edge2D, validCandidates map[model.CircuitVertex]bool) []interface{} {
-	candiates := []*heapDistanceToEdge{}
-
-	// O(n) find interior vertices that can have this edge attached to them.
-	for v := range validCandidates {
-		// TODO - either only include validCandidates that are in the heap for the source edge, or do not filter the valid candidates (by leftOf, or the sorting + filtering below).
-		// Otherwise, can attach a vertex, move the vertex, and prevent a different vertex from then attaching to the merged edge.
-
-		// Ignore vertices that are part of the convex hull, or the edge itself.
-		// Also ignore any vertices that are to the right of the edge:
-		//   The circuit is counter-clockwise, so a point to the right of an edge will have another edge between this edge and that vertex.
-		//   If that vertex were attached to this edge, it would automatically result in a longer circuit since it would result in crossed edges.
-		v2d := v.(*Vertex2D)
-		if !c.convexVertices[v] && v != edge.GetEnd() && v != edge.GetStart() && v2d.isLeftOf(edge) {
-			candiates = append(candiates, &heapDistanceToEdge{
-				vertex:   v2d,
-				edge:     edge,
-				distance: edge.DistanceIncrease(v),
-			})
-		}
-	}
-
-	// O(n * log n) sort the candidate vertices to make the next filtering faster.
-	sort.Slice(candiates, func(i, j int) bool {
-		return candiates[i].distance < candiates[j].distance
-	})
-
-	// O(n^2) check each candidate to see if it would cause any other vertex (in the candidate list) to shift from interior to exterior.
-	// If so, ignore the vertex, as the other vertex should be chosen first.
-	// Note: only need to check vertices that are closer to the edge than the candidate vertex
-	filteredCandiates := []interface{}{}
-	for i, c := range candiates {
-		splitEdgeA, splitEdgeB := edge.Split(c.vertex)
-
-		include := true
-		for j := i - 1; j >= 0 && include; j-- {
-			if vertexJ := candiates[j].vertex; vertexJ.isRightOf(splitEdgeA.(*Edge2D)) && vertexJ.isRightOf(splitEdgeB.(*Edge2D)) {
-				include = false
-			}
-		}
-
-		if include {
-			filteredCandiates = append(filteredCandiates, c)
-		}
-	}
-
-	return filteredCandiates
 }
 
 func (c *HeapableCircuit2DMinClones) heapValueFunction(a interface{}) float64 {
