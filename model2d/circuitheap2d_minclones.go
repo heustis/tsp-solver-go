@@ -250,7 +250,7 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 			// Do not allow an entry to be created for either of the vertices of the merged edge.
 			// For example, if point B is detached from between points A & C, point C could have an existing entry for A-B, which would be replaced by A-C.
 			// The way that this scenario happens is that B and C are both internal points, B is attached first, C is attached between B and D, leaving an entry for A-B for vertex C.
-			if !current.vertex.Equals(detachedEdgeA.GetStart()) && !current.vertex.Equals(detachedEdgeA.GetEnd()) {
+			if current.vertex.Equals(mergedEdge.GetStart()) || current.vertex.Equals(mergedEdge.GetEnd()) {
 				return []interface{}{}
 			}
 			return []interface{}{&heapDistanceToEdge{
@@ -259,6 +259,7 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 				distance: mergedEdge.DistanceIncrease(current.vertex),
 			}}
 		} else if current.edge.Equals(detachedEdgeB) {
+			// Only create one entry for the merged edge.
 			return []interface{}{}
 		} else {
 			return []interface{}{x}
