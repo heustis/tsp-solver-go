@@ -229,6 +229,40 @@ func TestIndexOfVertex(t *testing.T) {
 		model2d.NewVertex2D(4, 4),
 	}, initVertices[1]))
 }
+
+func TestInsertVertex_Heap(t *testing.T) {
+	assert := assert.New(t)
+	circuit := []model.CircuitVertex{
+		model2d.NewVertex2D(-15, -15),
+		model2d.NewVertex2D(0, 0),
+		model2d.NewVertex2D(15, -15),
+	}
+
+	circuit = model.InsertVertex(circuit, 0, model2d.NewVertex2D(5, 5))
+	assert.Len(circuit, 4)
+	assert.Equal(model2d.NewVertex2D(5, 5), circuit[0])
+	assert.Equal(model2d.NewVertex2D(-15, -15), circuit[1])
+	assert.Equal(model2d.NewVertex2D(0, 0), circuit[2])
+	assert.Equal(model2d.NewVertex2D(15, -15), circuit[3])
+
+	circuit = model.InsertVertex(circuit, 4, model2d.NewVertex2D(-5, -5))
+	assert.Len(circuit, 5)
+	assert.Equal(model2d.NewVertex2D(5, 5), circuit[0])
+	assert.Equal(model2d.NewVertex2D(-15, -15), circuit[1])
+	assert.Equal(model2d.NewVertex2D(0, 0), circuit[2])
+	assert.Equal(model2d.NewVertex2D(15, -15), circuit[3])
+	assert.Equal(model2d.NewVertex2D(-5, -5), circuit[4])
+
+	circuit = model.InsertVertex(circuit, 2, model2d.NewVertex2D(1, -5))
+	assert.Len(circuit, 6)
+	assert.Equal(model2d.NewVertex2D(5, 5), circuit[0])
+	assert.Equal(model2d.NewVertex2D(-15, -15), circuit[1])
+	assert.Equal(model2d.NewVertex2D(1, -5), circuit[2])
+	assert.Equal(model2d.NewVertex2D(0, 0), circuit[3])
+	assert.Equal(model2d.NewVertex2D(15, -15), circuit[4])
+	assert.Equal(model2d.NewVertex2D(-5, -5), circuit[5])
+}
+
 func TestMergeEdges(t *testing.T) {
 	assert := assert.New(t)
 

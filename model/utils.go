@@ -55,6 +55,21 @@ func IndexOfVertex(vertices []CircuitVertex, vertex CircuitVertex) int {
 	return -1
 }
 
+// InsertVertex inserts the supplied vertex at the specified index, 0-based.
+// If the index is greater than the last index in the array, the vertex will be appended to the end of the array.
+// This may modify the supplied array, so it should be updated with the returned array.
+func InsertVertex(vertices []CircuitVertex, index int, vertex CircuitVertex) []CircuitVertex {
+	if index >= len(vertices) {
+		return append(vertices, vertex)
+	} else {
+		// copy all elements starting at the index one to the right to create a duplicate record at index and index+1.
+		vertices = append(vertices[:index+1], vertices[index:]...)
+		// update only the vertex at the index, so that there are no duplicates and the vertex is at the index.
+		vertices[index] = vertex
+		return vertices
+	}
+}
+
 // MergeEdges combines the edges so that the attached vertex at the specified index is no longer used in the edges.
 // The vertexIndex should be the index of the vertex in the GetAttachedVertices array.
 // The array of CircuitEdge must be ordered so that the 0-th edge starts with the 0-th vertex in the GetAttachedVertices array.

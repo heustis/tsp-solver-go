@@ -3,6 +3,7 @@ package model
 import (
 	"container/heap"
 	"encoding/json"
+	"fmt"
 )
 
 // Heap is a min heap that implements heap.Interface.
@@ -186,7 +187,7 @@ func toString(value interface{}) string {
 	} else if jsonBytes, err := json.Marshal(p); err == nil {
 		return string(jsonBytes)
 	} else {
-		return "{}"
+		return fmt.Sprintf("%v", value)
 	}
 }
 
