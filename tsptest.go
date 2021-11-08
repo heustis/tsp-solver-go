@@ -72,7 +72,7 @@ func main() {
 		))
 
 		if math.Abs(shortestHeapMinClones.GetLength()-shortestNpLength) > model.Threshold {
-			panic(fmt.Errorf("found mismatched circuits between NP and Heap solutions"))
+			fmt.Printf("test %d: found mismatched circuits between NP and Heap solutions\n", i)
 		}
 
 		shortestHeap.Delete()
@@ -84,8 +84,8 @@ func main() {
 	}
 }
 
-func generateVertices(size int) []*model2d.Vertex2D {
-	var vertices []*model2d.Vertex2D
+func generateVertices(size int) []model.CircuitVertex {
+	var vertices []model.CircuitVertex
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < size; i++ {
 		vertices = append(vertices, model2d.NewVertex2D(r.Float64()*10000, r.Float64()*10000))

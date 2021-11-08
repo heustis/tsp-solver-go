@@ -28,7 +28,7 @@ func TestFindShortestPathGreedy_DataFromOldProject(t *testing.T) {
 
 		//TODO 2: Investigate why "edgeIndex := c.indexOfEdge(edgeToSplit)" is returning -1 in some test cases
 
-		vertices := make([]*model2d.Vertex2D, len(testEntry.Points))
+		vertices := make([]model.CircuitVertex, len(testEntry.Points))
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}

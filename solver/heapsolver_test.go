@@ -22,7 +22,7 @@ func TestFindShortestPathHeap_DataFromOldProject(t *testing.T) {
 	assert.Nil(err)
 
 	for testIndex, testEntry := range data.Arrays[0:10] {
-		vertices := make([]*model2d.Vertex2D, len(testEntry.Points))
+		vertices := make([]model.CircuitVertex, len(testEntry.Points))
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
@@ -50,7 +50,7 @@ func TestFindShortestPathHeap_MinClones_DataFromOldProject(t *testing.T) {
 	assert.Nil(err)
 
 	for testIndex, testEntry := range data.Arrays[0:10] {
-		vertices := make([]*model2d.Vertex2D, len(testEntry.Points))
+		vertices := make([]model.CircuitVertex, len(testEntry.Points))
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
