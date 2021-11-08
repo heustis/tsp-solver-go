@@ -1,5 +1,11 @@
 package model
 
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
 // DeleteVertex removes the vertex at the specified index in the supplied array, and returns the updated array.
 // This may or may not update the supplied array, so it should be updated with the returned array.
 func DeleteVertex(vertices []CircuitVertex, index int) []CircuitVertex {
@@ -181,5 +187,16 @@ func SplitEdge2(edges []CircuitEdge, edgeToSplit CircuitEdge, vertexToAdd Circui
 		return edges, edgeIndex
 	} else {
 		return updated, edgeIndex
+	}
+}
+
+// ToString converts an object to a string.
+func ToString(value interface{}) string {
+	if p, okay := value.(Printable); okay {
+		return p.ToString()
+	} else if jsonBytes, err := json.Marshal(value); err == nil && strings.Compare("null", string(jsonBytes)) != 0 {
+		return string(jsonBytes)
+	} else {
+		return fmt.Sprintf("%v", value)
 	}
 }

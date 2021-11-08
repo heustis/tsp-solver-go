@@ -40,7 +40,7 @@ func TestHasVertex(t *testing.T) {
 	assert.False(d.HasVertex(nil))
 }
 
-func TestToString(t *testing.T) {
+func TestToString_DistanceToEdge(t *testing.T) {
 	assert := assert.New(t)
 
 	d := &model.DistanceToEdge{

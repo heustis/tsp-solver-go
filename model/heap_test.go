@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -15,6 +16,10 @@ type testEntry struct {
 
 func getVal(e interface{}) float64 {
 	return e.(*testEntry).val
+}
+
+func (e *testEntry) ToString() string {
+	return fmt.Sprintf("%v", e.val)
 }
 
 func TestHeap(t *testing.T) {
@@ -234,4 +239,19 @@ func TestReplaceAll(t *testing.T) {
 	assert.Equal(&testEntry{4.0}, h2.PopHeap())
 	assert.Equal(4, h1.Len())
 	assert.Equal(3, h2.Len())
+}
+
+func TestToString_Heap(t *testing.T) {
+	assert := assert.New(t)
+
+	h1 := model.NewHeap(getVal)
+	h1.PushHeap(&testEntry{2.34})
+	h1.PushHeap(&testEntry{3.45})
+	h1.PushHeap(&testEntry{1.23})
+	h1.PushHeap(&testEntry{4})
+	h1.PushHeap(&testEntry{5})
+	h1.PushHeap(&testEntry{6})
+	h1.PushHeap(&testEntry{7})
+
+	assert.Equal(`{1.23,3.45,2.34,4,5,6,7}`, h1.ToString())
 }
