@@ -7,7 +7,7 @@ import (
 )
 
 type Circuit2D struct {
-	Vertices           []*Vertex2D
+	Vertices           []model.CircuitVertex
 	midpoint           *Vertex2D
 	circuit            []model.CircuitVertex
 	circuitEdges       []model.CircuitEdge
@@ -36,8 +36,8 @@ func (c *Circuit2D) BuildPerimiter() {
 	c.circuit = append(c.circuit, farthestFromFarthest)
 
 	// 3. Created edges 1 -> 2 and 2 -> 1
-	c.circuitEdges = append(c.circuitEdges, NewEdge2D(farthestFromMid, farthestFromFarthest))
-	c.circuitEdges = append(c.circuitEdges, NewEdge2D(farthestFromFarthest, farthestFromMid))
+	c.circuitEdges = append(c.circuitEdges, NewEdge2D(farthestFromMid.(*Vertex2D), farthestFromFarthest.(*Vertex2D)))
+	c.circuitEdges = append(c.circuitEdges, NewEdge2D(farthestFromFarthest.(*Vertex2D), farthestFromMid.(*Vertex2D)))
 
 	// 4. Find the exterior point farthest from its closest edge; 3rd point only.
 	// For the third point, we can simplify this since both edges are the same (but flipped).
@@ -141,15 +141,16 @@ func (c *Circuit2D) Prepare() {
 	c.circuit = []model.CircuitVertex{}
 	c.circuitEdges = []model.CircuitEdge{}
 
-	c.Vertices = deduplicateVertices(c.Vertices)
+	c.Vertices = DeduplicateVertices(c.Vertices)
 
 	numVertices := float64(len(c.Vertices))
 	c.midpoint = &Vertex2D{0.0, 0.0}
 
 	for _, v := range c.Vertices {
+		v2d := v.(*Vertex2D)
 		c.unattachedVertices[v] = true
-		c.midpoint.X += v.X / numVertices
-		c.midpoint.Y += v.Y / numVertices
+		c.midpoint.X += v2d.X / numVertices
+		c.midpoint.Y += v2d.Y / numVertices
 	}
 }
 

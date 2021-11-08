@@ -10,7 +10,7 @@ import (
 func TestBuildPerimeter_Heap(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &HeapableCircuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 			NewVertex2D(-15, -15), // Index 0 after sorting
 			NewVertex2D(0, 0),     // Index 2 after sorting
@@ -36,11 +36,11 @@ func TestBuildPerimeter_Heap(t *testing.T) {
 	assert.Equal(circuit.circuit, circuit.GetAttachedVertices())
 
 	assert.Len(circuit.circuitEdges, 5)
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[7]), circuit.circuitEdges[0])
-	assert.Equal(NewEdge2D(circuit.Vertices[7], circuit.Vertices[6]), circuit.circuitEdges[1])
-	assert.Equal(NewEdge2D(circuit.Vertices[6], circuit.Vertices[4]), circuit.circuitEdges[2])
-	assert.Equal(NewEdge2D(circuit.Vertices[4], circuit.Vertices[1]), circuit.circuitEdges[3])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]), circuit.circuitEdges[4])
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[7].(*Vertex2D)), circuit.circuitEdges[0])
+	assert.Equal(NewEdge2D(circuit.Vertices[7].(*Vertex2D), circuit.Vertices[6].(*Vertex2D)), circuit.circuitEdges[1])
+	assert.Equal(NewEdge2D(circuit.Vertices[6].(*Vertex2D), circuit.Vertices[4].(*Vertex2D)), circuit.circuitEdges[2])
+	assert.Equal(NewEdge2D(circuit.Vertices[4].(*Vertex2D), circuit.Vertices[1].(*Vertex2D)), circuit.circuitEdges[3])
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[0].(*Vertex2D)), circuit.circuitEdges[4])
 
 	l := 0.0
 	for _, edge := range circuit.circuitEdges {
@@ -59,22 +59,22 @@ func TestBuildPerimeter_Heap(t *testing.T) {
 	assert.Equal(15, circuit.closestEdges.Len())
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[1],
-		vertex:   circuit.Vertices[5],
+		vertex:   circuit.Vertices[5].(*Vertex2D),
 		distance: 0.763503994948632,
 	}, circuit.closestEdges.PopHeap())
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[2],
-		vertex:   circuit.Vertices[5],
+		vertex:   circuit.Vertices[5].(*Vertex2D),
 		distance: 1.628650237136812,
 	}, circuit.closestEdges.PopHeap())
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[1],
-		vertex:   circuit.Vertices[3],
+		vertex:   circuit.Vertices[3].(*Vertex2D),
 		distance: 5.854324418695558,
 	}, circuit.closestEdges.PopHeap())
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[4],
-		vertex:   circuit.Vertices[2],
+		vertex:   circuit.Vertices[2].(*Vertex2D),
 		distance: 7.9605428386450825,
 	}, circuit.closestEdges.PopHeap())
 }
@@ -83,7 +83,7 @@ func TestCloneAndUpdate(t *testing.T) {
 	assert := assert.New(t)
 
 	circuit := &HeapableCircuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 			NewVertex2D(-15, -15), // Index 0 after sorting
 			NewVertex2D(0, 0),     // Index 2 after sorting
@@ -107,7 +107,7 @@ func TestCloneAndUpdate(t *testing.T) {
 
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[2],
-		vertex:   circuit.Vertices[5],
+		vertex:   circuit.Vertices[5].(*Vertex2D),
 		distance: 1.628650237136812,
 	}, circuit.closestEdges.Peek())
 
@@ -118,7 +118,7 @@ func TestCloneAndUpdate(t *testing.T) {
 
 	assert.Equal(&heapDistanceToEdge{
 		edge:     clone.circuitEdges[1],
-		vertex:   clone.Vertices[3],
+		vertex:   clone.Vertices[3].(*Vertex2D),
 		distance: 5.09082042374693,
 	}, clone.closestEdges.Peek())
 
@@ -134,7 +134,7 @@ func TestCloneAndUpdate(t *testing.T) {
 
 	assert.Equal(&heapDistanceToEdge{
 		edge:     circuit.circuitEdges[2],
-		vertex:   circuit.Vertices[5],
+		vertex:   circuit.Vertices[5].(*Vertex2D),
 		distance: 1.628650237136812,
 	}, circuit.closestEdges.Peek())
 
@@ -145,7 +145,7 @@ func TestCloneAndUpdate(t *testing.T) {
 
 	assert.Equal(&heapDistanceToEdge{
 		edge:     clone.circuitEdges[5],
-		vertex:   clone.Vertices[2],
+		vertex:   clone.Vertices[2].(*Vertex2D),
 		distance: 7.9605428386450825,
 	}, clone.closestEdges.Peek())
 
@@ -156,7 +156,7 @@ func TestCloneAndUpdate(t *testing.T) {
 
 	assert.Equal(&heapDistanceToEdge{
 		edge:     cloneOfClone.circuitEdges[1],
-		vertex:   cloneOfClone.Vertices[2],
+		vertex:   cloneOfClone.Vertices[2].(*Vertex2D),
 		distance: 5.003830723297881,
 	}, cloneOfClone.closestEdges.Peek())
 
@@ -181,7 +181,7 @@ func TestCloneAndUpdate(t *testing.T) {
 func TestPrepare_Heap(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &HeapableCircuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(-15, -15),
 			NewVertex2D(0, 0),
 			NewVertex2D(15, -15),
@@ -233,7 +233,7 @@ func TestPrepare_Heap(t *testing.T) {
 func TestInsertVertex_Heap(t *testing.T) {
 	assert := assert.New(t)
 	c := &HeapableCircuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(-15, -15),
 			NewVertex2D(0, 0),
 			NewVertex2D(15, -15),

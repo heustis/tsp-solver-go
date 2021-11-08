@@ -1,6 +1,7 @@
 package model2d
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/fealos/lee-tsp-go/model"
@@ -61,6 +62,11 @@ func (v *Vertex2D) FindClosestEdge(currentCircuit []model.CircuitEdge) model.Cir
 // IsEdgeCloser checks if the supplied edge is closer than the current closest edge.
 func (v *Vertex2D) IsEdgeCloser(candidateEdge model.CircuitEdge, currentEdge model.CircuitEdge) bool {
 	return candidateEdge.DistanceIncrease(v) < currentEdge.DistanceIncrease(v)
+}
+
+// ToString prints the vertex as a string.
+func (v *Vertex2D) ToString() string {
+	return fmt.Sprintf(`{"x":%v,"y":%v}`, v.X, v.Y)
 }
 
 func (v *Vertex2D) add(other *Vertex2D) *Vertex2D {

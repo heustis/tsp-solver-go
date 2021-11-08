@@ -8,14 +8,14 @@ import (
 )
 
 type HeapableCircuit2DMinClones struct {
-	Vertices           []*Vertex2D
+	Vertices           []model.CircuitVertex
 	circuit            []model.CircuitVertex
 	circuitEdges       []model.CircuitEdge
 	closestEdges       *model.Heap
 	length             float64
 	unattachedVertices map[model.CircuitVertex]bool
 	convexVertices     map[model.CircuitVertex]bool
-	distanceIncreases  map[model.CircuitVertex]float64
+	// distanceIncreases  map[model.CircuitVertex]float64
 }
 
 func (c *HeapableCircuit2DMinClones) BuildPerimiter() {
@@ -58,20 +58,20 @@ func (c *HeapableCircuit2DMinClones) CloneAndUpdate() model.HeapableCircuit {
 		// 2a. If there are no more items in the heap with the vertex in 'next closest', this is the last edge that the vertex can attach to (i.e. all other possibilities have been tried).
 		//     Similarly, if this is the first time we are encountering a vertex, attach it at the specified location without cloning.
 		//     So do not clone the circuit, rather attach 'next closest' to this circuit.
-		// AnyMatch is O(n), attachVertex is O(TODO)
+		// AnyMatch is O(n), attachVertex is O(n)
 		c.attachVertex(next)
 		return nil
 	} else {
 		// 2b. If the 'next closest' vertex is already attached, clone the circuit with the 'next closest' vertex attached to the 'next closest' edge.
 		// O(n)
 		clone := &HeapableCircuit2DMinClones{
-			Vertices:           make([]*Vertex2D, len(c.Vertices)),
+			Vertices:           make([]model.CircuitVertex, len(c.Vertices)),
 			circuit:            make([]model.CircuitVertex, len(c.circuit)),
 			circuitEdges:       make([]model.CircuitEdge, len(c.circuitEdges)),
-			closestEdges:       nil,
+			closestEdges:       c.closestEdges.Clone(),
 			length:             c.length,
 			unattachedVertices: make(map[model.CircuitVertex]bool),
-			distanceIncreases:  make(map[model.CircuitVertex]float64),
+			// distanceIncreases:  make(map[model.CircuitVertex]float64),
 		}
 
 		for i, v := range c.Vertices {
@@ -86,29 +86,29 @@ func (c *HeapableCircuit2DMinClones) CloneAndUpdate() model.HeapableCircuit {
 		for k, v := range c.unattachedVertices {
 			clone.unattachedVertices[k] = v
 		}
-		for k, v := range c.distanceIncreases {
-			clone.distanceIncreases[k] = v
-		}
+		// for k, v := range c.distanceIncreases {
+		// 	clone.distanceIncreases[k] = v
+		// }
 
 		// Need to update the heap after setting the distance increases, for the value function to properly heapify the data.
-		clone.closestEdges = model.NewHeap(clone.heapValueFunction)
-		clone.closestEdges.PushAllFrom(c.closestEdges)
+		// clone.closestEdges = model.NewHeap(getDistanceToEdgeForHeap)
+		// clone.closestEdges.PushAllFrom(c.closestEdges)
 
 		// Update one of the circuits' heaps to no longer have entries for this vertex.
 		// The circuit chosen is the one which has the smaller distance increase for this vertex,
 		// since the larger distance increase will make the vertex's other heapDistanceToEdges closer to the heap's root.
 		// O(n)
-		heapToUpdate := clone.closestEdges
-		if c.distanceIncreases[next.vertex] < next.distance {
-			heapToUpdate = c.closestEdges
-		}
-		heapToUpdate.DeleteAll(func(x interface{}) bool {
+		// heapToUpdate := c.closestEdges
+		// if next.distance < c.distanceIncreases[next.vertex] {
+		// 	heapToUpdate = clone.closestEdges
+		// }
+		clone.closestEdges.DeleteAll(func(x interface{}) bool {
 			current := x.(*heapDistanceToEdge)
 			return current.vertex.Equals(next.vertex)
 		})
 
 		// Move the vertex from the previous location to the new location in the clone.
-		//O(TODO)
+		//O(n)
 		clone.detachVertex(next.vertex)
 		clone.attachVertex(next)
 
@@ -121,11 +121,11 @@ func (c *HeapableCircuit2DMinClones) Delete() {
 		delete(c.unattachedVertices, k)
 	}
 	for k := range c.convexVertices {
-		delete(c.distanceIncreases, k)
+		delete(c.convexVertices, k)
 	}
-	for k := range c.distanceIncreases {
-		delete(c.distanceIncreases, k)
-	}
+	// for k := range c.distanceIncreases {
+	// 	delete(c.distanceIncreases, k)
+	// }
 	if c.closestEdges != nil {
 		c.closestEdges.Delete()
 	}
@@ -146,7 +146,7 @@ func (c *HeapableCircuit2DMinClones) GetLength() float64 {
 func (c *HeapableCircuit2DMinClones) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
 		nextDistToEdge := next.(*heapDistanceToEdge)
-		nextDist := nextDistToEdge.distance - c.distanceIncreases[nextDistToEdge.vertex]
+		nextDist := nextDistToEdge.distance //- c.distanceIncreases[nextDistToEdge.vertex]
 		if len(c.unattachedVertices) == 0 && nextDist > 0 {
 			return c.length // If the circuit is complete and the next vertex to attach increases the perimeter length, the circuit is optimal.
 		} else {
@@ -164,17 +164,17 @@ func (c *HeapableCircuit2DMinClones) GetUnattachedVertices() map[model.CircuitVe
 func (c *HeapableCircuit2DMinClones) Prepare() {
 	c.convexVertices = make(map[model.CircuitVertex]bool)
 	c.unattachedVertices = make(map[model.CircuitVertex]bool)
-	c.distanceIncreases = make(map[model.CircuitVertex]float64)
-	c.closestEdges = model.NewHeap(c.heapValueFunction)
+	// c.distanceIncreases = make(map[model.CircuitVertex]float64)
+	c.closestEdges = model.NewHeap(getDistanceToEdgeForHeap)
 	c.circuit = []model.CircuitVertex{}
 	c.circuitEdges = []model.CircuitEdge{}
 	c.length = 0.0
 
-	c.Vertices = deduplicateVertices(c.Vertices)
+	c.Vertices = DeduplicateVertices(c.Vertices)
 
-	for _, v := range c.Vertices {
-		c.distanceIncreases[v] = 0.0
-	}
+	// for _, v := range c.Vertices {
+	// 	c.distanceIncreases[v] = 0.0
+	// }
 }
 
 func (c *HeapableCircuit2DMinClones) attachVertex(toAttach *heapDistanceToEdge) {
@@ -195,16 +195,21 @@ func (c *HeapableCircuit2DMinClones) attachVertex(toAttach *heapDistanceToEdge) 
 	delete(c.unattachedVertices, toAttach.vertex)
 
 	// 3. Update the circuit length and the distances increases as a result of the attached vertex.
+	c.length += edgeA.GetLength() + edgeB.GetLength() - toAttach.edge.GetLength()
 	// Complexity is O(n), due to updateDistanceIncrease looking through the circuit for the index of the vertex.
-	c.length += toAttach.distance
-	c.distanceIncreases[toAttach.vertex] = toAttach.distance
-	c.updateDistanceIncrease(toAttach.edge.GetStart())
-	c.updateDistanceIncrease(toAttach.edge.GetEnd())
+	// c.distanceIncreases[toAttach.vertex] = toAttach.distance
+	// c.updateDistanceIncrease(toAttach.edge.GetStart())
+	// c.updateDistanceIncrease(toAttach.edge.GetEnd())
 
 	// 4. Replace any references to the merged edge with two entries for the newly created edges..
 	//    Complexity is O(n)
+	distanceIncreases := c.getDistanceIncreases()
 	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
+		existingIncrease, okay := distanceIncreases[current.vertex]
+		if !okay {
+			existingIncrease = 0.0
+		}
 		if current.edge.Equals(toAttach.edge) {
 			if current.vertex.Equals(toAttach.vertex) {
 				return []interface{}{}
@@ -213,12 +218,20 @@ func (c *HeapableCircuit2DMinClones) attachVertex(toAttach *heapDistanceToEdge) 
 				&heapDistanceToEdge{
 					vertex:   current.vertex,
 					edge:     edgeA,
-					distance: edgeA.DistanceIncrease(current.vertex),
+					distance: edgeA.DistanceIncrease(current.vertex) - existingIncrease,
 				},
 				&heapDistanceToEdge{
 					vertex:   current.vertex,
 					edge:     edgeB,
-					distance: edgeB.DistanceIncrease(current.vertex),
+					distance: edgeB.DistanceIncrease(current.vertex) - existingIncrease,
+				},
+			}
+		} else if current.vertex.Equals(toAttach.vertex) || current.vertex.Equals(toAttach.edge.GetStart()) || current.vertex.Equals(toAttach.edge.GetEnd()) {
+			return []interface{}{
+				&heapDistanceToEdge{
+					vertex:   current.vertex,
+					edge:     current.edge,
+					distance: current.edge.DistanceIncrease(current.vertex) - existingIncrease,
 				},
 			}
 		} else {
@@ -237,16 +250,28 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 
 	// 4. Update the circuit distance by removing the old distance increase and adding in the new distance increase.
 	c.unattachedVertices[toDetach] = true
-	c.length -= c.distanceIncreases[toDetach]
-	c.distanceIncreases[toDetach] = 0
-	c.updateDistanceIncrease(mergedEdge.GetStart())
-	c.updateDistanceIncrease(mergedEdge.GetEnd())
+	c.length += mergedEdge.GetLength() - detachedEdgeA.GetLength() - detachedEdgeB.GetLength()
+	// c.distanceIncreases[toDetach]
+	// c.distanceIncreases[toDetach] = 0
+	// c.updateDistanceIncrease(mergedEdge.GetStart())
+	// c.updateDistanceIncrease(mergedEdge.GetEnd())
 
 	// 5. Replace any references to the merged edges in the heap with a single entry for the merged edge.
 	//    Complexity is O(n)
+	distanceIncreases := c.getDistanceIncreases()
+	replacedVertices := make(map[*Vertex2D]bool)
 	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
 		current := x.(*heapDistanceToEdge)
-		if current.edge.Equals(detachedEdgeA) {
+		existingIncrease, okay := distanceIncreases[current.vertex]
+		if !okay {
+			existingIncrease = 0.0
+		}
+		if current.edge.Equals(detachedEdgeA) || current.edge.Equals(detachedEdgeB) {
+			if replacedVertices[current.vertex] {
+				// Only create one entry for the merged edge, even if the source heap has two entries.
+				return []interface{}{}
+			}
+			replacedVertices[current.vertex] = true
 			// Do not allow an entry to be created for either of the vertices of the merged edge.
 			// For example, if point B is detached from between points A & C, point C could have an existing entry for A-B, which would be replaced by A-C.
 			// The way that this scenario happens is that B and C are both internal points, B is attached first, C is attached between B and D, leaving an entry for A-B for vertex C.
@@ -256,21 +281,26 @@ func (c *HeapableCircuit2DMinClones) detachVertex(toDetach model.CircuitVertex) 
 			return []interface{}{&heapDistanceToEdge{
 				vertex:   current.vertex,
 				edge:     mergedEdge,
-				distance: mergedEdge.DistanceIncrease(current.vertex),
+				distance: mergedEdge.DistanceIncrease(current.vertex) - existingIncrease,
 			}}
-		} else if current.edge.Equals(detachedEdgeB) {
-			// Only create one entry for the merged edge.
-			return []interface{}{}
+		} else if current.vertex.Equals(toDetach) || current.vertex.Equals(mergedEdge.GetStart()) || current.vertex.Equals(mergedEdge.GetEnd()) {
+			return []interface{}{
+				&heapDistanceToEdge{
+					vertex:   current.vertex,
+					edge:     current.edge,
+					distance: current.edge.DistanceIncrease(current.vertex) - existingIncrease,
+				},
+			}
 		} else {
 			return []interface{}{x}
 		}
 	})
 }
 
-func (c *HeapableCircuit2DMinClones) heapValueFunction(a interface{}) float64 {
-	e := a.(*heapDistanceToEdge)
-	return e.distance - c.distanceIncreases[e.vertex]
-}
+// func (c *HeapableCircuit2DMinClones) heapValueFunction(a interface{}) float64 {
+// 	e := a.(*heapDistanceToEdge)
+// 	return e.distance - c.distanceIncreases[e.vertex]
+// }
 
 func (c *HeapableCircuit2DMinClones) insertVertex(index int, vertex model.CircuitVertex) {
 	if index >= len(c.circuit) {
@@ -283,16 +313,37 @@ func (c *HeapableCircuit2DMinClones) insertVertex(index int, vertex model.Circui
 	}
 }
 
-func (c *HeapableCircuit2DMinClones) updateDistanceIncrease(vertex model.CircuitVertex) {
-	// No need to update convex vertices, since they will never be moved.
-	if c.convexVertices[vertex] {
-		return
-	}
-	index := model.IndexOfVertex(c.circuit, vertex)
+// func (c *HeapableCircuit2DMinClones) updateDistanceIncrease(vertex model.CircuitVertex) {
+// 	// No need to update convex vertices, since they will never be moved.
+// 	if c.convexVertices[vertex] {
+// 		return
+// 	}
+// 	index := model.IndexOfVertex(c.circuit, vertex)
+// 	circuitLen := len(c.circuit)
+// 	prev := c.circuit[(index-1+circuitLen)%circuitLen]
+// 	next := c.circuit[(index+1)%circuitLen]
+// 	c.distanceIncreases[vertex] = vertex.DistanceTo(prev) + vertex.DistanceTo(next) - prev.DistanceTo(next)
+// }
+
+func (c *HeapableCircuit2DMinClones) getDistanceIncreases() map[model.CircuitVertex]float64 {
+	distanceIncreases := make(map[model.CircuitVertex]float64)
 	circuitLen := len(c.circuit)
-	prev := c.circuit[(index-1+circuitLen)%circuitLen]
-	next := c.circuit[(index+1)%circuitLen]
-	c.distanceIncreases[vertex] = vertex.DistanceTo(prev) + vertex.DistanceTo(next) - prev.DistanceTo(next)
+	if circuitLen >= 3 {
+		prevIndex := circuitLen - 1
+		nextIndex := 1
+		for i, v := range c.circuit {
+			// No need to include convex vertices, since they will never be moved.
+			if !c.convexVertices[v] {
+				prev := c.circuit[prevIndex]
+				next := c.circuit[nextIndex]
+				distanceIncreases[v] = v.DistanceTo(prev) + v.DistanceTo(next) - prev.DistanceTo(next)
+			}
+			prevIndex = i
+			nextIndex = (nextIndex + 1) % circuitLen
+		}
+	}
+
+	return distanceIncreases
 }
 
 var _ model.HeapableCircuit = (*HeapableCircuit2DMinClones)(nil)

@@ -8,7 +8,7 @@ import (
 )
 
 type HeapableCircuit2D struct {
-	Vertices           []*Vertex2D
+	Vertices           []model.CircuitVertex
 	circuit            []model.CircuitVertex
 	circuitEdges       []model.CircuitEdge
 	closestEdges       *model.Heap
@@ -43,14 +43,14 @@ func getDistanceToEdgeForHeap(a interface{}) float64 {
 func (c *HeapableCircuit2D) BuildPerimiter() {
 	// 1. Find point farthest from midpoint
 	// Restricts problem-space to a circle around the midpoint, with radius equal to the distance to the point.
-	farthestFromMid := findFarthestPoint(c.midpoint, c.Vertices)
+	farthestFromMid := findFarthestPoint(c.midpoint, c.Vertices).(*Vertex2D)
 	delete(c.unattachedVertices, farthestFromMid)
 	c.circuit = append(c.circuit, farthestFromMid)
 
 	// 2. Find point farthest from point in step 1.
 	// Restricts problem-space to intersection of step 1 circle,
 	// and a circle centered on the point from step 1 with a radius equal to the distance between the points found in step 1 and 2.
-	farthestFromFarthest := findFarthestPoint(farthestFromMid, c.Vertices)
+	farthestFromFarthest := findFarthestPoint(farthestFromMid, c.Vertices).(*Vertex2D)
 	delete(c.unattachedVertices, farthestFromFarthest)
 	c.circuit = append(c.circuit, farthestFromFarthest)
 
@@ -165,7 +165,7 @@ func (c *HeapableCircuit2D) CloneAndUpdate() model.HeapableCircuit {
 		//     clone the circuit so that in the clone the vertex will be attached to the 'next closest' edge,
 		//     but in the original circuit that vertex can attach to a different edge.
 		clone := &HeapableCircuit2D{
-			Vertices:           append(make([]*Vertex2D, 0, len(c.Vertices)), c.Vertices...),
+			Vertices:           append(make([]model.CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
 			circuit:            append(make([]model.CircuitVertex, 0, len(c.circuit)), c.circuit...),
 			circuitEdges:       append(make([]model.CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
 			closestEdges:       c.closestEdges.Clone(),
@@ -223,15 +223,16 @@ func (c *HeapableCircuit2D) Prepare() {
 	c.circuitEdges = []model.CircuitEdge{}
 	c.length = 0.0
 
-	c.Vertices = deduplicateVertices(c.Vertices)
+	c.Vertices = DeduplicateVertices(c.Vertices)
 
 	numVertices := float64(len(c.Vertices))
 	c.midpoint = &Vertex2D{0.0, 0.0}
 
 	for _, v := range c.Vertices {
 		c.unattachedVertices[v] = true
-		c.midpoint.X += v.X / numVertices
-		c.midpoint.Y += v.Y / numVertices
+		v2d := v.(*Vertex2D)
+		c.midpoint.X += v2d.X / numVertices
+		c.midpoint.Y += v2d.Y / numVertices
 	}
 }
 

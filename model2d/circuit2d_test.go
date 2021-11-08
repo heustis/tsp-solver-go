@@ -10,7 +10,7 @@ import (
 func TestBuildPerimeter(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 			NewVertex2D(-15, -15), // Index 0 after sorting
 			NewVertex2D(0, 0),     // Index 2 after sorting
@@ -36,11 +36,11 @@ func TestBuildPerimeter(t *testing.T) {
 	assert.Equal(circuit.circuit, circuit.GetAttachedVertices())
 
 	assert.Len(circuit.circuitEdges, 5)
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[7]), circuit.circuitEdges[0])
-	assert.Equal(NewEdge2D(circuit.Vertices[7], circuit.Vertices[6]), circuit.circuitEdges[1])
-	assert.Equal(NewEdge2D(circuit.Vertices[6], circuit.Vertices[4]), circuit.circuitEdges[2])
-	assert.Equal(NewEdge2D(circuit.Vertices[4], circuit.Vertices[1]), circuit.circuitEdges[3])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]), circuit.circuitEdges[4])
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[7].(*Vertex2D)), circuit.circuitEdges[0])
+	assert.Equal(NewEdge2D(circuit.Vertices[7].(*Vertex2D), circuit.Vertices[6].(*Vertex2D)), circuit.circuitEdges[1])
+	assert.Equal(NewEdge2D(circuit.Vertices[6].(*Vertex2D), circuit.Vertices[4].(*Vertex2D)), circuit.circuitEdges[2])
+	assert.Equal(NewEdge2D(circuit.Vertices[4].(*Vertex2D), circuit.Vertices[1].(*Vertex2D)), circuit.circuitEdges[3])
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[0].(*Vertex2D)), circuit.circuitEdges[4])
 
 	assert.Len(circuit.interiorVertices, 3)
 	assert.True(circuit.interiorVertices[circuit.Vertices[2]])
@@ -72,7 +72,7 @@ func TestBuildPerimeter(t *testing.T) {
 func TestFindNextVertexAndEdge(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(-15, -15),
 			NewVertex2D(0, 0),
 			NewVertex2D(15, -15),
@@ -126,7 +126,7 @@ func TestFindNextVertexAndEdge(t *testing.T) {
 func TestPrepare(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(-15, -15),
 			NewVertex2D(0, 0),
 			NewVertex2D(15, -15),
@@ -177,7 +177,7 @@ func TestPrepare(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 			NewVertex2D(-15, -15), // Index 0 after sorting
 			NewVertex2D(0, 0),     // Index 2 after sorting
@@ -208,12 +208,12 @@ func TestUpdate(t *testing.T) {
 	assert.Len(circuit.closestEdges, 3)
 	assert.Len(circuit.unattachedVertices, 2)
 
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[7]), circuit.circuitEdges[0])
-	assert.Equal(NewEdge2D(circuit.Vertices[7], circuit.Vertices[5]), circuit.circuitEdges[1])
-	assert.Equal(NewEdge2D(circuit.Vertices[5], circuit.Vertices[6]), circuit.circuitEdges[2])
-	assert.Equal(NewEdge2D(circuit.Vertices[6], circuit.Vertices[4]), circuit.circuitEdges[3])
-	assert.Equal(NewEdge2D(circuit.Vertices[4], circuit.Vertices[1]), circuit.circuitEdges[4])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]), circuit.circuitEdges[5])
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[7].(*Vertex2D)), circuit.circuitEdges[0])
+	assert.Equal(NewEdge2D(circuit.Vertices[7].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.circuitEdges[1])
+	assert.Equal(NewEdge2D(circuit.Vertices[5].(*Vertex2D), circuit.Vertices[6].(*Vertex2D)), circuit.circuitEdges[2])
+	assert.Equal(NewEdge2D(circuit.Vertices[6].(*Vertex2D), circuit.Vertices[4].(*Vertex2D)), circuit.circuitEdges[3])
+	assert.Equal(NewEdge2D(circuit.Vertices[4].(*Vertex2D), circuit.Vertices[1].(*Vertex2D)), circuit.circuitEdges[4])
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[0].(*Vertex2D)), circuit.circuitEdges[5])
 
 	assert.Equal(NewVertex2D(8, 5), circuit.circuit[2])
 	assert.Equal(NewVertex2D(9, 6), circuit.circuit[3])
@@ -227,13 +227,13 @@ func TestUpdate(t *testing.T) {
 	assert.Len(circuit.closestEdges, 3)
 	assert.Len(circuit.unattachedVertices, 1)
 
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[7]), circuit.circuitEdges[0])
-	assert.Equal(NewEdge2D(circuit.Vertices[7], circuit.Vertices[3]), circuit.circuitEdges[1])
-	assert.Equal(NewEdge2D(circuit.Vertices[3], circuit.Vertices[5]), circuit.circuitEdges[2])
-	assert.Equal(NewEdge2D(circuit.Vertices[5], circuit.Vertices[6]), circuit.circuitEdges[3])
-	assert.Equal(NewEdge2D(circuit.Vertices[6], circuit.Vertices[4]), circuit.circuitEdges[4])
-	assert.Equal(NewEdge2D(circuit.Vertices[4], circuit.Vertices[1]), circuit.circuitEdges[5])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]), circuit.circuitEdges[6])
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[7].(*Vertex2D)), circuit.circuitEdges[0])
+	assert.Equal(NewEdge2D(circuit.Vertices[7].(*Vertex2D), circuit.Vertices[3].(*Vertex2D)), circuit.circuitEdges[1])
+	assert.Equal(NewEdge2D(circuit.Vertices[3].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.circuitEdges[2])
+	assert.Equal(NewEdge2D(circuit.Vertices[5].(*Vertex2D), circuit.Vertices[6].(*Vertex2D)), circuit.circuitEdges[3])
+	assert.Equal(NewEdge2D(circuit.Vertices[6].(*Vertex2D), circuit.Vertices[4].(*Vertex2D)), circuit.circuitEdges[4])
+	assert.Equal(NewEdge2D(circuit.Vertices[4].(*Vertex2D), circuit.Vertices[1].(*Vertex2D)), circuit.circuitEdges[5])
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[0].(*Vertex2D)), circuit.circuitEdges[6])
 
 	assert.Equal(NewVertex2D(3, 0), circuit.circuit[2])
 	assert.Equal(NewVertex2D(8, 5), circuit.circuit[3])
@@ -248,14 +248,14 @@ func TestUpdate(t *testing.T) {
 	assert.Len(circuit.closestEdges, 3)
 	assert.Len(circuit.unattachedVertices, 0)
 
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[7]), circuit.circuitEdges[0])
-	assert.Equal(NewEdge2D(circuit.Vertices[7], circuit.Vertices[2]), circuit.circuitEdges[1])
-	assert.Equal(NewEdge2D(circuit.Vertices[2], circuit.Vertices[3]), circuit.circuitEdges[2])
-	assert.Equal(NewEdge2D(circuit.Vertices[3], circuit.Vertices[5]), circuit.circuitEdges[3])
-	assert.Equal(NewEdge2D(circuit.Vertices[5], circuit.Vertices[6]), circuit.circuitEdges[4])
-	assert.Equal(NewEdge2D(circuit.Vertices[6], circuit.Vertices[4]), circuit.circuitEdges[5])
-	assert.Equal(NewEdge2D(circuit.Vertices[4], circuit.Vertices[1]), circuit.circuitEdges[6])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[0]), circuit.circuitEdges[7])
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[7].(*Vertex2D)), circuit.circuitEdges[0])
+	assert.Equal(NewEdge2D(circuit.Vertices[7].(*Vertex2D), circuit.Vertices[2].(*Vertex2D)), circuit.circuitEdges[1])
+	assert.Equal(NewEdge2D(circuit.Vertices[2].(*Vertex2D), circuit.Vertices[3].(*Vertex2D)), circuit.circuitEdges[2])
+	assert.Equal(NewEdge2D(circuit.Vertices[3].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.circuitEdges[3])
+	assert.Equal(NewEdge2D(circuit.Vertices[5].(*Vertex2D), circuit.Vertices[6].(*Vertex2D)), circuit.circuitEdges[4])
+	assert.Equal(NewEdge2D(circuit.Vertices[6].(*Vertex2D), circuit.Vertices[4].(*Vertex2D)), circuit.circuitEdges[5])
+	assert.Equal(NewEdge2D(circuit.Vertices[4].(*Vertex2D), circuit.Vertices[1].(*Vertex2D)), circuit.circuitEdges[6])
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[0].(*Vertex2D)), circuit.circuitEdges[7])
 
 	assert.Equal(NewVertex2D(0, 0), circuit.circuit[2])
 	assert.Equal(NewVertex2D(3, 0), circuit.circuit[3])
@@ -273,7 +273,7 @@ func TestUpdate(t *testing.T) {
 func TestUpdate_ShouldRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserThanPreviousEdge(t *testing.T) {
 	assert := assert.New(t)
 	circuit := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(0, 0),
 			NewVertex2D(4.7, 2.0),
 			NewVertex2D(5.0, 2.25),
@@ -295,22 +295,22 @@ func TestUpdate_ShouldRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserT
 	assert.Equal(circuit.Vertices[1], circuit.circuit[1])
 	assert.Equal(circuit.Vertices[4], circuit.circuit[3])
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[1]])
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[5]), circuit.closestEdges[circuit.Vertices[1]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[1]].edge)
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[2]])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[5]), circuit.closestEdges[circuit.Vertices[2]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[2]].edge)
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[4]])
-	assert.Equal(NewEdge2D(circuit.Vertices[5], circuit.Vertices[3]), circuit.closestEdges[circuit.Vertices[4]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[5].(*Vertex2D), circuit.Vertices[3].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[4]].edge)
 
 	circuit.Update(circuit.FindNextVertexAndEdge())
 	assert.Len(circuit.circuit, 5)
 	assert.Equal(circuit.Vertices[1], circuit.circuit[1])
 	assert.Equal(circuit.Vertices[2], circuit.circuit[2])
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[1]])
-	assert.Equal(NewEdge2D(circuit.Vertices[0], circuit.Vertices[2]), circuit.closestEdges[circuit.Vertices[1]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[0].(*Vertex2D), circuit.Vertices[2].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[1]].edge)
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[2]])
-	assert.Equal(NewEdge2D(circuit.Vertices[1], circuit.Vertices[5]), circuit.closestEdges[circuit.Vertices[2]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[1].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[2]].edge)
 	assert.NotNil(circuit.closestEdges[circuit.Vertices[4]])
-	assert.Equal(NewEdge2D(circuit.Vertices[2], circuit.Vertices[5]), circuit.closestEdges[circuit.Vertices[4]].edge)
+	assert.Equal(NewEdge2D(circuit.Vertices[2].(*Vertex2D), circuit.Vertices[5].(*Vertex2D)), circuit.closestEdges[circuit.Vertices[4]].edge)
 
 	circuit.Update(circuit.FindNextVertexAndEdge())
 	assert.Len(circuit.circuit, 6)
@@ -325,7 +325,7 @@ func TestUpdate_ShouldRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserT
 func TestInsertVertex(t *testing.T) {
 	assert := assert.New(t)
 	c := &Circuit2D{
-		Vertices: []*Vertex2D{
+		Vertices: []model.CircuitVertex{
 			NewVertex2D(-15, -15),
 			NewVertex2D(0, 0),
 			NewVertex2D(15, -15),

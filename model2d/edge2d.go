@@ -1,6 +1,10 @@
 package model2d
 
-import "github.com/fealos/lee-tsp-go/model"
+import (
+	"fmt"
+
+	"github.com/fealos/lee-tsp-go/model"
+)
 
 // Edge2D represents the line segment between two points
 type Edge2D struct {
@@ -57,6 +61,11 @@ func (e *Edge2D) Merge(other model.CircuitEdge) model.CircuitEdge {
 // Split creates two new edges "start-to-vertex" and "vertex-to-end" based on this edge and the supplied vertex.
 func (e *Edge2D) Split(vertex model.CircuitVertex) (model.CircuitEdge, model.CircuitEdge) {
 	return NewEdge2D(e.Start, vertex.(*Vertex2D)), NewEdge2D(vertex.(*Vertex2D), e.End)
+}
+
+// ToString prints the edge as a string.
+func (e *Edge2D) ToString() string {
+	return fmt.Sprintf(`{"start":%s,"end":%s}`, e.Start.ToString(), e.End.ToString())
 }
 
 // NewEdge2D creates a edge from the starting Vertex2D to the ending Vertex2D
