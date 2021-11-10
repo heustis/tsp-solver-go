@@ -2,7 +2,7 @@ package solver
 
 import "github.com/fealos/lee-tsp-go/model"
 
-func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit, int) {
+func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit, int, int) {
 	circuit.Prepare()
 	circuit.BuildPerimiter()
 
@@ -22,8 +22,10 @@ func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit,
 		iterationCount++
 	}
 
+	numClones := circuitHeap.Len()
+
 	// clean up the heap and each circuitHeap
 	circuitHeap.Delete()
 
-	return next, iterationCount
+	return next, iterationCount, numClones
 }
