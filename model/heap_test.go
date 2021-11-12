@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -84,7 +83,7 @@ func TestAnyMatch(t *testing.T) {
 	}))
 
 	assert.False(h1.AnyMatch(func(x interface{}) bool {
-		_, okay := x.(*model2d.Circuit2D)
+		_, okay := x.(*model.CircuitGreedyImpl)
 		return okay
 	}))
 

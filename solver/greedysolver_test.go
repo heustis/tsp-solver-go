@@ -32,9 +32,7 @@ func TestFindShortestPathGreedy_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		circuit := &model2d.Circuit2D{
-			Vertices: vertices,
-		}
+		circuit := model.NewCircuitGreedyWithUpdatesImpl(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
 		FindShortestPathGreedy(circuit)
 		shortest := circuit.GetAttachedVertices()
 		actual := circuit.GetLength()

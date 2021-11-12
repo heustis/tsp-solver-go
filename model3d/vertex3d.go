@@ -28,6 +28,10 @@ func (v *Vertex3D) DistanceToSquared(other *Vertex3D) float64 {
 	return xDiff*xDiff + yDiff*yDiff + zDiff*zDiff
 }
 
+func (v *Vertex3D) EdgeTo(end model.CircuitVertex) model.CircuitEdge {
+	return NewEdge3D(v, end.(*Vertex3D))
+}
+
 func (v *Vertex3D) Equals(other interface{}) bool {
 	// Compare pointers first, for performance, but then check X and Y, in case the same vertex is created multiple times.
 	if v == other {
@@ -46,8 +50,7 @@ func (v *Vertex3D) FindClosestEdge(currentCircuit []model.CircuitEdge) model.Cir
 	var closest model.CircuitEdge = nil
 	closestDistanceIncrease := math.MaxFloat64
 	for _, candidate := range currentCircuit {
-		candidateDistanceIncrease := candidate.DistanceIncrease(v)
-		if candidateDistanceIncrease < closestDistanceIncrease {
+		if candidateDistanceIncrease := candidate.DistanceIncrease(v); candidateDistanceIncrease < closestDistanceIncrease {
 			closest = candidate
 			closestDistanceIncrease = candidateDistanceIncrease
 		}

@@ -39,6 +39,8 @@ type CircuitVertex interface {
 	Printable
 	// DistanceTo returns the distance between the two vertices; this should always be a positive number.
 	DistanceTo(other CircuitVertex) float64
+	// EdgeTo creates a new CircuitEdge from this point (start) to the supplied point (end).
+	EdgeTo(end CircuitVertex) CircuitEdge
 	// FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
 	FindClosestEdge(currentCircuit []CircuitEdge) CircuitEdge
 	// IsEdgeCloser checks if the supplied edge is closer than the current closest edge.

@@ -44,6 +44,7 @@ type HeapableCircuit interface {
 type PerimeterBuilder interface {
 	// BuildPerimeter creates an initial circuit, using the minimum vertices required to fully enclose the other (interior) vertices.
 	// For example, when using 2-D points, this constructs a convex polygon such that all points are either vertices or inside the polygon.
+	// This returns the perimeter as an array of vertices, as well as the perimeter an array of edges, and a map of unattached vertices.
 	// This is the second step in the TSP solver.
 	BuildPerimiter(verticesArg []CircuitVertex) ([]CircuitVertex, []CircuitEdge, map[CircuitVertex]bool)
 }

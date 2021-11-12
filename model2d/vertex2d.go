@@ -26,6 +26,10 @@ func (v *Vertex2D) DistanceToSquared(other *Vertex2D) float64 {
 	return xDiff*xDiff + yDiff*yDiff
 }
 
+func (v *Vertex2D) EdgeTo(end model.CircuitVertex) model.CircuitEdge {
+	return NewEdge2D(v, end.(*Vertex2D))
+}
+
 func (v *Vertex2D) Equals(other interface{}) bool {
 	// Compare pointers first, for performance, but then check X and Y, in case the same vertex is created multiple times.
 	if v == other {
@@ -41,21 +45,17 @@ func (v *Vertex2D) Equals(other interface{}) bool {
 func (v *Vertex2D) FindClosestEdge(currentCircuit []model.CircuitEdge) model.CircuitEdge {
 	var closest model.CircuitEdge = nil
 	closestDistanceIncrease := math.MaxFloat64
-	// temp := []*distanceToEdge{}
 	for _, candidate := range currentCircuit {
+		// Ignore edges already containing the vertex.
+		if candidate.GetEnd() == v || candidate.GetStart() == v {
+			continue
+		}
 		candidateDistanceIncrease := candidate.DistanceIncrease(v)
-		// temp = append(temp, &distanceToEdge{
-		// 	edge:     candidate,
-		// 	distance: candidateDistanceIncrease,
-		// })
 		if candidateDistanceIncrease < closestDistanceIncrease {
 			closest = candidate
 			closestDistanceIncrease = candidateDistanceIncrease
 		}
 	}
-	// sort.Slice(temp, func(i, j int) bool {
-	// 	return temp[i].distance < temp[j].distance
-	// })
 	return closest
 }
 
