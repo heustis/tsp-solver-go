@@ -1,5 +1,7 @@
 package model
 
+import "container/list"
+
 // Threshold defines how close two values can be and still be considered identical (e.g. for de-duplicating points).
 const Threshold = 0.0000001
 
@@ -43,6 +45,8 @@ type CircuitVertex interface {
 	EdgeTo(end CircuitVertex) CircuitEdge
 	// FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
 	FindClosestEdge(currentCircuit []CircuitEdge) CircuitEdge
+	// FindClosestEdgeList finds, and returns, the edge that is the closest to the vertex in the supplied linked list.
+	FindClosestEdgeList(currentCircuit *list.List) CircuitEdge
 	// IsEdgeCloser checks if the supplied edge is closer than the current closest edge.
 	IsEdgeCloser(candidateEdge CircuitEdge, currentEdge CircuitEdge) bool
 }

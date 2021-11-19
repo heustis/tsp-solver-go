@@ -79,6 +79,17 @@ func (h *Heap) DeleteAll(shouldDelete func(x interface{}) bool) []interface{} {
 	return deleted
 }
 
+// GetValues returns all items in the heap. If any of the items in the heap (or the array) are modified, Heapify() should be called on this heap.
+func (h *Heap) GetValues() []interface{} {
+	return h.arr
+}
+
+// Heapify ensures that the heap is ordered correctly.
+// The complexity is O(n) per heap.Init().
+func (h *Heap) Heapify() {
+	heap.Init(h)
+}
+
 // Push is required by heap.Interface, and is used by the heap package.
 // PushHeap or PushAll should be used instead of Push to add a new item to the heap, since this will not update the location of the new item to the correct position in the heap.
 func (h *Heap) Push(x interface{}) {
@@ -153,6 +164,29 @@ func (h *Heap) ReplaceAll(replaceFunction func(x interface{}) []interface{}) {
 
 	for _, v := range h.arr {
 		updated = append(updated, replaceFunction(v)...)
+	}
+
+	h.arr = updated
+	heap.Init(h)
+}
+
+// ReplaceAll2 creates a copy of the heap, using the supplied function to replace items in the heap; this modifies the original heap.
+// "replaceFunction" should return one of the following:
+//   - nil or an empty array if the item should be excluded,
+//   - a single item that should replace the original item,
+//   - the original item if it should be retained unchanged, or
+//   - an array with one or more items if the original item should be replaced.
+// The complexity is O(n) due to needing to check each entry for replacement, then re-heapifying the updated data.
+func (h *Heap) ReplaceAll2(replaceFunction func(x interface{}) interface{}) {
+	updated := make([]interface{}, 0, h.Len())
+
+	for _, x := range h.arr {
+		replacement := replaceFunction(x)
+		if replacementArray, okay := replacement.([]interface{}); okay {
+			updated = append(updated, replacementArray...)
+		} else if replacement != nil {
+			updated = append(updated, replacement)
+		}
 	}
 
 	h.arr = updated

@@ -10,7 +10,6 @@ type CircuitGreedyWithUpdatesImpl struct {
 	Vertices           []CircuitVertex
 	deduplicator       func([]CircuitVertex) []CircuitVertex
 	perimeterBuilder   PerimeterBuilder
-	circuit            []CircuitVertex
 	circuitEdges       []CircuitEdge
 	closestEdges       *Heap
 	interiorVertices   map[CircuitVertex]bool
@@ -26,7 +25,7 @@ func NewCircuitGreedyWithUpdatesImpl(vertices []CircuitVertex, deduplicator func
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) BuildPerimiter() {
-	c.circuit, c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
+	_, c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
 	// Find the closest edge for all interior points, based on distance increase (rather than perpendicular distance)
 	for vertex := range c.unattachedVertices {
@@ -53,7 +52,11 @@ func (c *CircuitGreedyWithUpdatesImpl) GetAttachedEdges() []CircuitEdge {
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) GetAttachedVertices() []CircuitVertex {
-	return c.circuit
+	vertices := make([]CircuitVertex, len(c.circuitEdges))
+	for i, edge := range c.circuitEdges {
+		vertices[i] = edge.GetStart()
+	}
+	return vertices
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) GetClosestEdges() *Heap {
@@ -80,20 +83,15 @@ func (c *CircuitGreedyWithUpdatesImpl) Prepare() {
 	c.interiorVertices = make(map[CircuitVertex]bool)
 	c.unattachedVertices = make(map[CircuitVertex]bool)
 	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
-	c.circuit = []CircuitVertex{}
 	c.circuitEdges = []CircuitEdge{}
 
 	c.Vertices = c.deduplicator(c.Vertices)
-
-	for _, v := range c.Vertices {
-		c.unattachedVertices[v] = true
-	}
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) Update(vertexToAdd CircuitVertex, edgeToSplit CircuitEdge) {
 	if vertexToAdd != nil {
 		var edgeIndex int
-		c.circuitEdges, edgeIndex = SplitEdge2(c.circuitEdges, edgeToSplit, vertexToAdd)
+		c.circuitEdges, edgeIndex = SplitEdge(c.circuitEdges, edgeToSplit, vertexToAdd)
 		if edgeIndex < 0 {
 			expectedEdgeJson, _ := json.Marshal(edgeToSplit)
 			actualCircuitJson, _ := json.Marshal(c.circuitEdges)
@@ -101,18 +99,21 @@ func (c *CircuitGreedyWithUpdatesImpl) Update(vertexToAdd CircuitVertex, edgeToS
 			panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s \nvertices=%s", c, string(expectedEdgeJson), string(actualCircuitJson), string(initialVertices)))
 		}
 
-		c.circuit = InsertVertex(c.circuit, edgeIndex+1, vertexToAdd)
 		delete(c.unattachedVertices, vertexToAdd)
 		c.updateInteriorPoints(edgeToSplit, c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1])
 	}
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) getClosestEdgeForAttachedPoint(vertex CircuitVertex) CircuitEdge {
-	vertexIndex := IndexOfVertex(c.circuit, vertex)
-	interiorLen := len(c.circuit)
-	previousVertex := c.circuit[(vertexIndex+interiorLen-1)%interiorLen]
-	nextVertex := c.circuit[(vertexIndex+1)%interiorLen]
-	return previousVertex.EdgeTo(nextVertex)
+	prev := c.circuitEdges[len(c.circuitEdges)-1]
+	for _, edge := range c.circuitEdges {
+		if edge.GetStart() == vertex {
+			return prev.GetStart().EdgeTo(edge.GetEnd())
+		}
+
+		prev = edge
+	}
+	return nil
 }
 
 func (c *CircuitGreedyWithUpdatesImpl) updateInteriorPoints(removedEdge CircuitEdge, edgeA CircuitEdge, edgeB CircuitEdge) {
@@ -125,7 +126,7 @@ func (c *CircuitGreedyWithUpdatesImpl) updateInteriorPoints(removedEdge CircuitE
 		closestAttached := c.getClosestEdgeForAttachedPoint(vertex)
 		previousDistance := closestAttached.DistanceIncrease(vertex)
 		if edgeA.DistanceIncrease(vertex) < previousDistance || edgeB.DistanceIncrease(vertex) < previousDistance {
-			c.circuit = DeleteVertex2(c.circuit, vertex)
+			c.unattachedVertices[vertex] = true
 			c.circuitEdges, _, _, _ = MergeEdges2(c.circuitEdges, vertex)
 			// This will be  updated by ReplaceAll in the next step, so the edge value and distance are unimportant.
 			c.closestEdges.PushHeap(&DistanceToEdge{
@@ -137,11 +138,11 @@ func (c *CircuitGreedyWithUpdatesImpl) updateInteriorPoints(removedEdge CircuitE
 	}
 
 	// Since multiple edges could have been replaced (due to both the newly attached point and any removed points) recalculate the closest edge for each unattached vertex.
-	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
+	c.closestEdges.ReplaceAll2(func(x interface{}) interface{} {
 		previous := x.(*DistanceToEdge)
 		previous.Edge = previous.Vertex.FindClosestEdge(c.circuitEdges)
 		previous.Distance = previous.Edge.DistanceIncrease(previous.Vertex)
-		return []interface{}{previous}
+		return previous
 	})
 }
 

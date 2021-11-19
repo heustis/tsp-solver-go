@@ -102,7 +102,7 @@ func TestPrepare_Greedy(t *testing.T) {
 	})
 
 	assert.NotNil(circuit.GetUnattachedVertices())
-	assert.Len(circuit.GetUnattachedVertices(), 7)
+	assert.Len(circuit.GetUnattachedVertices(), 0)
 
 	assert.NotNil(circuit.GetClosestEdges())
 	assert.Equal(0, circuit.GetClosestEdges().Len())

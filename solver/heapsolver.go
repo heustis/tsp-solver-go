@@ -24,8 +24,14 @@ func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit,
 
 	numClones := circuitHeap.Len()
 
+	result := &model.HeapableCircuitComplete{
+		Circuit: next.GetAttachedVertices(),
+		Length:  next.GetLength(),
+	}
+
 	// clean up the heap and each circuitHeap
 	circuitHeap.Delete()
+	next.Delete()
 
-	return next, iterationCount, numClones
+	return result, iterationCount, numClones
 }

@@ -240,6 +240,78 @@ func TestReplaceAll(t *testing.T) {
 	assert.Equal(3, h2.Len())
 }
 
+func TestReplaceAll2(t *testing.T) {
+	assert := assert.New(t)
+
+	h1 := model.NewHeap(getVal)
+	h1.PushHeap(&testEntry{2.34})
+	h1.PushHeap(&testEntry{3.45})
+	h1.PushHeap(&testEntry{1.23})
+	h1.PushHeap(&testEntry{4})
+	h1.PushHeap(&testEntry{5})
+	h1.PushHeap(&testEntry{6})
+	h1.PushHeap(&testEntry{7})
+
+	h2 := h1.Clone()
+	h2.ReplaceAll2(func(x interface{}) interface{} {
+		i := int(x.(*testEntry).val)
+		if i%3 == 0 {
+			return nil
+		} else if i%2 == 0 {
+			return []interface{}{x, &testEntry{val: float64(i) * 2.0}, &testEntry{val: float64(i) * 0.5}}
+		}
+		return x
+	})
+
+	assert.Equal(7, h1.Len())
+	assert.Equal(9, h2.Len())
+
+	assert.Equal(&testEntry{1.23}, h1.Peek())
+	assert.Equal(&testEntry{1.23}, h1.PopHeap())
+	assert.Equal(6, h1.Len())
+	assert.Equal(9, h2.Len())
+
+	assert.Equal(&testEntry{1.0}, h2.Peek())
+	assert.Equal(&testEntry{1.0}, h2.PopHeap())
+	assert.Equal(6, h1.Len())
+	assert.Equal(8, h2.Len())
+
+	assert.Equal(&testEntry{1.23}, h2.Peek())
+	assert.Equal(&testEntry{1.23}, h2.PopHeap())
+	assert.Equal(6, h1.Len())
+	assert.Equal(7, h2.Len())
+
+	assert.Equal(&testEntry{2.34}, h1.Peek())
+	assert.Equal(&testEntry{2.34}, h1.PopHeap())
+	assert.Equal(5, h1.Len())
+	assert.Equal(7, h2.Len())
+
+	assert.Equal(&testEntry{3.45}, h1.Peek())
+	assert.Equal(&testEntry{3.45}, h1.PopHeap())
+	assert.Equal(4, h1.Len())
+	assert.Equal(7, h2.Len())
+
+	assert.Equal(&testEntry{2.0}, h2.Peek())
+	assert.Equal(&testEntry{2.0}, h2.PopHeap())
+	assert.Equal(4, h1.Len())
+	assert.Equal(6, h2.Len())
+
+	assert.Equal(&testEntry{2.34}, h2.Peek())
+	assert.Equal(&testEntry{2.34}, h2.PopHeap())
+	assert.Equal(4, h1.Len())
+	assert.Equal(5, h2.Len())
+
+	assert.Equal(&testEntry{4.0}, h2.Peek())
+	assert.Equal(&testEntry{4.0}, h2.PopHeap())
+	assert.Equal(4, h1.Len())
+	assert.Equal(4, h2.Len())
+
+	assert.Equal(&testEntry{4.0}, h2.Peek())
+	assert.Equal(&testEntry{4.0}, h2.PopHeap())
+	assert.Equal(4, h1.Len())
+	assert.Equal(3, h2.Len())
+}
+
 func TestToString_Heap(t *testing.T) {
 	assert := assert.New(t)
 

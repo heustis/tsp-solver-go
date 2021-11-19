@@ -107,7 +107,7 @@ func TestPrepare_GreedyWithUpdates(t *testing.T) {
 	})
 
 	assert.NotNil(circuit.GetUnattachedVertices())
-	assert.Len(circuit.GetUnattachedVertices(), 7)
+	assert.Len(circuit.GetUnattachedVertices(), 0)
 
 	assert.NotNil(circuit.GetInteriorVertices())
 	assert.Len(circuit.GetInteriorVertices(), 0)
