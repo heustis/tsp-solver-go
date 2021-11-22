@@ -12,6 +12,7 @@ type CircuitGreedyImpl struct {
 	circuitEdges       []CircuitEdge
 	closestEdges       *Heap
 	unattachedVertices map[CircuitVertex]bool
+	length             float64
 }
 
 func NewCircuitGreedyImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) Circuit {
@@ -33,6 +34,11 @@ func (c *CircuitGreedyImpl) BuildPerimiter() {
 			Edge:     closest,
 			Distance: closest.DistanceIncrease(vertex),
 		})
+	}
+
+	c.length = 0.0
+	for _, edge := range c.circuitEdges {
+		c.length += edge.GetLength()
 	}
 }
 
@@ -61,11 +67,7 @@ func (c *CircuitGreedyImpl) GetClosestEdges() *Heap {
 }
 
 func (c *CircuitGreedyImpl) GetLength() float64 {
-	length := 0.0
-	for _, edge := range c.circuitEdges {
-		length += edge.GetLength()
-	}
-	return length
+	return c.length
 }
 
 func (c *CircuitGreedyImpl) GetUnattachedVertices() map[CircuitVertex]bool {
@@ -76,6 +78,7 @@ func (c *CircuitGreedyImpl) Prepare() {
 	c.unattachedVertices = make(map[CircuitVertex]bool)
 	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
 	c.circuitEdges = []CircuitEdge{}
+	c.length = 0.0
 
 	c.Vertices = c.deduplicator(c.Vertices)
 }
@@ -96,6 +99,7 @@ func (c *CircuitGreedyImpl) Update(vertexToAdd CircuitVertex, edgeToSplit Circui
 }
 
 func (c *CircuitGreedyImpl) updateInteriorPoints(removedEdge CircuitEdge, edgeA CircuitEdge, edgeB CircuitEdge) {
+	c.length += edgeA.GetLength() + edgeB.GetLength() - removedEdge.GetLength()
 	for _, x := range c.closestEdges.GetValues() {
 		previous := x.(*DistanceToEdge)
 		distA := edgeA.DistanceIncrease(previous.Vertex)

@@ -260,3 +260,32 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 	v, _ := circuit.FindNextVertexAndEdge()
 	assert.Nil(v)
 }
+
+func TestUpdate_Greedy_ShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
+	assert := assert.New(t)
+	circuit := model.NewCircuitGreedyImpl([]model.CircuitVertex{
+		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	},
+		model2d.DeduplicateVertices,
+		&model2d.PerimeterBuilder2D{},
+	).(*model.CircuitGreedyImpl)
+
+	circuit.Prepare()
+	circuit.BuildPerimiter()
+
+	assert.Len(circuit.Vertices, 8)
+	assert.Len(circuit.GetAttachedVertices(), 5)
+	assert.Len(circuit.GetAttachedEdges(), 5)
+	assert.Len(circuit.GetUnattachedVertices(), 3)
+	assert.Equal(3, circuit.GetClosestEdges().Len())
+
+	assert.Panics(func() { circuit.Update(circuit.Vertices[2], circuit.Vertices[0].EdgeTo(circuit.Vertices[4])) })
+}
