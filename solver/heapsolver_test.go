@@ -26,7 +26,7 @@ func TestFindShortestPathHeap_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		circuit := model.CreateHeapableCircuitImpl(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
+		circuit := model.NewHeapableCircuitImpl(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
 		result, _, _ := FindShortestPathHeap(circuit)
 		shortest := result.GetAttachedVertices()
 		actual := result.GetLength()
@@ -52,7 +52,7 @@ func TestFindShortestPathHeap_MinClones_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		circuit := model.CreateHeapableCircuitMinClones(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
+		circuit := model.NewHeapableCircuitMinClones(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
 		result, _, _ := FindShortestPathHeap(circuit)
 		shortest := result.GetAttachedVertices()
 		actual := result.GetLength()

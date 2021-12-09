@@ -25,16 +25,9 @@ func TestBuildPerimeter(t *testing.T) {
 
 	vertices = model2d.DeduplicateVertices(vertices)
 
-	circuit, circuitEdges, unattachedVertices := pb.BuildPerimiter(vertices)
+	circuitEdges, unattachedVertices := pb.BuildPerimiter(vertices)
 
 	assert.Len(vertices, 8)
-
-	assert.Len(circuit, 5)
-	assert.Equal(model2d.NewVertex2D(-15, -15), circuit[0])
-	assert.Equal(model2d.NewVertex2D(15, -15), circuit[1])
-	assert.Equal(model2d.NewVertex2D(9, 6), circuit[2])
-	assert.Equal(model2d.NewVertex2D(3, 13), circuit[3])
-	assert.Equal(model2d.NewVertex2D(-7, 6), circuit[4])
 
 	assert.Len(circuitEdges, 5)
 	assert.Equal(model2d.NewEdge2D(vertices[0].(*model2d.Vertex2D), vertices[7].(*model2d.Vertex2D)), circuitEdges[0])

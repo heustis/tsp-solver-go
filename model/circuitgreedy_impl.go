@@ -24,11 +24,11 @@ func NewCircuitGreedyImpl(vertices []CircuitVertex, deduplicator func([]CircuitV
 }
 
 func (c *CircuitGreedyImpl) BuildPerimiter() {
-	_, c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
+	c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	for vertex := range c.unattachedVertices {
-		closest := vertex.FindClosestEdge(c.circuitEdges)
+		closest := FindClosestEdge(vertex, c.circuitEdges)
 		c.closestEdges.PushHeap(&DistanceToEdge{
 			Vertex:   vertex,
 			Edge:     closest,
@@ -111,7 +111,7 @@ func (c *CircuitGreedyImpl) updateInteriorPoints(removedEdge CircuitEdge, edgeA 
 			previous.Edge = edgeB
 			previous.Distance = distB
 		} else if previous.Edge == removedEdge {
-			previous.Edge = previous.Vertex.FindClosestEdge(c.circuitEdges)
+			previous.Edge = FindClosestEdge(previous.Vertex, c.circuitEdges)
 			previous.Distance = previous.Edge.DistanceIncrease(previous.Vertex)
 		}
 	}

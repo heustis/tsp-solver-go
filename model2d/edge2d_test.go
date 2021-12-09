@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,15 +31,16 @@ func TestDistanceIncrease(t *testing.T) {
 func TestSplit(t *testing.T) {
 	assert := assert.New(t)
 
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < 10; i++ {
-		start := NewVertex2D(rand.Float64(), 1+rand.Float64())
-		end := NewVertex2D(rand.Float64(), 3+rand.Float64())
+		start := NewVertex2D(r.Float64(), 1+r.Float64())
+		end := NewVertex2D(r.Float64(), 3+r.Float64())
 		edge := NewEdge2D(start, end)
 		assert.Equal(start, edge.GetStart())
 		assert.Equal(end, edge.GetEnd())
 		assert.Equal(start.DistanceTo(end), edge.GetLength())
 
-		mid := NewVertex2D(rand.Float64(), 2+rand.Float64())
+		mid := NewVertex2D(r.Float64(), 2+r.Float64())
 		e1, e2 := edge.Split(mid)
 
 		assert.Equal(start, e1.GetStart())

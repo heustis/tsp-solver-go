@@ -9,14 +9,13 @@ import (
 type PerimeterBuilder3D struct {
 }
 
-func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVertex) ([]model.CircuitVertex, []model.CircuitEdge, map[model.CircuitVertex]bool) {
+func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVertex) ([]model.CircuitEdge, map[model.CircuitVertex]bool) {
 	numVertices := len(verticesArg)
 	vertices := make([]*Vertex3D, numVertices)
 	midpoint := NewVertex3D(0, 0, 0)
 	unattachedVertices := make(map[model.CircuitVertex]bool)
 	distanceToMidpoint := make(map[model.CircuitVertex]float64)
 	exteriorClosestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)
-	circuit := make([]model.CircuitVertex, 0, numVertices)
 	circuitEdges := make([]model.CircuitEdge, 0, numVertices)
 
 	for i, v := range verticesArg {
@@ -32,14 +31,14 @@ func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVer
 	// Restricts problem-space to a sphere around the midpoint, with radius equal to the distance to the point.
 	farthestFromMid := findFarthestPoint3D(midpoint, vertices)
 	delete(unattachedVertices, farthestFromMid)
-	circuit = append(circuit, farthestFromMid)
+	distanceToMidpoint[farthestFromMid] = farthestFromMid.DistanceTo(midpoint)
 
 	// 2. Find point farthest from point in step 1.
 	// Restricts problem-space to intersection of step 1 sphere,
 	// and a sphere centered on the point from step 1 with a radius equal to the distance between the points found in step 1 and 2.
 	farthestFromFarthest := findFarthestPoint3D(farthestFromMid, vertices)
 	delete(unattachedVertices, farthestFromFarthest)
-	circuit = append(circuit, farthestFromFarthest)
+	distanceToMidpoint[farthestFromFarthest] = farthestFromFarthest.DistanceTo(midpoint)
 
 	// 3. Created edges 1 -> 2 and 2 -> 1
 	circuitEdges = append(circuitEdges, NewEdge3D(farthestFromMid, farthestFromFarthest))
@@ -81,9 +80,23 @@ func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVer
 
 		var edgeIndex int
 		circuitEdges, edgeIndex = model.SplitEdge(circuitEdges, farthestFromClosestEdge.Edge, farthestFromClosestEdge.Vertex)
-		circuit = insertVertex(circuit, edgeIndex+1, farthestFromClosestEdge.Vertex)
 		delete(unattachedVertices, farthestFromClosestEdge.Vertex)
 		delete(exteriorClosestEdges, farthestFromClosestEdge.Vertex)
+
+		// Check if either adjacent point on the perimeter is now interior, and detach it if it is. This is required for 3D but not 2D.
+		if circuitLen := len(circuitEdges); circuitLen > 3 {
+			//TODO - Debug and fix
+			start, added, end := farthestFromClosestEdge.Edge.GetStart(), farthestFromClosestEdge.Vertex, farthestFromClosestEdge.Edge.GetEnd()
+			beforeStart, afterEnd := circuitEdges[(edgeIndex-1+circuitLen)%circuitLen].GetStart(), circuitEdges[(edgeIndex+2)%circuitLen].GetEnd()
+			if isInterior(start, beforeStart.EdgeTo(added), midpoint, distanceToMidpoint[start]) {
+				circuitEdges, _, _, _ = model.MergeEdges2(circuitEdges, start)
+				unattachedVertices[start] = true
+			}
+			if isInterior(end, added.EdgeTo(afterEnd), midpoint, distanceToMidpoint[end]) {
+				circuitEdges, _, _, _ = model.MergeEdges2(circuitEdges, end)
+				unattachedVertices[end] = true
+			}
+		}
 
 		for v := range unattachedVertices {
 			// If the vertex was previously an exterior point and the edge closest to it was split, it could now be an interior point.
@@ -105,7 +118,7 @@ func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVer
 
 				// If the vertex is now interior, stop tracking its closest edge (until the convex perimeter is fully constructed) and add it to the interior edge list.
 				// Otherwise, it is still exterior, so update its closest edge.
-				if newClosest.Edge != closest.Edge && v.(*Vertex3D).projectToEdge(newClosest.Edge.(*Edge3D)).DistanceTo(midpoint) > distanceToMidpoint[v] {
+				if newClosest.Edge != closest.Edge && isInterior(v, newClosest.Edge, midpoint, distanceToMidpoint[v]) {
 					delete(exteriorClosestEdges, v)
 				} else {
 					exteriorClosestEdges[v] = newClosest
@@ -114,19 +127,7 @@ func (builder *PerimeterBuilder3D) BuildPerimiter(verticesArg []model.CircuitVer
 		}
 	}
 
-	return circuit, circuitEdges, unattachedVertices
-}
-
-func insertVertex(circuit []model.CircuitVertex, index int, vertex model.CircuitVertex) []model.CircuitVertex {
-	if index >= len(circuit) {
-		return append(circuit, vertex)
-	} else {
-		// copy all elements starting at the index one to the right to create a duplicate record at index and index+1.
-		circuit = append(circuit[:index+1], circuit[index:]...)
-		// update only the vertex at the index, so that there are no duplicates and the vertex is at the index.
-		circuit[index] = vertex
-		return circuit
-	}
+	return circuitEdges, unattachedVertices
 }
 
 func findFarthestPoint3D(target *Vertex3D, points []*Vertex3D) *Vertex3D {
@@ -141,6 +142,12 @@ func findFarthestPoint3D(target *Vertex3D, points []*Vertex3D) *Vertex3D {
 	}
 
 	return farthestPoint
+}
+
+func isInterior(v model.CircuitVertex, closestEdge model.CircuitEdge, midpoint *Vertex3D, distanceToMidpoint float64) bool {
+	projected := v.(*Vertex3D).projectToEdge(closestEdge.(*Edge3D))
+	projectedDist := projected.DistanceTo(midpoint)
+	return projectedDist > distanceToMidpoint
 }
 
 var _ model.PerimeterBuilder = (*PerimeterBuilder3D)(nil)

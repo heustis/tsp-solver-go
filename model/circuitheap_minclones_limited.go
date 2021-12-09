@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type HeapableCircuitMinClones struct {
+type HeapableCircuitMinClonesLimited struct {
 	Vertices         []CircuitVertex
 	deduplicator     func([]CircuitVertex) []CircuitVertex
 	perimeterBuilder PerimeterBuilder
@@ -15,21 +15,15 @@ type HeapableCircuitMinClones struct {
 	interiorVertices map[CircuitVertex]*vertexStatus
 }
 
-type vertexStatus struct {
-	isUnattached     bool
-	isConcave        bool
-	distanceIncrease float64
-}
-
-func NewHeapableCircuitMinClones(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) *HeapableCircuitMinClones {
-	return &HeapableCircuitMinClones{
+func NewHeapableCircuitMinClonesLimited(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) *HeapableCircuitMinClonesLimited {
+	return &HeapableCircuitMinClonesLimited{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
 		perimeterBuilder: perimeterBuilder,
 	}
 }
 
-func (c *HeapableCircuitMinClones) BuildPerimiter() {
+func (c *HeapableCircuitMinClonesLimited) BuildPerimiter() {
 	var unattachedVertices map[CircuitVertex]bool
 	c.circuitEdges, unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
@@ -49,6 +43,7 @@ func (c *HeapableCircuitMinClones) BuildPerimiter() {
 	// complexity  = attached * unattached  = attached * (total - attached)  = total*attached - attached^2
 	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
 	for v := range unattachedVertices {
+		vertexHeap := NewHeap(GetDistanceToEdgeForHeap)
 		c.interiorVertices[v] = &vertexStatus{
 			isUnattached:     true,
 			isConcave:        false,
@@ -56,17 +51,22 @@ func (c *HeapableCircuitMinClones) BuildPerimiter() {
 		}
 		for _, edge := range c.circuitEdges {
 			// Note: Using Push, not PushHeap to just append elements for now, will heapify after all elements are pushed.
-			c.closestEdges.Push(&DistanceToEdge{
+			vertexHeap.Push(&DistanceToEdge{
 				Vertex:   v,
 				Edge:     edge,
 				Distance: edge.DistanceIncrease(v),
 			})
 		}
+		vertexHeap.Heapify()
+		vertexHeap.TrimN(3)
+		for v := vertexHeap.PopHeap(); v != nil; v = vertexHeap.PopHeap() {
+			c.closestEdges.Push(v)
+		}
 	}
 	c.closestEdges.Heapify()
 }
 
-func (c *HeapableCircuitMinClones) CloneAndUpdate() HeapableCircuit {
+func (c *HeapableCircuitMinClonesLimited) CloneAndUpdate() HeapableCircuit {
 	// 1. Remove 'next closest' from heap - complexity O(log n)
 	next, okay := c.closestEdges.PopHeap().(*DistanceToEdge)
 
@@ -82,7 +82,7 @@ func (c *HeapableCircuitMinClones) CloneAndUpdate() HeapableCircuit {
 	} else {
 		// 2b. If the 'next closest' vertex is already attached, clone the circuit with the 'next closest' vertex attached to the 'next closest' edge.
 		// O(n)
-		clone := &HeapableCircuitMinClones{
+		clone := &HeapableCircuitMinClonesLimited{
 			Vertices:         c.Vertices,
 			circuitEdges:     make([]CircuitEdge, len(c.circuitEdges)),
 			closestEdges:     c.closestEdges.Clone(),
@@ -104,7 +104,7 @@ func (c *HeapableCircuitMinClones) CloneAndUpdate() HeapableCircuit {
 	}
 }
 
-func (c *HeapableCircuitMinClones) Delete() {
+func (c *HeapableCircuitMinClonesLimited) Delete() {
 	for k := range c.interiorVertices {
 		delete(c.interiorVertices, k)
 	}
@@ -116,7 +116,7 @@ func (c *HeapableCircuitMinClones) Delete() {
 	c.closestEdges = nil
 }
 
-func (c *HeapableCircuitMinClones) GetAttachedVertices() []CircuitVertex {
+func (c *HeapableCircuitMinClonesLimited) GetAttachedVertices() []CircuitVertex {
 	vertices := make([]CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
@@ -124,19 +124,19 @@ func (c *HeapableCircuitMinClones) GetAttachedVertices() []CircuitVertex {
 	return vertices
 }
 
-func (c *HeapableCircuitMinClones) GetAttachedEdges() []CircuitEdge {
+func (c *HeapableCircuitMinClonesLimited) GetAttachedEdges() []CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *HeapableCircuitMinClones) GetClosestEdges() *Heap {
+func (c *HeapableCircuitMinClonesLimited) GetClosestEdges() *Heap {
 	return c.closestEdges
 }
 
-func (c *HeapableCircuitMinClones) GetLength() float64 {
+func (c *HeapableCircuitMinClonesLimited) GetLength() float64 {
 	return c.length
 }
 
-func (c *HeapableCircuitMinClones) GetLengthWithNext() float64 {
+func (c *HeapableCircuitMinClonesLimited) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
 		nextDistToEdge := next.(*DistanceToEdge)
 		if len(c.circuitEdges) == len(c.Vertices) && nextDistToEdge.Distance > 0 {
@@ -149,7 +149,7 @@ func (c *HeapableCircuitMinClones) GetLengthWithNext() float64 {
 	}
 }
 
-func (c *HeapableCircuitMinClones) GetUnattachedVertices() map[CircuitVertex]bool {
+func (c *HeapableCircuitMinClonesLimited) GetUnattachedVertices() map[CircuitVertex]bool {
 	unattachedVertices := make(map[CircuitVertex]bool)
 	for k, v := range c.interiorVertices {
 		if v.isUnattached {
@@ -159,7 +159,7 @@ func (c *HeapableCircuitMinClones) GetUnattachedVertices() map[CircuitVertex]boo
 	return unattachedVertices
 }
 
-func (c *HeapableCircuitMinClones) Prepare() {
+func (c *HeapableCircuitMinClonesLimited) Prepare() {
 	c.Vertices = c.deduplicator(c.Vertices)
 	c.circuitEdges = []CircuitEdge{}
 	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
@@ -167,9 +167,11 @@ func (c *HeapableCircuitMinClones) Prepare() {
 	c.interiorVertices = make(map[CircuitVertex]*vertexStatus)
 }
 
-func (c *HeapableCircuitMinClones) AttachVertex(toAttach *DistanceToEdge) {
+func (c *HeapableCircuitMinClonesLimited) AttachVertex(toAttach *DistanceToEdge) {
 	// 1. Update the circuitEdges and retrieve the newly created edges
 	var edgeIndex int
+	//TODO - this can cause an index out of bounds exception, investigate prior to using this struct further.
+	// Note: in preliminary tests this was already less accurate than the greedy algorithms.
 	c.circuitEdges, edgeIndex = SplitEdge2(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
 	if edgeIndex < 0 {
 		expectedEdgeJson, _ := json.Marshal(toAttach.Edge)
@@ -197,18 +199,18 @@ func (c *HeapableCircuitMinClones) AttachVertex(toAttach *DistanceToEdge) {
 		if current.Edge.GetStart() == toAttach.Edge.GetStart() && current.Edge.GetEnd() == toAttach.Edge.GetEnd() {
 			if current.Vertex == toAttach.Vertex {
 				return nil
-			}
-			return []interface{}{
-				&DistanceToEdge{
+			} else if distA, distB := edgeA.DistanceIncrease(current.Vertex), edgeB.DistanceIncrease(current.Vertex); distA <= distB {
+				return &DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeA,
-					Distance: edgeA.DistanceIncrease(current.Vertex) - existingIncrease,
-				},
-				&DistanceToEdge{
+					Distance: distA - existingIncrease,
+				}
+			} else {
+				return &DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeB,
-					Distance: edgeB.DistanceIncrease(current.Vertex) - existingIncrease,
-				},
+					Distance: distB - existingIncrease,
+				}
 			}
 		} else if updatedVertices[current.Vertex] {
 			return &DistanceToEdge{
@@ -222,7 +224,7 @@ func (c *HeapableCircuitMinClones) AttachVertex(toAttach *DistanceToEdge) {
 	})
 }
 
-func (c *HeapableCircuitMinClones) MoveVertex(toMove *DistanceToEdge) {
+func (c *HeapableCircuitMinClonesLimited) MoveVertex(toMove *DistanceToEdge) {
 	// 1. Remove the edge with the vertex from the circuitEdges
 	var mergedEdge, splitEdgeA, splitEdgeB CircuitEdge
 	c.circuitEdges, mergedEdge, splitEdgeA, splitEdgeB = MoveVertex(c.circuitEdges, toMove.Vertex, toMove.Edge)
@@ -295,7 +297,7 @@ func (c *HeapableCircuitMinClones) MoveVertex(toMove *DistanceToEdge) {
 	})
 }
 
-func (c *HeapableCircuitMinClones) updateDistanceIncreases(updatedVertices map[CircuitVertex]bool) {
+func (c *HeapableCircuitMinClonesLimited) updateDistanceIncreases(updatedVertices map[CircuitVertex]bool) {
 	circuitLen := len(c.circuitEdges)
 	if circuitLen >= 3 {
 		prev := c.circuitEdges[circuitLen-1]
@@ -313,4 +315,4 @@ func (c *HeapableCircuitMinClones) updateDistanceIncreases(updatedVertices map[C
 	}
 }
 
-var _ HeapableCircuit = (*HeapableCircuitMinClones)(nil)
+var _ HeapableCircuit = (*HeapableCircuitMinClonesLimited)(nil)

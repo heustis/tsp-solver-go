@@ -4,26 +4,26 @@ import (
 	"math"
 )
 
-type CircuitGreedyByEdgeImpl struct {
+type CircuitGreedyByEdgeWithUpdatesImpl struct {
 	Vertices         []CircuitVertex
 	deduplicator     func([]CircuitVertex) []CircuitVertex
 	perimeterBuilder PerimeterBuilder
 	circuits         []Circuit
 }
 
-func NewCircuitGreedyByEdgeImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) Circuit {
-	return &CircuitGreedyByEdgeImpl{
+func NewCircuitGreedyByEdgeWithUpdatesImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) Circuit {
+	return &CircuitGreedyByEdgeWithUpdatesImpl{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
 		perimeterBuilder: perimeterBuilder,
 	}
 }
 
-func (c *CircuitGreedyByEdgeImpl) BuildPerimiter() {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) BuildPerimiter() {
 	circuitEdges, unattachedVertices := c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
 	closestEdges := make(map[CircuitVertex]*DistanceToEdge)
-	toAttach := make(map[*CircuitGreedyImpl]*DistanceToEdge)
+	toAttach := make(map[*CircuitGreedyWithUpdatesImpl]*DistanceToEdge)
 
 	initLength := 0.0
 	for _, edge := range circuitEdges {
@@ -34,7 +34,7 @@ func (c *CircuitGreedyByEdgeImpl) BuildPerimiter() {
 	// This allows the greedy algorithm to detect scenarios where the points are individually closer to various edges, but are collectively closer to a different edge.
 	// This increases the complexity of this circuit implementation to O(n^3), the unsmiplified form being O(e*(n-e)*(n-e)), since the greedy implementation is O(n^2) or O((n-e)^2).
 	for _, e := range circuitEdges {
-		circuit := &CircuitGreedyImpl{
+		circuit := &CircuitGreedyWithUpdatesImpl{
 			circuitEdges:       make([]CircuitEdge, len(circuitEdges)),
 			Vertices:           c.Vertices,
 			closestEdges:       NewHeap(GetDistanceToEdgeForHeap),
@@ -87,48 +87,48 @@ func (c *CircuitGreedyByEdgeImpl) BuildPerimiter() {
 	}
 }
 
-func (c *CircuitGreedyByEdgeImpl) FindNextVertexAndEdge() (CircuitVertex, CircuitEdge) {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) FindNextVertexAndEdge() (CircuitVertex, CircuitEdge) {
 	if shortest := c.getShortestCircuit(); shortest != nil && len(shortest.GetUnattachedVertices()) > 0 {
-		next := shortest.(*CircuitGreedyImpl).closestEdges.Peek().(*DistanceToEdge)
+		next := shortest.(*CircuitGreedyWithUpdatesImpl).closestEdges.Peek().(*DistanceToEdge)
 		return next.Vertex, next.Edge
 	} else {
 		return nil, nil
 	}
 }
 
-func (c *CircuitGreedyByEdgeImpl) GetAttachedVertices() []CircuitVertex {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) GetAttachedVertices() []CircuitVertex {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetAttachedVertices()
 	}
 	return []CircuitVertex{}
 }
 
-func (c *CircuitGreedyByEdgeImpl) GetLength() float64 {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) GetLength() float64 {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetLength()
 	}
 	return 0.0
 }
 
-func (c *CircuitGreedyByEdgeImpl) GetUnattachedVertices() map[CircuitVertex]bool {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) GetUnattachedVertices() map[CircuitVertex]bool {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetUnattachedVertices()
 	}
 	return make(map[CircuitVertex]bool)
 }
 
-func (c *CircuitGreedyByEdgeImpl) Prepare() {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) Prepare() {
 	c.circuits = []Circuit{}
 	c.Vertices = c.deduplicator(c.Vertices)
 }
 
-func (c *CircuitGreedyByEdgeImpl) Update(ignoredVertex CircuitVertex, ignoredEdge CircuitEdge) {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) Update(ignoredVertex CircuitVertex, ignoredEdge CircuitEdge) {
 	for _, circuit := range c.circuits {
 		circuit.Update(circuit.FindNextVertexAndEdge())
 	}
 }
 
-func (c *CircuitGreedyByEdgeImpl) getShortestCircuit() Circuit {
+func (c *CircuitGreedyByEdgeWithUpdatesImpl) getShortestCircuit() Circuit {
 	shortestLen := math.MaxFloat64
 	var shortest Circuit
 	for _, circuit := range c.circuits {
@@ -140,4 +140,4 @@ func (c *CircuitGreedyByEdgeImpl) getShortestCircuit() Circuit {
 	return shortest
 }
 
-var _ Circuit = (*CircuitGreedyImpl)(nil)
+var _ Circuit = (*CircuitGreedyWithUpdatesImpl)(nil)

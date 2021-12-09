@@ -2,6 +2,7 @@ package model
 
 import (
 	"container/heap"
+	"math"
 )
 
 // Heap is a min heap that implements heap.Interface.
@@ -198,6 +199,18 @@ func (h *Heap) Swap(i int, j int) {
 	if i >= 0 && j >= 0 {
 		h.arr[i], h.arr[j] = h.arr[j], h.arr[i]
 	}
+}
+
+// TrimN keeps the N minmimum entries in this heap and discards the rest. The complexity is O(numberToRetain * log(n)).
+func (h *Heap) TrimN(numberToRetain int) {
+	numberToRetain = int(math.Min(float64(numberToRetain), float64(h.Len())))
+	updated := make([]interface{}, numberToRetain)
+
+	for i := 0; i < numberToRetain; i++ {
+		updated[i] = h.PopHeap()
+	}
+	h.arr = updated
+	heap.Init(h)
 }
 
 func (h *Heap) ToString() string {

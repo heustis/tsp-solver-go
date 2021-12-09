@@ -1,7 +1,6 @@
 package model2d
 
 import (
-	"container/list"
 	"fmt"
 	"math"
 
@@ -40,47 +39,6 @@ func (v *Vertex2D) Equals(other interface{}) bool {
 	} else {
 		return false
 	}
-}
-
-// FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
-func (v *Vertex2D) FindClosestEdge(currentCircuit []model.CircuitEdge) model.CircuitEdge {
-	var closest model.CircuitEdge = nil
-	closestDistanceIncrease := math.MaxFloat64
-	for _, candidate := range currentCircuit {
-		// Ignore edges already containing the vertex.
-		if candidate.GetEnd() == v || candidate.GetStart() == v {
-			continue
-		}
-		candidateDistanceIncrease := candidate.DistanceIncrease(v)
-		if candidateDistanceIncrease < closestDistanceIncrease {
-			closest = candidate
-			closestDistanceIncrease = candidateDistanceIncrease
-		}
-	}
-	return closest
-}
-
-func (v *Vertex2D) FindClosestEdgeList(currentCircuit *list.List) model.CircuitEdge {
-	var closest model.CircuitEdge = nil
-	closestDistanceIncrease := math.MaxFloat64
-	for i, link := 0, currentCircuit.Front(); i < currentCircuit.Len(); i, link = i+1, link.Next() {
-		candidate := link.Value.(*Edge2D)
-		// Ignore edges already containing the vertex.
-		if candidate.GetEnd() == v || candidate.GetStart() == v {
-			continue
-		}
-		candidateDistanceIncrease := candidate.DistanceIncrease(v)
-		if candidateDistanceIncrease < closestDistanceIncrease {
-			closest = candidate
-			closestDistanceIncrease = candidateDistanceIncrease
-		}
-	}
-	return closest
-}
-
-// IsEdgeCloser checks if the supplied edge is closer than the current closest edge.
-func (v *Vertex2D) IsEdgeCloser(candidateEdge model.CircuitEdge, currentEdge model.CircuitEdge) bool {
-	return candidateEdge.DistanceIncrease(v) < currentEdge.DistanceIncrease(v)
 }
 
 // ToString prints the vertex as a string.

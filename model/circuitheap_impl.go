@@ -4,14 +4,13 @@ type HeapableCircuitImpl struct {
 	Vertices           []CircuitVertex
 	deduplicator       func([]CircuitVertex) []CircuitVertex
 	perimeterBuilder   PerimeterBuilder
-	circuit            []CircuitVertex
 	circuitEdges       []CircuitEdge
 	closestEdges       *Heap
 	length             float64
 	unattachedVertices map[CircuitVertex]bool
 }
 
-func CreateHeapableCircuitImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) *HeapableCircuitImpl {
+func NewHeapableCircuitImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) *HeapableCircuitImpl {
 	return &HeapableCircuitImpl{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
@@ -20,7 +19,7 @@ func CreateHeapableCircuitImpl(vertices []CircuitVertex, deduplicator func([]Cir
 }
 
 func (c *HeapableCircuitImpl) BuildPerimiter() {
-	c.circuit, c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
+	c.circuitEdges, c.unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
 	// Determine the initial length of the perimeter.
 	c.length = 0.0
@@ -62,7 +61,6 @@ func (c *HeapableCircuitImpl) CloneAndUpdate() HeapableCircuit {
 		//     but in the original circuit that vertex can attach to a different edge.
 		clone := &HeapableCircuitImpl{
 			Vertices:           append(make([]CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
-			circuit:            append(make([]CircuitVertex, 0, len(c.circuit)), c.circuit...),
 			circuitEdges:       append(make([]CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
 			closestEdges:       c.closestEdges.Clone(),
 			length:             c.length,
@@ -85,13 +83,16 @@ func (c *HeapableCircuitImpl) Delete() {
 		c.closestEdges.Delete()
 	}
 	c.Vertices = nil
-	c.circuit = nil
 	c.circuitEdges = nil
 	c.closestEdges = nil
 }
 
 func (c *HeapableCircuitImpl) GetAttachedVertices() []CircuitVertex {
-	return c.circuit
+	vertices := make([]CircuitVertex, len(c.circuitEdges))
+	for i, edge := range c.circuitEdges {
+		vertices[i] = edge.GetStart()
+	}
+	return vertices
 }
 
 func (c *HeapableCircuitImpl) GetAttachedEdges() []CircuitEdge {
@@ -120,7 +121,6 @@ func (c *HeapableCircuitImpl) GetUnattachedVertices() map[CircuitVertex]bool {
 
 func (c *HeapableCircuitImpl) Prepare() {
 	c.Vertices = c.deduplicator(c.Vertices)
-	c.circuit = []CircuitVertex{}
 	c.circuitEdges = []CircuitEdge{}
 	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
 	c.length = 0.0
@@ -133,7 +133,6 @@ func (c *HeapableCircuitImpl) attachVertex(toAttach *DistanceToEdge) {
 	c.circuitEdges, edgeIndex = SplitEdge(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
 
 	// 2. Update the circuit
-	c.circuit = InsertVertex(c.circuit, edgeIndex+1, toAttach.Vertex)
 	delete(c.unattachedVertices, toAttach.Vertex)
 	c.length += toAttach.Distance
 

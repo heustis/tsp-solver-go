@@ -1,7 +1,5 @@
 package model
 
-import "container/list"
-
 // Threshold defines how close two values can be and still be considered identical (e.g. for de-duplicating points).
 const Threshold = 0.0000001
 
@@ -43,12 +41,6 @@ type CircuitVertex interface {
 	DistanceTo(other CircuitVertex) float64
 	// EdgeTo creates a new CircuitEdge from this point (start) to the supplied point (end).
 	EdgeTo(end CircuitVertex) CircuitEdge
-	// FindClosestEdge finds, and returns, the edge that is the closest to the vertex.
-	FindClosestEdge(currentCircuit []CircuitEdge) CircuitEdge
-	// FindClosestEdgeList finds, and returns, the edge that is the closest to the vertex in the supplied linked list.
-	FindClosestEdgeList(currentCircuit *list.List) CircuitEdge
-	// IsEdgeCloser checks if the supplied edge is closer than the current closest edge.
-	IsEdgeCloser(candidateEdge CircuitEdge, currentEdge CircuitEdge) bool
 }
 
 // CircuitVertex provides an abstract representation of an edge for the TSP solver to interact with.
@@ -71,3 +63,5 @@ type CircuitEdge interface {
 	// Split creates two new edges "start-to-vertex" and "vertex-to-end" based on this edge and the supplied vertex.
 	Split(vertex CircuitVertex) (CircuitEdge, CircuitEdge)
 }
+
+type Deduplicator func([]CircuitVertex) []CircuitVertex

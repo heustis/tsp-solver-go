@@ -10,7 +10,7 @@ import (
 
 func TestBuildPerimeter_Heap(t *testing.T) {
 	assert := assert.New(t)
-	circuit := model.CreateHeapableCircuitImpl([]model.CircuitVertex{
+	circuit := model.NewHeapableCircuitImpl([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -81,7 +81,7 @@ func TestBuildPerimeter_Heap(t *testing.T) {
 func TestCloneAndUpdate(t *testing.T) {
 	assert := assert.New(t)
 
-	circuit := model.CreateHeapableCircuitImpl([]model.CircuitVertex{
+	circuit := model.NewHeapableCircuitImpl([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -177,7 +177,7 @@ func TestCloneAndUpdate(t *testing.T) {
 func TestDelete_Heap(t *testing.T) {
 	assert := assert.New(t)
 
-	circuit := model.CreateHeapableCircuitImpl([]model.CircuitVertex{
+	circuit := model.NewHeapableCircuitImpl([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -233,7 +233,7 @@ func TestDelete_Heap(t *testing.T) {
 
 func TestPrepare_Heap(t *testing.T) {
 	assert := assert.New(t)
-	circuit := model.CreateHeapableCircuitImpl([]model.CircuitVertex{
+	circuit := model.NewHeapableCircuitImpl([]model.CircuitVertex{
 		model2d.NewVertex2D(-15, -15),
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(15, -15),

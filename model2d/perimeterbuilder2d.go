@@ -5,12 +5,11 @@ import "github.com/fealos/lee-tsp-go/model"
 type PerimeterBuilder2D struct {
 }
 
-func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVertex) ([]model.CircuitVertex, []model.CircuitEdge, map[model.CircuitVertex]bool) {
+func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVertex) ([]model.CircuitEdge, map[model.CircuitVertex]bool) {
 	numVertices := len(verticesArg)
 	vertices := make([]model.CircuitVertex, numVertices)
 	midpoint := NewVertex2D(0, 0)
 	unattachedVertices := make(map[model.CircuitVertex]bool)
-	circuit := make([]model.CircuitVertex, 0, numVertices)
 	circuitEdges := make([]model.CircuitEdge, 0, numVertices)
 
 	for i, v := range verticesArg {
@@ -25,14 +24,12 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 	// Restricts problem-space to a circle around the midpoint, with radius equal to the distance to the point.
 	farthestFromMid := findFarthestPoint(midpoint, vertices).(*Vertex2D)
 	delete(unattachedVertices, farthestFromMid)
-	circuit = append(circuit, farthestFromMid)
 
 	// 2. Find point farthest from point in step 1.
 	// Restricts problem-space to intersection of step 1 circle,
 	// and a circle centered on the point from step 1 with a radius equal to the distance between the points found in step 1 and 2.
 	farthestFromFarthest := findFarthestPoint(farthestFromMid, vertices).(*Vertex2D)
 	delete(unattachedVertices, farthestFromFarthest)
-	circuit = append(circuit, farthestFromFarthest)
 
 	// 3. Created edges 1 -> 2 and 2 -> 1
 	circuitEdges = append(circuitEdges, NewEdge2D(farthestFromMid, farthestFromFarthest))
@@ -78,7 +75,6 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 
 		var edgeIndex int
 		circuitEdges, edgeIndex = model.SplitEdge(circuitEdges, farthestFromClosestEdge.Edge, farthestFromClosestEdge.Vertex)
-		circuit = insertVertex(circuit, edgeIndex+1, farthestFromClosestEdge.Vertex)
 		delete(unattachedVertices, farthestFromClosestEdge.Vertex)
 		delete(exteriorClosestEdges, farthestFromClosestEdge.Vertex)
 
@@ -113,19 +109,7 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 		}
 	}
 
-	return circuit, circuitEdges, unattachedVertices
-}
-
-func insertVertex(circuit []model.CircuitVertex, index int, vertex model.CircuitVertex) []model.CircuitVertex {
-	if index >= len(circuit) {
-		return append(circuit, vertex)
-	} else {
-		// copy all elements starting at the index one to the right to create a duplicate record at index and index+1.
-		circuit = append(circuit[:index+1], circuit[index:]...)
-		// update only the vertex at the index, so that there are no duplicates and the vertex is at the index.
-		circuit[index] = vertex
-		return circuit
-	}
+	return circuitEdges, unattachedVertices
 }
 
 var _ model.PerimeterBuilder = (*PerimeterBuilder2D)(nil)

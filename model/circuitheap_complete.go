@@ -16,6 +16,10 @@ func (c *HeapableCircuitComplete) Delete() {
 	c.Circuit = nil
 }
 
+func (c *HeapableCircuitComplete) FindNextVertexAndEdge() (CircuitVertex, CircuitEdge) {
+	return nil, nil
+}
+
 func (c *HeapableCircuitComplete) GetAttachedVertices() []CircuitVertex {
 	return c.Circuit
 }
@@ -35,4 +39,8 @@ func (c *HeapableCircuitComplete) GetUnattachedVertices() map[CircuitVertex]bool
 func (c *HeapableCircuitComplete) Prepare() {
 }
 
+func (c *HeapableCircuitComplete) Update(vertexToAdd CircuitVertex, edgeToSplit CircuitEdge) {
+}
+
 var _ HeapableCircuit = (*HeapableCircuitComplete)(nil)
+var _ Circuit = (*HeapableCircuitComplete)(nil)
