@@ -37,6 +37,7 @@ func (g *GraphVertex) Equals(other interface{}) bool {
 func (g *GraphVertex) GetAdjacentVertices() map[*GraphVertex]float64 {
 	return g.adjacentVertices
 }
+
 func (g *GraphVertex) GetId() string {
 	return g.id
 }
@@ -65,7 +66,7 @@ func (g *GraphVertex) PathToAll() map[model.CircuitVertex]model.CircuitEdge {
 				// Note: we don't update visited yet, since there may be a vertex that is farther than the current vertex, but with a shorter connection to 'v'.
 				if _, nextVisited := edges[v]; !nextVisited {
 					next := &GraphEdge{
-						path:     make([]*GraphVertex, len(current.path)+1),
+						path:     make([]*GraphVertex, len(current.path), len(current.path)+1),
 						distance: current.distance + dist,
 					}
 					copy(next.path, current.path)
@@ -74,10 +75,8 @@ func (g *GraphVertex) PathToAll() map[model.CircuitVertex]model.CircuitEdge {
 				}
 			}
 		}
-		current.Delete()
 	}
 
-	toVisit.Delete()
 	return edges
 }
 

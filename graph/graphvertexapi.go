@@ -18,16 +18,20 @@ func (api *GraphApi) ToGraph() *Graph {
 
 	for _, vApi := range api.Vertices {
 		var v *GraphVertex
-		g.Vertices = append(g.Vertices, v)
+
+		// Ensure each vertex is created only once; re-use the vertex if it was created while processing adjacent vertices of an earlier vertex.
 		if existing, okay := vertexMap[vApi.Id]; okay {
 			v = existing
 		} else {
-			v := &GraphVertex{
+			v = &GraphVertex{
 				id:               vApi.Id,
 				adjacentVertices: make(map[*GraphVertex]float64),
 			}
 			vertexMap[vApi.Id] = v
 		}
+		g.Vertices = append(g.Vertices, v)
+
+		// Create one vertex for each adjacent vertex, unless that vertex already exists, in which case re-use it.
 		for adjId, dist := range vApi.AdjacentVertices {
 			if adj, okay := vertexMap[adjId]; okay {
 				v.adjacentVertices[adj] = dist

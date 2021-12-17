@@ -40,7 +40,7 @@ func NewGraphEdge(start *GraphVertex, end *GraphVertex) *GraphEdge {
 				// Note: we don't update visited yet, since there may be a vertex that is farther than the current vertex, but with a shorter connection to 'v'.
 				if !visited[v] {
 					next := &GraphEdge{
-						path:     make([]*GraphVertex, len(current.path)+1),
+						path:     make([]*GraphVertex, len(current.path), len(current.path)+1),
 						distance: current.distance + dist,
 					}
 					copy(next.path, current.path)
@@ -90,6 +90,10 @@ func (e *GraphEdge) GetEnd() model.CircuitVertex {
 
 func (e *GraphEdge) GetLength() float64 {
 	return e.distance
+}
+
+func (e *GraphEdge) GetPath() []*GraphVertex {
+	return e.path
 }
 
 func (e *GraphEdge) GetStart() model.CircuitVertex {

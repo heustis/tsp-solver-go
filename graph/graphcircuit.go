@@ -58,14 +58,14 @@ func (c *GraphCircuit) BuildPerimiter() {
 	for k, v := range c.unattachedVertices {
 		exteriorVertices[k] = v
 	}
-	var interiorVertex model.CircuitVertex = nil
+	// var interiorVertex model.CircuitVertex = nil
 	for len(exteriorVertices) > 0 {
 		// Since a graph does not have to follow 2D and 3D geometric principles, we need to recompute the closest edges each time.
 		// With 2D we know that the closest edge (or edges that are created by splitting it) will remain the closest edge of any external point since the perimeter is convex.
 		// However, in a graph A->B and B->C each may be farther away from an external point Z than A->C, causing a different edge (D->E) to become the closest edge to Z.
 		closestEdges := c.findClosestEdges(exteriorVertices)
 		farthestFromClosestEdge := &model.DistanceToEdge{
-			Distance: 0.0,
+			Distance: -1.0,
 		}
 		for _, closest := range closestEdges {
 			if closest.Distance > farthestFromClosestEdge.Distance {
@@ -91,24 +91,24 @@ func (c *GraphCircuit) BuildPerimiter() {
 				}
 			}
 
-			if interiorVertex != nil {
-				if c.edges[extVertex][interiorVertex].GetLength() < c.edges[closestEdgeVertex][interiorVertex].GetLength() {
+			// if interiorVertex != nil {
+			// 	if c.edges[extVertex][interiorVertex].GetLength() < c.edges[closestEdgeVertex][interiorVertex].GetLength() {
+			// 		isExterior = false
+			// 		break
+			// 	}
+			// } else {
+			for _, edge := range c.circuit {
+				start := edge.GetStart()
+				if start == extClosest.Edge.GetStart() || start == extClosest.Edge.GetEnd() {
+					continue
+				}
+				if c.edges[extVertex][start].GetLength() < c.edges[closestEdgeVertex][start].GetLength() {
 					isExterior = false
+					// interiorVertex = extVertex
 					break
 				}
-			} else {
-				for _, edge := range c.circuit {
-					start := edge.GetStart()
-					if start == extClosest.Edge.GetStart() || start == extClosest.Edge.GetEnd() {
-						continue
-					}
-					if c.edges[extVertex][start].GetLength() < c.edges[closestEdgeVertex][start].GetLength() {
-						isExterior = false
-						interiorVertex = extVertex
-						break
-					}
-				}
 			}
+			// }
 
 			if !isExterior {
 				delete(exteriorVertices, extVertex)
@@ -135,7 +135,8 @@ func (c *GraphCircuit) Delete() {
 	for k := range c.unattachedVertices {
 		delete(c.unattachedVertices, k)
 	}
-	c.graph.Delete()
+	c.circuit = nil
+	// Note: Do not delete the graph, since it was supplied to NewGraphCircuit rather than created by this GraphCircuit.
 }
 
 func (c *GraphCircuit) FindNextVertexAndEdge() (vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
@@ -165,6 +166,14 @@ func (c *GraphCircuit) GetAttachedVertices() []model.CircuitVertex {
 	return vertices
 }
 
+func (c *GraphCircuit) GetEdgeFor(start model.CircuitVertex, end model.CircuitVertex) model.CircuitEdge {
+	if e, okay := c.edges[start]; okay {
+		return e[end]
+	} else {
+		return nil
+	}
+}
+
 func (c *GraphCircuit) GetLength() float64 {
 	return c.length
 }
@@ -174,6 +183,7 @@ func (c *GraphCircuit) GetUnattachedVertices() map[model.CircuitVertex]bool {
 }
 
 func (c *GraphCircuit) Prepare() {
+	c.circuit = []model.CircuitEdge{}
 	c.edges = c.graph.PathToAllFromAll()
 	c.length = 0.0
 	c.unattachedVertices = make(map[model.CircuitVertex]bool)
