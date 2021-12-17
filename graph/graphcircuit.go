@@ -78,9 +78,8 @@ func (c *GraphCircuit) BuildPerimiter() {
 		delete(closestEdges, farthestFromClosestEdge.Vertex)
 
 		// Update exterior vertices.
-		// Once an interior vertex is found, we can determine whether a candidate vertex is interior/exterior by calculating whether the candidate vertex is closer to the interior vertex than the candidate's closest vertex on its closest edge.
-		// i.e. isExterior := dist(C, I) > dist(projection(E, C), I)
-		// Prior to an interior vertex being found, we need to check whether a candidate vertex is closer to the perimeter vertices (other than those in its closest edge) than its closest vertex on its closest edge.
+		// A vertex is interior if it is closer to the perimeter vertices (other than those in its closest edge) than the closest vertex on its closest edge.
+		// i.e. isExterior := dist(C, P) > dist(projection(E, C), P)
 		for extVertex, extClosest := range closestEdges {
 			isExterior := true
 
@@ -91,12 +90,6 @@ func (c *GraphCircuit) BuildPerimiter() {
 				}
 			}
 
-			// if interiorVertex != nil {
-			// 	if c.edges[extVertex][interiorVertex].GetLength() < c.edges[closestEdgeVertex][interiorVertex].GetLength() {
-			// 		isExterior = false
-			// 		break
-			// 	}
-			// } else {
 			for _, edge := range c.circuit {
 				start := edge.GetStart()
 				if start == extClosest.Edge.GetStart() || start == extClosest.Edge.GetEnd() {
@@ -104,11 +97,9 @@ func (c *GraphCircuit) BuildPerimiter() {
 				}
 				if c.edges[extVertex][start].GetLength() < c.edges[closestEdgeVertex][start].GetLength() {
 					isExterior = false
-					// interiorVertex = extVertex
 					break
 				}
 			}
-			// }
 
 			if !isExterior {
 				delete(exteriorVertices, extVertex)
