@@ -25,3 +25,5 @@ func (h *DistanceToEdge) HasVertex(x interface{}) bool {
 func (h *DistanceToEdge) ToString() string {
 	return fmt.Sprintf(`{"vertex":%s,"edge":%s,"distance":%v}`, h.Vertex.ToString(), h.Edge.ToString(), h.Distance)
 }
+
+var _ Printable = (*DistanceToEdge)(nil)

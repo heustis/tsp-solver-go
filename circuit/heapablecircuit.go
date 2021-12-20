@@ -1,16 +1,18 @@
-package model
+package circuit
+
+import "github.com/fealos/lee-tsp-go/model"
 
 type HeapableCircuitImpl struct {
-	Vertices           []CircuitVertex
-	deduplicator       func([]CircuitVertex) []CircuitVertex
-	perimeterBuilder   PerimeterBuilder
-	circuitEdges       []CircuitEdge
-	closestEdges       *Heap
+	Vertices           []model.CircuitVertex
+	deduplicator       func([]model.CircuitVertex) []model.CircuitVertex
+	perimeterBuilder   model.PerimeterBuilder
+	circuitEdges       []model.CircuitEdge
+	closestEdges       *model.Heap
 	length             float64
-	unattachedVertices map[CircuitVertex]bool
+	unattachedVertices map[model.CircuitVertex]bool
 }
 
-func NewHeapableCircuitImpl(vertices []CircuitVertex, deduplicator func([]CircuitVertex) []CircuitVertex, perimeterBuilder PerimeterBuilder) *HeapableCircuitImpl {
+func NewHeapableCircuitImpl(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *HeapableCircuitImpl {
 	return &HeapableCircuitImpl{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
@@ -27,13 +29,13 @@ func (c *HeapableCircuitImpl) BuildPerimiter() {
 		c.length += edge.GetLength()
 	}
 
-	// 6. Find the closest edge for all interior points, based on distance increase (rather than perpendicular distance)
+	// Find the closest edge for all interior points, based on distance increase (rather than perpendicular distance)
 	// O(v*e) due to storing the entries, one per edge per unattached vertex, in an array then heapifing the array.
 	// Note: it would be O(v*e * log(v*e)) to push each entry independently.
 	initialCandidates := []interface{}{}
 	for v := range c.unattachedVertices {
 		for _, edge := range c.circuitEdges {
-			initialCandidates = append(initialCandidates, &DistanceToEdge{
+			initialCandidates = append(initialCandidates, &model.DistanceToEdge{
 				Edge:     edge,
 				Distance: edge.DistanceIncrease(v),
 				Vertex:   v,
@@ -43,9 +45,9 @@ func (c *HeapableCircuitImpl) BuildPerimiter() {
 	c.closestEdges.PushAll(initialCandidates...)
 }
 
-func (c *HeapableCircuitImpl) CloneAndUpdate() HeapableCircuit {
+func (c *HeapableCircuitImpl) CloneAndUpdate() model.HeapableCircuit {
 	// 1. Remove 'next closest' from heap
-	next, okay := c.closestEdges.PopHeap().(*DistanceToEdge)
+	next, okay := c.closestEdges.PopHeap().(*model.DistanceToEdge)
 
 	if next == nil || !okay {
 		return nil
@@ -60,11 +62,11 @@ func (c *HeapableCircuitImpl) CloneAndUpdate() HeapableCircuit {
 		//     clone the circuit so that in the clone the vertex will be attached to the 'next closest' edge,
 		//     but in the original circuit that vertex can attach to a different edge.
 		clone := &HeapableCircuitImpl{
-			Vertices:           append(make([]CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
-			circuitEdges:       append(make([]CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
+			Vertices:           append(make([]model.CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
+			circuitEdges:       append(make([]model.CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
 			closestEdges:       c.closestEdges.Clone(),
 			length:             c.length,
-			unattachedVertices: make(map[CircuitVertex]bool),
+			unattachedVertices: make(map[model.CircuitVertex]bool),
 		}
 		for k, v := range c.unattachedVertices {
 			clone.unattachedVertices[k] = v
@@ -87,19 +89,19 @@ func (c *HeapableCircuitImpl) Delete() {
 	c.closestEdges = nil
 }
 
-func (c *HeapableCircuitImpl) GetAttachedVertices() []CircuitVertex {
-	vertices := make([]CircuitVertex, len(c.circuitEdges))
+func (c *HeapableCircuitImpl) GetAttachedVertices() []model.CircuitVertex {
+	vertices := make([]model.CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
 	}
 	return vertices
 }
 
-func (c *HeapableCircuitImpl) GetAttachedEdges() []CircuitEdge {
+func (c *HeapableCircuitImpl) GetAttachedEdges() []model.CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *HeapableCircuitImpl) GetClosestEdges() *Heap {
+func (c *HeapableCircuitImpl) GetClosestEdges() *model.Heap {
 	return c.closestEdges
 }
 
@@ -109,28 +111,28 @@ func (c *HeapableCircuitImpl) GetLength() float64 {
 
 func (c *HeapableCircuitImpl) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
-		return c.length + next.(*DistanceToEdge).Distance
+		return c.length + next.(*model.DistanceToEdge).Distance
 	} else {
 		return c.length
 	}
 }
 
-func (c *HeapableCircuitImpl) GetUnattachedVertices() map[CircuitVertex]bool {
+func (c *HeapableCircuitImpl) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.unattachedVertices
 }
 
 func (c *HeapableCircuitImpl) Prepare() {
 	c.Vertices = c.deduplicator(c.Vertices)
-	c.circuitEdges = []CircuitEdge{}
-	c.closestEdges = NewHeap(GetDistanceToEdgeForHeap)
+	c.circuitEdges = []model.CircuitEdge{}
+	c.closestEdges = model.NewHeap(model.GetDistanceToEdgeForHeap)
 	c.length = 0.0
-	c.unattachedVertices = make(map[CircuitVertex]bool)
+	c.unattachedVertices = make(map[model.CircuitVertex]bool)
 }
 
-func (c *HeapableCircuitImpl) attachVertex(toAttach *DistanceToEdge) {
+func (c *HeapableCircuitImpl) attachVertex(toAttach *model.DistanceToEdge) {
 	// 1. Update the circuitEdges
 	var edgeIndex int
-	c.circuitEdges, edgeIndex = SplitEdge(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
+	c.circuitEdges, edgeIndex = model.SplitEdge(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
 
 	// 2. Update the circuit
 	delete(c.unattachedVertices, toAttach.Vertex)
@@ -140,19 +142,19 @@ func (c *HeapableCircuitImpl) attachVertex(toAttach *DistanceToEdge) {
 	edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1%len(c.circuitEdges)]
 
 	c.closestEdges.ReplaceAll(func(x interface{}) []interface{} {
-		current := x.(*DistanceToEdge)
+		current := x.(*model.DistanceToEdge)
 		if current.Vertex == toAttach.Vertex {
 			// 4a. Remove any items in the heap with the vertex that was attached to the circuit.
 			return []interface{}{}
 		} else if current.Edge == toAttach.Edge {
 			// 4b. Replace any items in the heap with the edge that was split, with one entry for each of the newly created edges.
 			return []interface{}{
-				&DistanceToEdge{
+				&model.DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeA,
 					Distance: edgeA.DistanceIncrease(current.Vertex),
 				},
-				&DistanceToEdge{
+				&model.DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeB,
 					Distance: edgeB.DistanceIncrease(current.Vertex),
@@ -165,5 +167,4 @@ func (c *HeapableCircuitImpl) attachVertex(toAttach *DistanceToEdge) {
 	})
 }
 
-var _ HeapableCircuit = (*HeapableCircuitImpl)(nil)
-var _ Printable = (*DistanceToEdge)(nil)
+var _ model.HeapableCircuit = (*HeapableCircuitImpl)(nil)
