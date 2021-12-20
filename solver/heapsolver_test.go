@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/fealos/lee-tsp-go/circuit"
 	"github.com/fealos/lee-tsp-go/model"
 	"github.com/fealos/lee-tsp-go/model2d"
 	"github.com/stretchr/testify/assert"
@@ -26,8 +27,8 @@ func TestFindShortestPathHeap_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		circuit := model.NewHeapableCircuitImpl(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
-		result, _, _ := FindShortestPathHeap(circuit)
+		c := circuit.NewHeapableCircuitImpl(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
+		result, _, _ := FindShortestPathHeap(c)
 		shortest := result.GetAttachedVertices()
 		actual := result.GetLength()
 
@@ -52,8 +53,8 @@ func TestFindShortestPathHeap_MinClones_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		circuit := model.NewHeapableCircuitMinClones(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
-		result, _, _ := FindShortestPathHeap(circuit)
+		c := circuit.NewHeapableCircuitMinClones(vertices, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
+		result, _, _ := FindShortestPathHeap(c)
 		shortest := result.GetAttachedVertices()
 		actual := result.GetLength()
 
