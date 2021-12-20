@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/fealos/lee-tsp-go/circuit"
 	"github.com/fealos/lee-tsp-go/graph"
 	"github.com/fealos/lee-tsp-go/model"
 	"github.com/fealos/lee-tsp-go/solver"
@@ -24,7 +25,7 @@ func ComparePerformanceGraph() {
 	// 	name: "np",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
 	// 		circuit, pathLength := solver.FindShortestPathNP(cv)
-	// 		return &model.HeapableCircuitComplete{
+	// 		return &circuit.CompletedCircuit{
 	// 			Circuit: circuit,
 	// 			Length:  pathLength,
 	// 		}
@@ -35,7 +36,7 @@ func ComparePerformanceGraph() {
 	// 	name: "np_heap",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
 	// 		circuit, pathLength := solver.FindShortestPathNPHeap(cv)
-	// 		return &model.HeapableCircuitComplete{
+	// 		return &circuit.CompletedCircuit{
 	// 			Circuit: circuit,
 	// 			Length:  pathLength,
 	// 		}
@@ -52,14 +53,14 @@ func ComparePerformanceGraph() {
 			g := &graph.Graph{
 				Vertices: v,
 			}
-			circuit := graph.NewGraphCircuit(g)
-			defer circuit.Delete()
+			c := graph.NewGraphCircuit(g)
+			defer c.Delete()
 
-			solver.FindShortestPathGreedy(circuit)
+			solver.FindShortestPathGreedy(c)
 
-			return &model.HeapableCircuitComplete{
-				Circuit: circuit.GetAttachedVertices(),
-				Length:  circuit.GetLength(),
+			return &circuit.CompletedCircuit{
+				Circuit: c.GetAttachedVertices(),
+				Length:  c.GetLength(),
 			}
 		},
 	})

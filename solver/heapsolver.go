@@ -1,15 +1,18 @@
 package solver
 
-import "github.com/fealos/lee-tsp-go/model"
+import (
+	"github.com/fealos/lee-tsp-go/circuit"
+	"github.com/fealos/lee-tsp-go/model"
+)
 
-func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit, int, int) {
-	circuit.Prepare()
-	circuit.BuildPerimiter()
+func FindShortestPathHeap(cir model.HeapableCircuit) (model.HeapableCircuit, int, int) {
+	cir.Prepare()
+	cir.BuildPerimiter()
 
 	circuitHeap := model.NewHeap(func(a interface{}) float64 {
 		return a.(model.HeapableCircuit).GetLengthWithNext()
 	})
-	circuitHeap.PushHeap(circuit)
+	circuitHeap.PushHeap(cir)
 
 	iterationCount := 0
 	next := circuitHeap.PopHeap().(model.HeapableCircuit)
@@ -24,7 +27,7 @@ func FindShortestPathHeap(circuit model.HeapableCircuit) (model.HeapableCircuit,
 
 	numClones := circuitHeap.Len()
 
-	result := &model.HeapableCircuitComplete{
+	result := &circuit.CompletedCircuit{
 		Circuit: next.GetAttachedVertices(),
 		Length:  next.GetLength(),
 	}

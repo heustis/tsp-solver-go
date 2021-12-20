@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/fealos/lee-tsp-go/circuit"
 	"github.com/fealos/lee-tsp-go/model"
 	"github.com/fealos/lee-tsp-go/model3d"
 	"github.com/fealos/lee-tsp-go/solver"
@@ -25,9 +26,9 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "np",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			circuit, pathLength := solver.FindShortestPathNP(cv)
-			return &model.HeapableCircuitComplete{
-				Circuit: circuit,
+			c, pathLength := solver.FindShortestPathNP(cv)
+			return &circuit.CompletedCircuit{
+				Circuit: c,
 				Length:  pathLength,
 			}
 		},
@@ -36,9 +37,9 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "np_heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			circuit, pathLength := solver.FindShortestPathNPHeap(cv)
-			return &model.HeapableCircuitComplete{
-				Circuit: circuit,
+			c, pathLength := solver.FindShortestPathNPHeap(cv)
+			return &circuit.CompletedCircuit{
+				Circuit: c,
 				Length:  pathLength,
 			}
 		},
@@ -47,54 +48,54 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			circuit, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
-			return circuit.(model.Circuit)
+			c, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
+			return c.(model.Circuit)
 		},
 	})
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap_mc",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			circuit, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitMinClones(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
-			return circuit.(model.Circuit)
+			c, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitMinClones(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
+			return c.(model.Circuit)
 		},
 	})
 
 	// circuits = append(circuits, &NamedCircuit{
-	// 	name: "greedy_byedge_withupdates",
+	// 	name: "convex_concave_byedge_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit := model.NewCircuitGreedyByEdgeWithUpdatesImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{})
-	// 		solver.FindShortestPathGreedy(circuit)
-	// 		return circuit
+	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, true)
+	// 		solver.FindShortestPathGreedy(c)
+	// 		return c
 	// 	},
 	// })
 
 	// circuits = append(circuits, &NamedCircuit{
-	// 	name: "greedy_byedge",
+	// 	name: "convex_concave_byedge",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit := model.NewCircuitGreedyByEdgeImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{})
-	// 		solver.FindShortestPathGreedy(circuit)
-	// 		return circuit
+	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, false)
+	// 		solver.FindShortestPathGreedy(c)
+	// 		return c
+	// 	},
+	// })
+
+	// circuits = append(circuits, &NamedCircuit{
+	// 	name: "convex_concave_withupdates",
+	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
+	// 		c := circuit.NewConvexConcave(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, true)
+	// 		solver.FindShortestPathGreedy(c)
+	// 		return c
 	// 	},
 	// })
 
 	circuits = append(circuits, &NamedCircuit{
-		name: "greedy",
+		name: "convex_concave",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			circuit := model.NewCircuitGreedyImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{})
-			solver.FindShortestPathGreedy(circuit)
-			return circuit
+			c := circuit.NewConvexConcave(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, false)
+			solver.FindShortestPathGreedy(c)
+			return c
 		},
 	})
-
-	// circuits = append(circuits, &NamedCircuit{
-	// 	name: "greedy_withupdates",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit := model.NewCircuitGreedyWithUpdatesImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{})
-	// 		solver.FindShortestPathGreedy(circuit)
-	// 		return circuit
-	// 	},
-	// })
 
 	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, GenerateVertices3d)
 }
