@@ -72,13 +72,22 @@ func MergeEdges2(edges []CircuitEdge, vertex CircuitVertex) ([]CircuitEdge, Circ
 // In addition to updating the linked list, this also returns the two detached edges and the linked list element for the merged edge.
 // If the vertex is not presed in the list of edges, it will be unmodified and nil will be returned.
 func MergeEdgesList(edges *list.List, vertex CircuitVertex) (CircuitEdge, CircuitEdge, *list.Element) {
+	// There must be at least 2 edges to merge edges.
+	if edges.Len() < 2 {
+		return nil, nil, nil
+	}
+
 	for i, link := 0, edges.Front(); i < edges.Len(); i, link = i+1, link.Next() {
 		edge := link.Value.(CircuitEdge)
 		if edge.GetStart() == vertex {
-			prev := link.Prev().Value.(CircuitEdge)
-			link.Value = prev.Merge(edge)
-			edges.Remove(link.Prev())
-			return prev, edge, link
+			prevLink := link.Prev()
+			if link.Prev() == nil {
+				prevLink = edges.Back()
+			}
+			prev := prevLink.Value.(CircuitEdge)
+			prevLink.Value = prev.Merge(edge)
+			edges.Remove(link)
+			return prev, edge, prevLink
 		}
 	}
 	return nil, nil, nil

@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"container/list"
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/model"
@@ -226,6 +227,43 @@ func TestFindClosestEdge_3D(t *testing.T) {
 	}
 }
 
+func TestFindClosestEdgeList_2D(t *testing.T) {
+	assert := assert.New(t)
+
+	points := []*model2d.Vertex2D{
+		{X: 0.0, Y: 0.0},
+		{X: 0.0, Y: 1.0},
+		{X: 1.0, Y: 1.0},
+		{X: 0.7, Y: 0.5},
+		{X: 1.0, Y: 0.0},
+	}
+
+	edges := list.New()
+	edges.PushBack(model2d.NewEdge2D(points[0], points[1])) //0 = 0.0,0.0 -> 0.0,1.0
+	edges.PushBack(model2d.NewEdge2D(points[1], points[2])) //1 = 0.0,1.0 -> 1.0,1.0
+	edges.PushBack(model2d.NewEdge2D(points[2], points[3])) //2 = 1.0,1.0 -> 0.7,0.5
+	edges.PushBack(model2d.NewEdge2D(points[3], points[4])) //3 = 0.7,0.5 -> 1.0,0.0
+	edges.PushBack(model2d.NewEdge2D(points[4], points[0])) //4 = 1.0,0.0 -> 0.0,0.0
+
+	testCases := []struct {
+		v        *model2d.Vertex2D
+		expected model.CircuitEdge
+	}{
+		{v: &model2d.Vertex2D{X: 0.0, Y: 0.0}, expected: model2d.NewEdge2D(points[0], points[1])},
+		{v: &model2d.Vertex2D{X: 0.5, Y: 0.0}, expected: model2d.NewEdge2D(points[4], points[0])},
+		{v: &model2d.Vertex2D{X: 0.5, Y: 0.5}, expected: model2d.NewEdge2D(points[2], points[3])},
+		{v: &model2d.Vertex2D{X: 0.5, Y: 0.6}, expected: model2d.NewEdge2D(points[1], points[2])},
+		{v: &model2d.Vertex2D{X: 0.6, Y: 0.6}, expected: model2d.NewEdge2D(points[2], points[3])},
+		{v: &model2d.Vertex2D{X: 0.5, Y: 0.4}, expected: model2d.NewEdge2D(points[4], points[0])},
+		{v: &model2d.Vertex2D{X: 0.6, Y: 0.4}, expected: model2d.NewEdge2D(points[3], points[4])},
+		{v: &model2d.Vertex2D{X: 0.2, Y: 0.1}, expected: model2d.NewEdge2D(points[4], points[0])},
+	}
+
+	for i, tc := range testCases {
+		assert.Equal(model.FindClosestEdgeList(tc.v, edges), tc.expected, i)
+	}
+}
+
 func TestFindClosestEdge_3D_ShouldReturnNilIfListIsEmpty(t *testing.T) {
 	assert := assert.New(t)
 
@@ -320,6 +358,19 @@ func TestInsertVertex_Heap(t *testing.T) {
 	assert.Equal(model2d.NewVertex2D(0, 0), circuit[3])
 	assert.Equal(model2d.NewVertex2D(15, -15), circuit[4])
 	assert.Equal(model2d.NewVertex2D(-5, -5), circuit[5])
+}
+
+func TestIsBetween(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.True(model.IsBetween(5, 0, 10))
+	assert.True(model.IsBetween(5, -5, 10))
+	assert.True(model.IsBetween(5, -5, 5))
+	assert.True(model.IsBetween(5, 5, 5))
+	assert.False(model.IsBetween(5, 5.1, 5.6))
+	assert.False(model.IsBetween(5, -5, -5))
+	assert.False(model.IsBetween(5, 0, -10))
+	assert.False(model.IsBetween(5, -10, 0))
 }
 
 func TestIsEdgeCloser_2D(t *testing.T) {

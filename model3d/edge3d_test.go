@@ -28,7 +28,7 @@ func TestDistanceIncrease(t *testing.T) {
 	}
 }
 
-func TestDistanceIncrease2D(t *testing.T) {
+func TestDistanceIncrease3D(t *testing.T) {
 	assert := assert.New(t)
 
 	edge := NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 0.0, 0.0))
@@ -73,6 +73,63 @@ func TestGetVector(t *testing.T) {
 	assert.InDelta(2.0/math.Sqrt(17), vector.X, 0.0000001)
 	assert.InDelta(-2.0/math.Sqrt(17), vector.Y, 0.0000001)
 	assert.InDelta(3.0/math.Sqrt(17), vector.Z, 0.0000001)
+}
+
+func TestIntersects_Edge3D_ShouldWorkFor2DTestCases(t *testing.T) {
+	assert := assert.New(t)
+
+	testCases := []struct {
+		edgeA    *Edge3D
+		edgeB    *Edge3D
+		expected bool
+	}{
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), NewEdge3D(NewVertex3D(0.0, -1.0, 0.0), NewVertex3D(1.0, 0.0, 0.0)), false},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), NewEdge3D(NewVertex3D(-1.0, -1.0, 0.0), NewVertex3D(1.0, 0.0, 0.0)), false},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 0.0, 0.0)), true},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), NewEdge3D(NewVertex3D(0.5, 0.5, 0.0), NewVertex3D(-1.5, -1.5, 0.0)), true},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), NewEdge3D(NewVertex3D(0.0, 1.0, 0.0), NewVertex3D(1.0, 0.0, 0.0)), true},
+		{NewEdge3D(NewVertex3D(15.5, 12.0, 0.0), NewVertex3D(10.3, 7.25, 0.0)), NewEdge3D(NewVertex3D(5.5, 28.0, 0.0), NewVertex3D(19.6, 3.0, 0.0)), true},
+	}
+
+	for i, tc := range testCases {
+		assert.Equal(tc.expected, tc.edgeA.Intersects(tc.edgeB), i)
+		assert.Equal(tc.expected, tc.edgeB.Intersects(tc.edgeA), i)
+
+		edgeAReverse := NewEdge3D(tc.edgeA.End, tc.edgeA.Start)
+		edgeBReverse := NewEdge3D(tc.edgeB.End, tc.edgeB.Start)
+		assert.Equal(tc.expected, edgeAReverse.Intersects(tc.edgeB), i)
+		assert.Equal(tc.expected, edgeAReverse.Intersects(edgeBReverse), i)
+		assert.Equal(tc.expected, edgeBReverse.Intersects(tc.edgeA), i)
+		assert.Equal(tc.expected, edgeBReverse.Intersects(edgeAReverse), i)
+	}
+}
+
+func TestIntersects_Edge3D_ShouldWorkFor3D(t *testing.T) {
+	assert := assert.New(t)
+
+	testCases := []struct {
+		edgeA    *Edge3D
+		edgeB    *Edge3D
+		expected bool
+	}{
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 1.0)), NewEdge3D(NewVertex3D(1.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 0.0)), false},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 1.0)), NewEdge3D(NewVertex3D(2.0, 2.0, 2.0), NewVertex3D(3.0, 3.0, 3.0)), false},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 1.0)), NewEdge3D(NewVertex3D(.75, .75, .75), NewVertex3D(3.0, 3.0, 3.0)), true},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 1.0)), NewEdge3D(NewVertex3D(.5, .5, .5), NewVertex3D(-3.0, 15.0, 30.0)), true},
+		{NewEdge3D(NewVertex3D(0.0, 0.0, 0.0), NewVertex3D(1.0, 1.0, 1.0)), NewEdge3D(NewVertex3D(-9.5, 5.5, 13.8333), NewVertex3D(10.5, -4.5, -12.8333)), true},
+	}
+
+	for i, tc := range testCases {
+		assert.Equal(tc.expected, tc.edgeA.Intersects(tc.edgeB), i)
+		assert.Equal(tc.expected, tc.edgeB.Intersects(tc.edgeA), i)
+
+		edgeAReverse := NewEdge3D(tc.edgeA.End, tc.edgeA.Start)
+		edgeBReverse := NewEdge3D(tc.edgeB.End, tc.edgeB.Start)
+		assert.Equal(tc.expected, edgeAReverse.Intersects(tc.edgeB), i)
+		assert.Equal(tc.expected, edgeAReverse.Intersects(edgeBReverse), i)
+		assert.Equal(tc.expected, edgeBReverse.Intersects(tc.edgeA), i)
+		assert.Equal(tc.expected, edgeBReverse.Intersects(edgeAReverse), i)
+	}
 }
 
 func TestSplit(t *testing.T) {

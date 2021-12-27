@@ -3,6 +3,7 @@ package solver
 import (
 	"math"
 
+	"github.com/fealos/lee-tsp-go/graph"
 	"github.com/fealos/lee-tsp-go/model"
 )
 
@@ -10,9 +11,69 @@ import (
 // It accepts an unordered set of vertices, and returns the ordered list of vertices.
 // To minimize memory usage (N^2) it uses a tree and depth-first search.
 func FindShortestPathNP(vertices []model.CircuitVertex) ([]model.CircuitVertex, float64) {
+	numVertices := len(vertices)
+	if numVertices == 0 {
+		return nil, 0.0
+	}
 	// Step 1: Prepare root of tree
 	treeRoot := createNode(0, 0, nil)
+	treeRoot.createChildren(numVertices)
+
+	// - Check if path to child intersects any ancestor paths (other than parent path, since they share a vertex), skip child if true.
+	// -- Consider tracking found paths to minimize re-computation; O(n^4) memory usage, so may not be worth it.
+	// - Track best circuit length thus far, if child node would exceed that length, skip child if true.
+	shortestPathLen := math.MaxFloat64
+	_, isGraph := vertices[0].(*graph.GraphVertex)
+
+	// Step 2: Navigate down tree, creating children as we go
+	for current := treeRoot; treeRoot.shortestPath == nil; {
+		// If at leaf node, compute length of path from root to leaf, then return up one level
+		if current.depth == numVertices-1 {
+			current.computeLeafPath(vertices)
+			current = current.parent
+		} else if nextChild := current.findUnprocessedChild(); nextChild != nil {
+			// If uncomputed children nodes exist, process the next child node
+			current = nextChild
+			// Ignore paths that self intersect, since those are guaranteed to be non-optimal (for non-graphs), or are longer than the optimal path so far.
+			// Do not perform this check for graphs, since those may need to be self-intersecting to produce the optimal result.
+			if !isGraph && current.intersectsAnyAncestorsOrIsLongerThanBestLength(vertices, shortestPathLen) {
+				// Use empty array and max length to ignore a branch in the tree.
+				current.shortestPath = []model.CircuitVertex{}
+				current = current.parent
+			} else {
+				current.createChildren(numVertices)
+			}
+		} else {
+			// If no uncomputed children, find shortest path among them, update current node, and delete children
+			current.shortestPath = []model.CircuitVertex{}
+			for _, child := range current.children {
+				if child.shortestPathLength < current.shortestPathLength {
+					current.shortestPath = child.shortestPath
+					current.shortestPathLength = child.shortestPathLength
+					if child.shortestPathLength < shortestPathLen {
+						shortestPathLen = child.shortestPathLength
+					}
+				}
+				child.deleteNode()
+			}
+			current.children = nil
+			current = current.parent
+		}
+	}
+
+	return treeRoot.shortestPath, treeRoot.shortestPathLength
+}
+
+// FindShortestPathNP checks all possible combinations of paths to find the shortest path.
+// It accepts an unordered set of vertices, and returns the ordered list of vertices.
+// To minimize memory usage (N^2) it uses a tree and depth-first search.
+func FindShortestPathNPNoChecks(vertices []model.CircuitVertex) ([]model.CircuitVertex, float64) {
 	numVertices := len(vertices)
+	if numVertices == 0 {
+		return nil, 0.0
+	}
+	// Step 1: Prepare root of tree
+	treeRoot := createNode(0, 0, nil)
 	treeRoot.createChildren(numVertices)
 
 	// Step 2: Navigate down tree, creating children as we go
@@ -66,9 +127,32 @@ func (t *treeNodeTSP) createChildren(numVertices int) {
 	existingIndices := t.computeExistingIndices()
 	for index := 0; index < numVertices; index++ {
 		if _, exists := existingIndices[index]; !exists {
-			t.children = append(t.children, createNode(index, t.depth+1, t))
+			child := createNode(index, t.depth+1, t)
+			t.children = append(t.children, child)
 		}
 	}
+}
+
+func (t *treeNodeTSP) intersectsAnyAncestorsOrIsLongerThanBestLength(vertices []model.CircuitVertex, bestLength float64) bool {
+	// Ignore the first 3 vertices, since either there are no edges to intersect, or there is only one other edge (which ends at the parent to this vertex)
+	if t.depth < 3 {
+		return false
+	}
+	edgeT := vertices[t.parent.index].EdgeTo(vertices[t.index])
+	pathLength := edgeT.GetLength()
+
+	// Go to the parent two levels up, to ensure that there are no shared vertices between this edge and the current edge.
+	for current := t.parent.parent; current.parent != nil; current = current.parent {
+		edgeCurrent := vertices[current.parent.index].EdgeTo(vertices[current.index])
+		pathLength += edgeCurrent.GetLength()
+		if pathLength > bestLength {
+			return true
+		} else if edgeT.Intersects(edgeCurrent) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (t *treeNodeTSP) computeExistingIndices() map[int]bool {

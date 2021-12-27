@@ -58,6 +58,9 @@ type CircuitEdge interface {
 	GetLength() float64
 	// GetStart returns the starting point of this edge.
 	GetStart() CircuitVertex
+	// Intersects checks if the two edges go through at least one identical point.
+	// Note: Edges may share multiple points if they are co-linear, or in the use-case of graphs.
+	Intersects(other CircuitEdge) bool
 	// Merge creates a new edge starting from this edge's start vertex and ending at the supplied edge's end vertex.
 	Merge(CircuitEdge) CircuitEdge
 	// Split creates two new edges "start-to-vertex" and "vertex-to-end" based on this edge and the supplied vertex.

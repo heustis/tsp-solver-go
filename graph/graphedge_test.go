@@ -127,11 +127,19 @@ func TestMergeAndSplit(t *testing.T) {
 				a, b := edge.Split(g.Vertices[split])
 				assert.Equal(g.Vertices[start], a.GetStart())
 				assert.Equal(g.Vertices[split], a.GetEnd())
-				assert.False(edge.Equals(a))
+				if split != end {
+					assert.False(edge.Equals(a))
+				} else {
+					assert.True(edge.Equals(a))
+				}
 
 				assert.Equal(g.Vertices[split], b.GetStart())
 				assert.Equal(g.Vertices[end], b.GetEnd())
-				assert.False(edge.Equals(b))
+				if split != start {
+					assert.False(edge.Equals(b))
+				} else {
+					assert.True(edge.Equals(b))
+				}
 
 				merged := a.Merge(b)
 				assert.True(edge.Equals(merged))
@@ -139,7 +147,11 @@ func TestMergeAndSplit(t *testing.T) {
 				mergedReverse := b.Merge(a)
 				assert.Equal(g.Vertices[split], mergedReverse.GetStart())
 				assert.Equal(g.Vertices[split], mergedReverse.GetEnd())
-				assert.False(edge.Equals(mergedReverse))
+				if start == end && (split == start || split == end) {
+					assert.True(edge.Equals(mergedReverse))
+				} else {
+					assert.False(edge.Equals(mergedReverse))
+				}
 
 				edge.Delete()
 				a.(*graph.GraphEdge).Delete()

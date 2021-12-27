@@ -1,7 +1,9 @@
 package model2d
 
 import (
+	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/fealos/lee-tsp-go/model"
 )
@@ -31,6 +33,15 @@ func DeduplicateVertices(vertices []model.CircuitVertex) []model.CircuitVertex {
 		sourceIndex = nextIndex
 	}
 	return uniqueVertices
+}
+
+func GenerateVertices2D(size int) []model.CircuitVertex {
+	var vertices []model.CircuitVertex
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < size; i++ {
+		vertices = append(vertices, NewVertex2D(r.Float64()*10000, r.Float64()*10000))
+	}
+	return vertices
 }
 
 func findFarthestPoint(target model.CircuitVertex, points []model.CircuitVertex) model.CircuitVertex {

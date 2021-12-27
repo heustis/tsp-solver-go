@@ -45,13 +45,13 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 	for vertex := range unattachedVertices {
 		v2d := vertex.(*Vertex2D)
 		e2d := circuitEdges[0].(*Edge2D)
-		if v2d.isLeftOf(e2d) {
+		if v2d.IsLeftOf(e2d) {
 			e2d = circuitEdges[1].(*Edge2D)
 		}
 
 		exteriorClosestEdges[vertex] = &model.DistanceToEdge{
 			Edge:     e2d,
-			Distance: v2d.distanceToEdge(e2d),
+			Distance: v2d.DistanceToEdge(e2d),
 			Vertex:   v2d,
 		}
 	}
@@ -100,7 +100,7 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 
 				// If the vertex is now interior, stop tracking its closest edge (until the convex perimeter is fully constructed) and add it to the interior edge list.
 				// Otherwise, it is still exterior, so update its closest edge.
-				if v.(*Vertex2D).isLeftOf(newClosest.Edge.(*Edge2D)) {
+				if v.(*Vertex2D).IsLeftOf(newClosest.Edge.(*Edge2D)) {
 					delete(exteriorClosestEdges, v)
 				} else {
 					exteriorClosestEdges[v] = newClosest

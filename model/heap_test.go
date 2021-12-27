@@ -78,6 +78,10 @@ func TestAnyMatch(t *testing.T) {
 	h1.PushHeap(&testEntry{6})
 	h1.PushHeap(&testEntry{7})
 
+	assert.Equal([]interface{}{
+		&testEntry{1.23}, &testEntry{3.45}, &testEntry{2.34}, &testEntry{4}, &testEntry{5}, &testEntry{6}, &testEntry{7},
+	}, h1.GetValues())
+
 	assert.True(h1.AnyMatch(func(x interface{}) bool {
 		e, okay := x.(*testEntry)
 		return okay && e.val > 6
@@ -167,6 +171,35 @@ func TestDeleteAll(t *testing.T) {
 	assert.Equal(7, h1.Len())
 	assert.Equal(0, h2.Len())
 	assert.Equal(3, h3.Len())
+}
+
+func TestPushAll(t *testing.T) {
+	assert := assert.New(t)
+
+	entries := []interface{}{&testEntry{5}, &testEntry{4}, &testEntry{3}, &testEntry{2}, &testEntry{1}}
+
+	h := model.NewHeap(getVal)
+	h.PushAll(entries...)
+	assert.NotEqual(entries, h.GetValues())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}, &testEntry{3}, &testEntry{5}, &testEntry{4}}, h.GetValues())
+
+	h2 := model.NewHeap(getVal)
+	h2.PushAllFrom(h)
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}, &testEntry{3}, &testEntry{5}, &testEntry{4}}, h2.GetValues())
+
+	h2.PopHeap()
+	assert.Equal([]interface{}{&testEntry{2}, &testEntry{4}, &testEntry{3}, &testEntry{5}}, h2.GetValues())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}, &testEntry{3}, &testEntry{5}, &testEntry{4}}, h.GetValues())
+
+	h.PopHeap()
+	h.PopHeap()
+	assert.Equal([]interface{}{&testEntry{2}, &testEntry{4}, &testEntry{3}, &testEntry{5}}, h2.GetValues())
+	assert.Equal([]interface{}{&testEntry{3}, &testEntry{4}, &testEntry{5}}, h.GetValues())
+
+	h.Delete()
+	assert.Equal(0, h.Len())
+	h2.Delete()
+	assert.Equal(0, h2.Len())
 }
 
 func TestReplaceAll(t *testing.T) {
@@ -311,6 +344,35 @@ func TestReplaceAll2(t *testing.T) {
 	assert.Equal(&testEntry{4.0}, h2.PopHeap())
 	assert.Equal(4, h1.Len())
 	assert.Equal(3, h2.Len())
+}
+
+func TestTrimN(t *testing.T) {
+	assert := assert.New(t)
+
+	entries := []interface{}{&testEntry{5}, &testEntry{4}, &testEntry{3}, &testEntry{2}, &testEntry{1}}
+
+	h := model.NewHeap(getVal)
+	h.PushAll(entries...)
+	assert.Equal(5, h.Len())
+
+	h.TrimN(4)
+	assert.Equal(4, h.Len())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}, &testEntry{3}, &testEntry{4}}, h.GetValues())
+
+	h.TrimN(5)
+	assert.Equal(4, h.Len())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}, &testEntry{3}, &testEntry{4}}, h.GetValues())
+
+	h.TrimN(2)
+	assert.Equal(2, h.Len())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}}, h.GetValues())
+
+	h.TrimN(-1)
+	assert.Equal(2, h.Len())
+	assert.Equal([]interface{}{&testEntry{1}, &testEntry{2}}, h.GetValues())
+
+	h.TrimN(0)
+	assert.Equal(0, h.Len())
 }
 
 func TestToString_Heap(t *testing.T) {

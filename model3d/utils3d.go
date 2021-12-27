@@ -1,6 +1,9 @@
 package model3d
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/fealos/lee-tsp-go/model"
 )
 
@@ -25,4 +28,13 @@ func DeduplicateVertices3D(vertices []model.CircuitVertex) []model.CircuitVertex
 		}
 	}
 	return uniqueVertices
+}
+
+func GenerateVertices3D(size int) []model.CircuitVertex {
+	var vertices []model.CircuitVertex
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < size; i++ {
+		vertices = append(vertices, NewVertex3D(r.Float64()*10000, r.Float64()*10000, r.Float64()*10000))
+	}
+	return vertices
 }

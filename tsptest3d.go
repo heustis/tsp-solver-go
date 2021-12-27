@@ -1,9 +1,6 @@
 package main
 
 import (
-	"math/rand"
-	"time"
-
 	"github.com/fealos/lee-tsp-go/circuit"
 	"github.com/fealos/lee-tsp-go/model"
 	"github.com/fealos/lee-tsp-go/model3d"
@@ -48,7 +45,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
+			c, _, _ := solver.FindShortestPathHeap(circuit.NewHeapableCircuitImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
 			return c.(model.Circuit)
 		},
 	})
@@ -56,7 +53,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap_mc",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, _, _ := solver.FindShortestPathHeap(model.NewHeapableCircuitMinClones(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
+			c, _, _ := solver.FindShortestPathHeap(circuit.NewHeapableCircuitMinClones(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
 			return c.(model.Circuit)
 		},
 	})
@@ -97,14 +94,5 @@ func ComparePerformance3d() {
 		},
 	})
 
-	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, GenerateVertices3d)
-}
-
-func GenerateVertices3d(size int) []model.CircuitVertex {
-	var vertices []model.CircuitVertex
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < size; i++ {
-		vertices = append(vertices, model3d.NewVertex3D(r.Float64()*10000, r.Float64()*10000, r.Float64()*10000))
-	}
-	return vertices
+	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, model3d.GenerateVertices3D)
 }

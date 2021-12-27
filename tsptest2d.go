@@ -1,9 +1,6 @@
 package main
 
 import (
-	"math/rand"
-	"time"
-
 	"github.com/fealos/lee-tsp-go/circuit"
 	"github.com/fealos/lee-tsp-go/model"
 	"github.com/fealos/lee-tsp-go/model2d"
@@ -76,14 +73,5 @@ func ComparePerformance2d() {
 	// 	},
 	// })
 
-	ComparePerformance("results_2d_comp_convex_concave_3.tsv", &NumVertices{initVertices: 100, incrementVertices: 100, maxVertices: 2000, numIterations: 100}, circuits, GenerateVertices2d)
-}
-
-func GenerateVertices2d(size int) []model.CircuitVertex {
-	var vertices []model.CircuitVertex
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < size; i++ {
-		vertices = append(vertices, model2d.NewVertex2D(r.Float64()*10000, r.Float64()*10000))
-	}
-	return vertices
+	ComparePerformance("results_2d_comp_convex_concave_3.tsv", &NumVertices{initVertices: 100, incrementVertices: 100, maxVertices: 2000, numIterations: 100}, circuits, model2d.GenerateVertices2D)
 }

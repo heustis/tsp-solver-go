@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"container/list"
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/model"
@@ -222,6 +223,125 @@ func TestMergeEdges2(t *testing.T) {
 	assert.Len(edges, 1)
 	edges, _, _, _ = model.MergeEdges2(edges, vertices[2])
 	assert.Len(edges, 1)
+}
+
+func TestMergeEdgesList(t *testing.T) {
+	assert := assert.New(t)
+
+	vertices := []*model2d.Vertex2D{
+		model2d.NewVertex2D(1, 1),
+		model2d.NewVertex2D(2, 2),
+		model2d.NewVertex2D(3, 3),
+		model2d.NewVertex2D(4, 4),
+		model2d.NewVertex2D(5, 5),
+		model2d.NewVertex2D(6, 6),
+		model2d.NewVertex2D(7, 7),
+		model2d.NewVertex2D(8, 8),
+	}
+
+	edges := list.New()
+	edges.PushBack(model2d.NewEdge2D(vertices[0], vertices[1]))
+	edges.PushBack(model2d.NewEdge2D(vertices[1], vertices[2]))
+	edges.PushBack(model2d.NewEdge2D(vertices[2], vertices[3]))
+	edges.PushBack(model2d.NewEdge2D(vertices[3], vertices[4]))
+	edges.PushBack(model2d.NewEdge2D(vertices[4], vertices[5]))
+	edges.PushBack(model2d.NewEdge2D(vertices[5], vertices[6]))
+	edges.PushBack(model2d.NewEdge2D(vertices[6], vertices[7]))
+	edges.PushBack(model2d.NewEdge2D(vertices[7], vertices[0]))
+
+	a, b, merged := model.MergeEdgesList(edges, vertices[1])
+	assert.Equal(7, edges.Len())
+	expected := []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[0], vertices[2]),
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+		model2d.NewEdge2D(vertices[5], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[7]),
+		model2d.NewEdge2D(vertices[7], vertices[0]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value)
+	}
+	assert.Equal(model2d.NewEdge2D(vertices[0], vertices[1]), a)
+	assert.Equal(model2d.NewEdge2D(vertices[1], vertices[2]), b)
+	assert.Equal(model2d.NewEdge2D(vertices[0], vertices[2]), merged.Value)
+
+	a, b, merged = model.MergeEdgesList(edges, model2d.NewVertex2D(10, 10))
+	assert.Equal(7, edges.Len())
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[0], vertices[2]),
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+		model2d.NewEdge2D(vertices[5], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[7]),
+		model2d.NewEdge2D(vertices[7], vertices[0]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value)
+	}
+	assert.Nil(a)
+	assert.Nil(b)
+	assert.Nil(merged)
+
+	a, b, merged = model.MergeEdgesList(edges, vertices[0])
+	assert.Equal(6, edges.Len())
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+		model2d.NewEdge2D(vertices[5], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[7]),
+		model2d.NewEdge2D(vertices[7], vertices[2]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value, i)
+	}
+	assert.Equal(model2d.NewEdge2D(vertices[7], vertices[0]), a)
+	assert.Equal(model2d.NewEdge2D(vertices[0], vertices[2]), b)
+	assert.Equal(model2d.NewEdge2D(vertices[7], vertices[2]), merged.Value)
+
+	a, b, merged = model.MergeEdgesList(edges, vertices[7])
+	assert.Equal(5, edges.Len())
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+		model2d.NewEdge2D(vertices[5], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[2]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value)
+	}
+	assert.Equal(model2d.NewEdge2D(vertices[6], vertices[7]), a)
+	assert.Equal(model2d.NewEdge2D(vertices[7], vertices[2]), b)
+	assert.Equal(model2d.NewEdge2D(vertices[6], vertices[2]), merged.Value)
+
+	a, b, merged = model.MergeEdgesList(edges, vertices[3])
+	assert.Equal(4, edges.Len())
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[2], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+		model2d.NewEdge2D(vertices[5], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[2]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value)
+	}
+	assert.Equal(model2d.NewEdge2D(vertices[2], vertices[3]), a)
+	assert.Equal(model2d.NewEdge2D(vertices[3], vertices[4]), b)
+	assert.Equal(model2d.NewEdge2D(vertices[2], vertices[4]), merged.Value)
+
+	_, _, _ = model.MergeEdgesList(edges, vertices[4])
+	_, _, _ = model.MergeEdgesList(edges, vertices[5])
+	assert.Equal(2, edges.Len())
+	_, _, _ = model.MergeEdgesList(edges, vertices[6])
+	assert.Equal(1, edges.Len())
+	_, _, _ = model.MergeEdgesList(edges, vertices[2])
+	assert.Equal(1, edges.Len())
+	_, _, _ = model.MergeEdgesList(edges, vertices[2])
+	assert.Equal(1, edges.Len())
 }
 
 func TestMoveVertex(t *testing.T) {
@@ -475,4 +595,74 @@ func TestSplitEdge2(t *testing.T) {
 		model2d.NewEdge2D(vertices[4], vertices[7]),
 		model2d.NewEdge2D(vertices[7], vertices[5]),
 	}, edges)
+}
+
+func TestSplitEdgeList(t *testing.T) {
+	assert := assert.New(t)
+
+	vertices := []*model2d.Vertex2D{
+		model2d.NewVertex2D(1, 1),
+		model2d.NewVertex2D(2, 2),
+		model2d.NewVertex2D(3, 3),
+		model2d.NewVertex2D(4, 4),
+		model2d.NewVertex2D(5, 5),
+		model2d.NewVertex2D(6, 6),
+		model2d.NewVertex2D(7, 7),
+		model2d.NewVertex2D(8, 8),
+	}
+
+	edges := list.New()
+	edges.PushBack(model2d.NewEdge2D(vertices[0], vertices[1]))
+	edges.PushBack(model2d.NewEdge2D(vertices[1], vertices[2]))
+	edges.PushBack(model2d.NewEdge2D(vertices[2], vertices[3]))
+	edges.PushBack(model2d.NewEdge2D(vertices[3], vertices[4]))
+	edges.PushBack(model2d.NewEdge2D(vertices[4], vertices[5]))
+
+	newEdge := model.SplitEdgeList(edges, model2d.NewEdge2D(vertices[0], vertices[7]), vertices[6])
+	assert.Nil(newEdge)
+	expected := []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[0], vertices[1]),
+		model2d.NewEdge2D(vertices[1], vertices[2]),
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value, i)
+	}
+
+	newEdge = model.SplitEdgeList(edges, model2d.NewEdge2D(vertices[0], vertices[1]), vertices[6])
+	assert.NotNil(newEdge)
+	assert.NotNil(newEdge.Prev())
+	assert.Equal(model2d.NewEdge2D(vertices[0], vertices[6]), newEdge.Prev().Value)
+	assert.Equal(model2d.NewEdge2D(vertices[6], vertices[1]), newEdge.Value)
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[0], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[1]),
+		model2d.NewEdge2D(vertices[1], vertices[2]),
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[5]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value, i)
+	}
+
+	newEdge = model.SplitEdgeList(edges, model2d.NewEdge2D(vertices[4], vertices[5]), vertices[7])
+	assert.NotNil(newEdge)
+	assert.NotNil(newEdge.Prev())
+	assert.Equal(model2d.NewEdge2D(vertices[4], vertices[7]), newEdge.Prev().Value)
+	assert.Equal(model2d.NewEdge2D(vertices[7], vertices[5]), newEdge.Value)
+	expected = []model.CircuitEdge{
+		model2d.NewEdge2D(vertices[0], vertices[6]),
+		model2d.NewEdge2D(vertices[6], vertices[1]),
+		model2d.NewEdge2D(vertices[1], vertices[2]),
+		model2d.NewEdge2D(vertices[2], vertices[3]),
+		model2d.NewEdge2D(vertices[3], vertices[4]),
+		model2d.NewEdge2D(vertices[4], vertices[7]),
+		model2d.NewEdge2D(vertices[7], vertices[5]),
+	}
+	for i, testNode := 0, edges.Front(); testNode != nil; i, testNode = i+1, testNode.Next() {
+		assert.Equal(expected[i], testNode.Value, i)
+	}
 }

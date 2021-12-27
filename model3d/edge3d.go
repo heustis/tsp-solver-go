@@ -2,6 +2,7 @@ package model3d
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/fealos/lee-tsp-go/model"
 )
@@ -45,14 +46,75 @@ func (e *Edge3D) GetEnd() model.CircuitVertex {
 	return e.End
 }
 
+// GetLength returns the length of the edge
+func (e *Edge3D) GetLength() float64 {
+	return e.length
+}
+
 // GetVector returns the normalized (length=1.0) vector from the edge's start to the edges end
 func (e *Edge3D) GetVector() *Vertex3D {
 	return e.vector
 }
 
-// GetLength returns the length of the edge
-func (e *Edge3D) GetLength() float64 {
-	return e.length
+// Intersects checks if the two edges go through at least one identical point.
+func (e *Edge3D) Intersects(other model.CircuitEdge) bool {
+	otherEdge3D := other.(*Edge3D)
+	// See http://paulbourke.net/geometry/pointlineplane/
+	// Note: due to point deduplication, we do not need to check for zero length edges.
+
+	vec21 := e.End.subtract(e.Start)
+	vec43 := otherEdge3D.End.subtract(otherEdge3D.Start)
+	vec13 := e.Start.subtract(otherEdge3D.Start)
+
+	dot4321 := vec43.dotProduct(vec21)
+	dot4343 := vec43.dotProduct(vec43)
+	dot2121 := vec21.dotProduct(vec21)
+	dot1321 := vec13.dotProduct(vec21)
+
+	denominator := (dot2121 * dot4343) - (dot4321 * dot4321)
+	if math.Abs(denominator) < model.Threshold {
+		// Edges are parallel, check if they are colinear, then return true if they overlap.
+
+		// For this we can do similar math to the denominator, using vec13 (the start-to-start vector) as the "other" edge for this check.
+		dot1313 := vec13.dotProduct(vec13)
+		startToStartDenominator := (dot2121 * dot1313) - (dot1321 * dot1321)
+
+		return math.Abs(startToStartDenominator) < model.Threshold && (model.IsBetween(e.Start.X, otherEdge3D.Start.X, otherEdge3D.End.X) ||
+			model.IsBetween(e.End.X, otherEdge3D.Start.X, otherEdge3D.End.X) ||
+			model.IsBetween(otherEdge3D.Start.X, e.Start.X, e.End.X) ||
+			model.IsBetween(otherEdge3D.End.X, e.Start.X, e.End.X))
+	}
+
+	dot1343 := vec13.dotProduct(vec43)
+
+	numerator := (dot1343 * dot4321) - (dot1321 * dot4343)
+	percentE := numerator / denominator
+
+	// If the closest point is not within the the start and end points, then the line segments do not intersect, even if the infinite lines do.
+	if percentE < -model.Threshold || percentE > 1.0+model.Threshold {
+		return false
+	}
+
+	percentOther := (dot1343 + (dot4321 * percentE)) / dot4343
+
+	// If the closest point is not within the the start and end points, then the line segments do not intersect, even if the infinite lines do.
+	if percentOther < -model.Threshold || percentOther > 1.0+model.Threshold {
+		return false
+	}
+
+	pointE := &Vertex3D{
+		X: e.Start.X + (percentE * vec21.X),
+		Y: e.Start.Y + (percentE * vec21.Y),
+		Z: e.Start.Z + (percentE * vec21.Z),
+	}
+
+	pointOther := &Vertex3D{
+		X: otherEdge3D.Start.X + (percentOther * vec43.X),
+		Y: otherEdge3D.Start.Y + (percentOther * vec43.Y),
+		Z: otherEdge3D.Start.Z + (percentOther * vec43.Z),
+	}
+
+	return pointE.Equals(pointOther)
 }
 
 // Merge creates a new edge starting from this edge's start vertex and ending at the supplied edge's end vertex.

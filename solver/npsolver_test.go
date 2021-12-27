@@ -45,6 +45,11 @@ func TestFindShortestPathNP_Square(t *testing.T) {
 	shortestString, err := json.Marshal(shortest)
 	assert.Nil(err)
 	assert.InDelta(testEntry.Expected, actual, 0.00001, fmt.Sprintf("pathLength=%f shortestPath=%s", actual, shortestString))
+
+	shortestNoChecks, actualNoChecks := FindShortestPathNPNoChecks(vertices)
+	shortestStringNoChecks, err := json.Marshal(shortestNoChecks)
+	assert.Nil(err)
+	assert.InDelta(testEntry.Expected, actualNoChecks, 0.00001, fmt.Sprintf("pathLength=%f shortestPath=%s", actualNoChecks, shortestStringNoChecks))
 }
 
 func TestFindShortestPathNP_Concave(t *testing.T) {
@@ -73,6 +78,11 @@ func TestFindShortestPathNP_Concave(t *testing.T) {
 	shortestString, err := json.Marshal(shortest)
 	assert.Nil(err)
 	assert.InDelta(testEntry.Expected, actual, 0.00001, fmt.Sprintf("pathLength=%f shortestPath=%s", actual, shortestString))
+
+	shortestNoChecks, actualNoChecks := FindShortestPathNPNoChecks(vertices)
+	shortestStringNoChecks, err := json.Marshal(shortestNoChecks)
+	assert.Nil(err)
+	assert.InDelta(testEntry.Expected, actualNoChecks, 0.00001, fmt.Sprintf("pathLength=%f shortestPath=%s", actualNoChecks, shortestStringNoChecks))
 }
 
 func TestFindShortestPathNP_DataFromOldProject(t *testing.T) {
@@ -98,5 +108,10 @@ func TestFindShortestPathNP_DataFromOldProject(t *testing.T) {
 		assert.Nil(err)
 		shortestString := string(shortestBytes)
 		assert.InDelta(testEntry.Expected, actual, model.Threshold, fmt.Sprintf("test=%d pathLength=%f shortestPath=%s", testIndex, actual, shortestString))
+
+		shortestNoChecks, actualNoChecks := FindShortestPathNPNoChecks(vertices)
+		shortestStringNoChecks, err := json.Marshal(shortestNoChecks)
+		assert.Nil(err)
+		assert.InDelta(testEntry.Expected, actualNoChecks, 0.00001, fmt.Sprintf("pathLength=%f shortestPath=%s", actualNoChecks, shortestStringNoChecks))
 	}
 }

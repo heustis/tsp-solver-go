@@ -37,3 +37,11 @@ func TestDeduplicateVertices3D(t *testing.T) {
 		model3d.NewVertex3D(15, -15, -5),
 	}, actual)
 }
+
+func TestGenerateVertices3D(t *testing.T) {
+	assert := assert.New(t)
+
+	for i := 3; i < 15; i++ {
+		assert.Len(model3d.GenerateVertices3D(i), i)
+	}
+}

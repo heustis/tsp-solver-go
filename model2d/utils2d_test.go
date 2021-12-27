@@ -35,3 +35,11 @@ func TestDeduplicateVertices2D(t *testing.T) {
 		model2d.NewVertex2D(15, -15),
 	}, actual)
 }
+
+func TestGenerateVertices2D(t *testing.T) {
+	assert := assert.New(t)
+
+	for i := 3; i < 15; i++ {
+		assert.Len(model2d.GenerateVertices2D(i), i)
+	}
+}

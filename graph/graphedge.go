@@ -100,9 +100,10 @@ func (e *GraphEdge) GetStart() model.CircuitVertex {
 	return e.path[0]
 }
 
-func (e *GraphEdge) Intersects(other *GraphEdge) bool {
+func (e *GraphEdge) Intersects(other model.CircuitEdge) bool {
+	otherGraphEdge := other.(*GraphEdge)
 	for _, v := range e.path {
-		for _, o := range other.path {
+		for _, o := range otherGraphEdge.path {
 			if v == o {
 				return true
 			}
