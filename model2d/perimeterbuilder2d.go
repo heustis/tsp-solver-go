@@ -65,7 +65,7 @@ func (builder *PerimeterBuilder2D) BuildPerimiter(verticesArg []model.CircuitVer
 	//             2. updates each exterior point that had the split edge as its closest edge (O(N)).
 	for len(exteriorClosestEdges) > 0 {
 		farthestFromClosestEdge := &model.DistanceToEdge{
-			Distance: 0.0,
+			Distance: -1.0,
 		}
 		for _, closest := range exteriorClosestEdges {
 			if closest.Distance > farthestFromClosestEdge.Distance {
