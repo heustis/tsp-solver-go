@@ -51,14 +51,14 @@ func (data *TspLibData) GetVertices() []model.CircuitVertex {
 	return verticesCopy
 }
 
-func (data *TspLibData) SolveAndCompare(solver func([]model.CircuitVertex) model.Circuit) error {
+func (data *TspLibData) SolveAndCompare(solverName string, solver func([]model.CircuitVertex) model.Circuit) error {
 	verticesCopy := make([]model.CircuitVertex, len(data.vertices))
 	for i, v := range data.vertices {
 		verticesCopy[i] = v
 	}
 	result := solver(verticesCopy)
 
-	f, err := os.OpenFile(fmt.Sprintf(`../test-data/tsplib/output/%s.tsp.test.tour`, data.name), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(fmt.Sprintf(`../test-data/tsplib/output/%s.tsp.%s.tour`, data.name, solverName), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func NewData(filePath string) (*TspLibData, error) {
 	regexComment := regexp.MustCompile(`^COMMENT\s*:\s*(.+)$`)
 	regexDimension := regexp.MustCompile(`^DIMENSION\s*:\s*([0-9]+)(.*)$`)
 	regexName := regexp.MustCompile(`^NAME\s*:\s*(.+)$`)
-	regexCoordinate := regexp.MustCompile(`\s*([0-9.]+)\s*([0-9.]+)\s*([0-9.]+)$`)
+	regexCoordinate := regexp.MustCompile(`\s*([0-9]+)\s*(-?[0-9.]+(?:e\+[0-9]+)?)\s*(-?[0-9.]+(?:e\+[0-9]+)?)$`)
 
 	for inCoordinateSection := false; sourceScanner.Scan(); {
 		line := strings.TrimSpace(sourceScanner.Text())

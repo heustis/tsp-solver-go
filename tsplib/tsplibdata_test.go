@@ -1,6 +1,7 @@
 package tsplib_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/circuit"
@@ -18,11 +19,11 @@ func TestNewData(t *testing.T) {
 	assert.NotNil(err)
 	assert.Nil(data)
 
-	data, err = tsplib.NewData("../test-data/tsplib/a280.tsp.malformed.x")
+	data, err = tsplib.NewData("../test-data/tsplib/a280.tsp.malformedX")
 	assert.NotNil(err)
 	assert.Nil(data)
 
-	data, err = tsplib.NewData("../test-data/tsplib/a280.tsp.malformed.y")
+	data, err = tsplib.NewData("../test-data/tsplib/a280.tsp.malformedY")
 	assert.NotNil(err)
 	assert.Nil(data)
 
@@ -53,18 +54,92 @@ func TestNewData(t *testing.T) {
 	assert.InDelta(2586.7696475631606, data.GetBestRouteLength(), model.Threshold)
 }
 
-func TestSolveAndCompare(t *testing.T) {
+func TestNewData_ShouldSupportExponents(t *testing.T) {
 	assert := assert.New(t)
 
-	data, err := tsplib.NewData("../test-data/tsplib/a280.tsp")
+	data, err := tsplib.NewData("../test-data/tsplib/d1291.tsp")
 	assert.Nil(err)
 	assert.NotNil(data)
 
-	err = data.SolveAndCompare(func(cv []model.CircuitVertex) model.Circuit {
-		c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
-		solver.FindShortestPathGreedy(c)
-		return c
-	})
+	vertices := data.GetVertices()
+	assert.Len(vertices, 1291)
+	assert.Equal(model2d.NewVertex2D(0.0, 0.0), vertices[0])
+	assert.Equal(model2d.NewVertex2D(837, 958.3), vertices[1])
+}
 
-	assert.Nil(err)
+func TestSolveAndCompare(t *testing.T) {
+	assert := assert.New(t)
+
+	for _, filename := range []string{
+		"a280",
+		"ali535",
+		"att48",
+		"att532",
+		"berlin52",
+		"bier127",
+		"brd14051",
+		"burma14",
+		"ch130",
+		"ch150",
+		"d198",
+		"d493",
+		"d657",
+		"d1291",
+		"d1655",
+		"d2103",
+		"d18512",
+		"dsj1000",
+		"eil51",
+		"eil76",
+		"eil101",
+		"fl417",
+		"fl1400",
+		"fl1577",
+		"fl3795",
+		"fnl4461",
+		"gil262",
+		"gr96",
+		"gr137",
+		"gr202",
+		"gr666",
+		"kroA100",
+		"kroC100",
+		"kroD100",
+		"lin105",
+		"pcb442",
+		"pr76",
+		"pr1002",
+		"pr2392",
+		"rd100",
+		"st70",
+		"tsp225",
+		"ulysses16",
+		"ulysses22",
+		"usa13509",
+	} {
+		data, err := tsplib.NewData(fmt.Sprintf("../test-data/tsplib/%s.tsp", filename))
+		assert.Nil(err)
+		assert.NotNil(data)
+
+		err = data.SolveAndCompare("concon", func(cv []model.CircuitVertex) model.Circuit {
+			c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
+			solver.FindShortestPathGreedy(c)
+			return c
+		})
+		assert.Nil(err, filename)
+
+		// err = data.SolveAndCompare("concon_by_edge", func(cv []model.CircuitVertex) model.Circuit {
+		// 	c := circuit.NewConvexConcaveByEdge(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
+		// 	solver.FindShortestPathGreedy(c)
+		// 	return c
+		// })
+		// assert.Nil(err)
+
+		// err = data.SolveAndCompare("concon_updates", func(cv []model.CircuitVertex) model.Circuit {
+		// 	c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, true)
+		// 	solver.FindShortestPathGreedy(c)
+		// 	return c
+		// })
+		// assert.Nil(err)
+	}
 }
