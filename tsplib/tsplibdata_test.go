@@ -68,8 +68,6 @@ func TestNewData_ShouldSupportExponents(t *testing.T) {
 }
 
 func TestSolveAndCompare(t *testing.T) {
-	assert := assert.New(t)
-
 	for _, filename := range []string{
 		"a280",
 		"ali535",
@@ -117,29 +115,33 @@ func TestSolveAndCompare(t *testing.T) {
 		"ulysses22",
 		"usa13509",
 	} {
-		data, err := tsplib.NewData(fmt.Sprintf("../test-data/tsplib/%s.tsp", filename))
-		assert.Nil(err)
-		assert.NotNil(data)
+		t.Run(filename, func(t *testing.T) {
+			fmt.Println(filename)
+			assert := assert.New(t)
+			data, err := tsplib.NewData(fmt.Sprintf("../test-data/tsplib/%s.tsp", filename))
+			assert.Nil(err)
+			assert.NotNil(data)
 
-		err = data.SolveAndCompare("concon", func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
-			solver.FindShortestPathGreedy(c)
-			return c
+			err = data.SolveAndCompare("concon", func(cv []model.CircuitVertex) model.Circuit {
+				c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
+				solver.FindShortestPathGreedy(c)
+				return c
+			})
+			assert.Nil(err, filename)
+
+			// err = data.SolveAndCompare("concon_by_edge", func(cv []model.CircuitVertex) model.Circuit {
+			// 	c := circuit.NewConvexConcaveByEdge(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
+			// 	solver.FindShortestPathGreedy(c)
+			// 	return c
+			// })
+			// assert.Nil(err)
+
+			// err = data.SolveAndCompare("concon_updates", func(cv []model.CircuitVertex) model.Circuit {
+			// 	c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, true)
+			// 	solver.FindShortestPathGreedy(c)
+			// 	return c
+			// })
+			// assert.Nil(err)
 		})
-		assert.Nil(err, filename)
-
-		// err = data.SolveAndCompare("concon_by_edge", func(cv []model.CircuitVertex) model.Circuit {
-		// 	c := circuit.NewConvexConcaveByEdge(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
-		// 	solver.FindShortestPathGreedy(c)
-		// 	return c
-		// })
-		// assert.Nil(err)
-
-		// err = data.SolveAndCompare("concon_updates", func(cv []model.CircuitVertex) model.Circuit {
-		// 	c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, true)
-		// 	solver.FindShortestPathGreedy(c)
-		// 	return c
-		// })
-		// assert.Nil(err)
 	}
 }

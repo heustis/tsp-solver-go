@@ -9,19 +9,21 @@ import (
 )
 
 type ConvexConcaveDisparity struct {
-	Vertices         []model.CircuitVertex
-	deduplicator     func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder model.PerimeterBuilder
-	circuitEdges     []model.CircuitEdge
-	edgeDistances    map[model.CircuitVertex]*vertexDisparity
-	length           float64
+	Vertices             []model.CircuitVertex
+	deduplicator         func([]model.CircuitVertex) []model.CircuitVertex
+	perimeterBuilder     model.PerimeterBuilder
+	circuitEdges         []model.CircuitEdge
+	edgeDistances        map[model.CircuitVertex]*vertexDisparity
+	length               float64
+	useRelativeDisparity bool
 }
 
-func NewConvexConcaveDisparity(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func NewConvexConcaveDisparity(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) model.Circuit {
 	return &ConvexConcaveDisparity{
-		Vertices:         vertices,
-		deduplicator:     deduplicator,
-		perimeterBuilder: perimeterBuilder,
+		Vertices:             vertices,
+		deduplicator:         deduplicator,
+		perimeterBuilder:     perimeterBuilder,
+		useRelativeDisparity: useRelativeDisparity,
 	}
 }
 
@@ -34,6 +36,19 @@ func (c *ConvexConcaveDisparity) BuildPerimiter() {
 		disparity := &vertexDisparity{
 			closestEdge:       &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
 			secondClosestEdge: &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
+		}
+
+		if c.useRelativeDisparity {
+			disparity.disparityFunction = func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64 {
+				if closer.Distance < model.Threshold {
+					return math.MaxFloat64
+				}
+				return farther.Distance / closer.Distance
+			}
+		} else {
+			disparity.disparityFunction = func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64 {
+				return farther.Distance - closer.Distance
+			}
 		}
 
 		for _, e := range c.circuitEdges {
@@ -122,6 +137,7 @@ type vertexDisparity struct {
 	closestEdge       *model.DistanceToEdge
 	secondClosestEdge *model.DistanceToEdge
 	amount            float64
+	disparityFunction func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64
 }
 
 func (disparity *vertexDisparity) update(e model.CircuitEdge, distance float64) {
@@ -132,6 +148,7 @@ func (disparity *vertexDisparity) update(e model.CircuitEdge, distance float64) 
 		if distance < disparity.closestEdge.Distance {
 			disparity.closestEdge, disparity.secondClosestEdge = disparity.secondClosestEdge, disparity.closestEdge
 		}
+		disparity.amount = disparity.disparityFunction(disparity.closestEdge, disparity.secondClosestEdge)
 	}
 }
 
