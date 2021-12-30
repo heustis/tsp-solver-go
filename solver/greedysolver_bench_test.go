@@ -32,6 +32,11 @@ func BenchmarkFindShortestPathGreedy(b *testing.B) {
 				return circuit.NewConvexConcaveByEdge(cv, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, true)
 			})
 		})
+		b.Run(fmt.Sprintf("N=%d ConcaveConvex Disparity", n), func(b *testing.B) {
+			benchmarkFindShortestPathGreedyHelper(n, b, func(cv []model.CircuitVertex) model.Circuit {
+				return circuit.NewConvexConcaveDisparity(cv, model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{})
+			})
+		})
 	}
 }
 
