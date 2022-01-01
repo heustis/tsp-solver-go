@@ -21,7 +21,8 @@ import (
 //        In other words, if the exterior point is close to a concave corner, it could attach to either edge without intersecting the other.
 //        However, if it is near a convex corner, the farther edge would have to cross the closer edge to attach to the point.
 //    2c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
-// TODO - test what counts as a significant gap: standard deviation of distance increases, standard deviation of gaps, etc.
+// Note:
+//  - Based on testing performed in commit 2c75229997dd4abd540941192b2593b988ff1de4 the standard deviation of the gaps should be used to determine if a gap is significant.
 type ConvexConcaveConfidence struct {
 	Vertices         []model.CircuitVertex
 	deduplicator     func([]model.CircuitVertex) []model.CircuitVertex

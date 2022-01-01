@@ -8,46 +8,33 @@ import (
 )
 
 type vertexStatistics struct {
-	ClosestEdges              []*model.DistanceToEdge
-	DistanceGaps              []float64
-	DistanceAverage           float64
-	DistanceStandardDeviation float64
-	GapAverage                float64
-	GapStandardDeviation      float64
+	ClosestEdges         []*model.DistanceToEdge
+	DistanceGaps         []float64
+	GapAverage           float64
+	GapStandardDeviation float64
 }
 
 func (stats *vertexStatistics) processStats() {
-	numEdges := len(stats.ClosestEdges)
-	numGaps := float64(numEdges - 1)
+	numGaps := len(stats.ClosestEdges) - 1
+	numGapsFloat := float64(numGaps)
 
-	stats.DistanceAverage = 0
 	stats.GapAverage = 0
-	stats.DistanceGaps = make([]float64, numEdges-1)
+	stats.DistanceGaps = make([]float64, numGaps)
 
 	// Compute averages
-	for current, next := 0, 1; current < numEdges; current, next = current+1, next+1 {
-		currentDistance := stats.ClosestEdges[current].Distance
-		stats.DistanceAverage += currentDistance / float64(numEdges)
-		if next < numEdges {
-			distanceGap := stats.ClosestEdges[next].Distance - currentDistance
-			stats.DistanceGaps[current] = distanceGap
-			stats.GapAverage += distanceGap / numGaps
-		}
+	for current, next := 0, 1; current < numGaps; current, next = current+1, next+1 {
+		distanceGap := stats.ClosestEdges[next].Distance - stats.ClosestEdges[current].Distance
+		stats.DistanceGaps[current] = distanceGap
+		stats.GapAverage += distanceGap / numGapsFloat
 	}
 
-	stats.DistanceStandardDeviation = 0
 	stats.GapStandardDeviation = 0
 	// Compute standard deviations
-	for current, next := 0, 1; current < numEdges; current, next = current+1, next+1 {
-		currentDeviation := stats.ClosestEdges[current].Distance - stats.DistanceAverage
-		stats.DistanceStandardDeviation += currentDeviation * currentDeviation / float64(numEdges)
-		if next < numEdges {
-			currentGapDeviation := stats.DistanceGaps[current] - stats.GapAverage
-			stats.GapStandardDeviation += currentGapDeviation * currentGapDeviation / numGaps
-		}
+	for current, next := 0, 1; current < numGaps; current, next = current+1, next+1 {
+		currentGapDeviation := stats.DistanceGaps[current] - stats.GapAverage
+		stats.GapStandardDeviation += currentGapDeviation * currentGapDeviation / numGapsFloat
 	}
 
-	stats.DistanceStandardDeviation = math.Sqrt(stats.DistanceStandardDeviation)
 	stats.GapStandardDeviation = math.Sqrt(stats.GapStandardDeviation)
 }
 
@@ -113,8 +100,8 @@ func (stats *vertexStatistics) ToString(vertexIndexLookup map[model.CircuitVerte
 		return `{}`
 	}
 
-	s := fmt.Sprintf("{\r\n\t\"vertex\":%d,\r\n\t\"distanceAverage\":%g,\r\n\t\"distanceStdDev\":%g,\r\n\t\"gapAverage\":%g,\r\n\t\"gapStdDev\":%g,\r\n\t\"closestEdges\":[",
-		vertexIndexLookup[stats.ClosestEdges[0].Vertex], stats.DistanceAverage, stats.DistanceStandardDeviation, stats.GapAverage, stats.GapStandardDeviation)
+	s := fmt.Sprintf("{\r\n\t\"vertex\":%d,\r\n\t\"gapAverage\":%g,\r\n\t\"gapStdDev\":%g,\r\n\t\"closestEdges\":[",
+		vertexIndexLookup[stats.ClosestEdges[0].Vertex], stats.GapAverage, stats.GapStandardDeviation)
 
 	lastIndex := len(stats.ClosestEdges) - 1
 	for i, e := range stats.ClosestEdges {
@@ -128,10 +115,9 @@ func (stats *vertexStatistics) ToString(vertexIndexLookup map[model.CircuitVerte
 	s += "],\r\n\t\"gaps\":["
 	lastIndex = len(stats.DistanceGaps) - 1
 	for i, gap := range stats.DistanceGaps {
-		if i == lastIndex {
-			s += fmt.Sprintf("{\"gap\":%g,\"byGapStdDev\":%g,\"byDistStdDev\":%g}", gap, gap/stats.GapStandardDeviation, gap/stats.DistanceStandardDeviation)
-		} else {
-			s += fmt.Sprintf("{\"gap\":%g,\"byGapStdDev\":%g,\"byDistStdDev\":%g},", gap, gap/stats.GapStandardDeviation, gap/stats.DistanceStandardDeviation)
+		s += fmt.Sprintf("{\"gap\":%g,\"byGapStdDev\":%g}", gap, gap/stats.GapStandardDeviation)
+		if i != lastIndex {
+			s += ","
 		}
 	}
 
