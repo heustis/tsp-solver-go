@@ -3,6 +3,7 @@ package circuit
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/fealos/lee-tsp-go/model"
 )
@@ -30,15 +31,7 @@ type ConvexConcaveConfidence struct {
 	length           float64
 }
 
-type vertexStatistics struct {
-	ClosestEdges                       []*model.DistanceToEdge
-	DistanceAverage                    float64
-	DistanceStandardDeviation          float64
-	DistanceDisparityAverage           float64
-	DistanceDisparityStandardDeviation float64
-}
-
-func NewConvexConcaveConfidence(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+func NewConvexConcaveConfidence(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	return &ConvexConcaveConfidence{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
@@ -51,8 +44,23 @@ func (c *ConvexConcaveConfidence) BuildPerimiter() {
 	c.circuitEdges, unattachedVertices = c.perimeterBuilder.BuildPerimiter(c.Vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
+	numEdges := len(c.circuitEdges)
 	for vertex := range unattachedVertices {
-		model.FindClosestEdge(vertex, c.circuitEdges) //TODO
+		stats := &vertexStatistics{
+			ClosestEdges: make([]*model.DistanceToEdge, numEdges),
+		}
+		for i, e := range c.circuitEdges {
+			stats.ClosestEdges[i] = &model.DistanceToEdge{
+				Vertex:   vertex,
+				Edge:     e,
+				Distance: e.DistanceIncrease(vertex),
+			}
+		}
+		sort.Slice(stats.ClosestEdges, func(i, j int) bool {
+			return stats.ClosestEdges[i].Distance < stats.ClosestEdges[j].Distance
+		})
+		stats.processStats()
+		c.edgeDistances[vertex] = stats
 	}
 
 	c.length = 0.0
@@ -112,6 +120,47 @@ func (c *ConvexConcaveConfidence) Update(vertexToAdd model.CircuitVertex, edgeTo
 		c.length += edgeA.GetLength() + edgeB.GetLength() - edgeToSplit.GetLength()
 		//TODO
 	}
+}
+
+func (c *ConvexConcaveConfidence) ToString() string {
+	s := "{\r\n\t\"vertices\":["
+
+	vertexIndexLookup := make(map[model.CircuitVertex]int)
+	edgeIndexLookup := make(map[model.CircuitEdge]int)
+
+	lastIndex := len(c.Vertices) - 1
+	for i, v := range c.Vertices {
+		vertexIndexLookup[v] = i
+		s += v.ToString()
+		if i != lastIndex {
+			s += ","
+		}
+	}
+
+	s += "],\r\n\t\"edges\":["
+	lastIndex = len(c.circuitEdges) - 1
+	for i, e := range c.circuitEdges {
+		edgeIndexLookup[e] = i
+		s += fmt.Sprintf(`{"start":%d,"end":%d,"distance":%g}`, vertexIndexLookup[e.GetStart()], vertexIndexLookup[e.GetEnd()], e.GetLength())
+		if i != lastIndex {
+			s += ","
+		}
+	}
+
+	s += "],\r\n\t\"edgeDistances\":["
+	lastIndex = len(c.edgeDistances) - 1
+	i := 0
+	for _, dist := range c.edgeDistances {
+		s += dist.ToString(vertexIndexLookup, edgeIndexLookup)
+		if i != lastIndex {
+			s += ","
+		}
+		i++
+	}
+
+	s += "]}"
+
+	return s
 }
 
 var _ model.Circuit = (*ConvexConcaveConfidence)(nil)
