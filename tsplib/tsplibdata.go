@@ -8,57 +8,69 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
+	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/tspmodel2d"
 )
 
+// TspLibData represents data used in "Symmetric traveling salesman problem" files from http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsplib.html.
+// It contains data from both a ".tsp" file (required) and a ".opt.tour" file (optional).
+// Currently this only supports 2D coordinate data (files containing "NODE_COORD_SECTION"), not graph data (files containing "EDGE_WEIGHT_SECTION").
 type TspLibData struct {
 	name            string
 	comment         string
 	numPoints       int
-	vertices        []*model2d.Vertex2D
-	bestRoute       []*model2d.Vertex2D
+	vertices        []*tspmodel2d.Vertex2D
+	bestRoute       []*tspmodel2d.Vertex2D
 	bestRouteLength float64
 }
 
-func (data *TspLibData) GetBestRoute() []*model2d.Vertex2D {
-	bestRouteCopy := make([]*model2d.Vertex2D, len(data.bestRoute))
+// GetBestRoute returns the best known route according to the source file (if an optimal tour file is supplied)
+// This is not dynamic, it is reliant on the source having accurate data.
+func (data *TspLibData) GetBestRoute() []*tspmodel2d.Vertex2D {
+	bestRouteCopy := make([]*tspmodel2d.Vertex2D, len(data.bestRoute))
 	copy(bestRouteCopy, data.bestRoute)
 	return bestRouteCopy
 }
 
+// GetBestRouteLength returns the length of the best known route accoring to the source file (if an optimal tour file is supplied).
+// This is not dynamic, it is reliant on the source having accurate data.
 func (data *TspLibData) GetBestRouteLength() float64 {
 	return data.bestRouteLength
 }
 
+// GetComment returns the comment section from the source file.
 func (data *TspLibData) GetComment() string {
 	return data.comment
 }
 
+// GetName returns the name of the TspLibData from the source file.
 func (data *TspLibData) GetName() string {
 	return data.name
 }
 
+// GetNumPoints returns the number of vertices in the source file.
 func (data *TspLibData) GetNumPoints() int {
 	return data.numPoints
 }
 
-func (data *TspLibData) GetVertices() []model.CircuitVertex {
-	verticesCopy := make([]model.CircuitVertex, len(data.vertices))
+// GetVertices returns the vertices in the order they appear in the source file.
+func (data *TspLibData) GetVertices() []tspmodel.CircuitVertex {
+	verticesCopy := make([]tspmodel.CircuitVertex, len(data.vertices))
 	for i, v := range data.vertices {
 		verticesCopy[i] = v
 	}
 	return verticesCopy
 }
 
-func (data *TspLibData) SolveAndCompare(solverName string, solver func([]model.CircuitVertex) model.Circuit) error {
-	verticesCopy := make([]model.CircuitVertex, len(data.vertices))
+// SolveAndCompare uses the supplied solver to process the current TspLibData and writes its output to a file in TspLib format.
+func (data *TspLibData) SolveAndCompare(solverName string, tspsolver func([]tspmodel.CircuitVertex) tspmodel.Circuit) error {
+	verticesCopy := make([]tspmodel.CircuitVertex, len(data.vertices))
 	for i, v := range data.vertices {
 		verticesCopy[i] = v
 	}
-	result := solver(verticesCopy)
+	result := tspsolver(verticesCopy)
 
-	f, err := os.OpenFile(fmt.Sprintf(`../test-data/tsplib/output/%s.tsp.%s.tour`, data.name, solverName), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(fmt.Sprintf(`../results/tsplib/%s.tsp.%s.tour`, data.name, solverName), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
@@ -71,7 +83,7 @@ func (data *TspLibData) SolveAndCompare(solverName string, solver func([]model.C
 	fmt.Fprintf(f, "COMPUTED LENGTH : %f\n", result.GetLength())
 	fmt.Fprintf(f, "TOUR_SECTION\n")
 	for _, v := range result.GetAttachedVertices() {
-		index := model.IndexOfVertex(verticesCopy, v)
+		index := tspmodel.IndexOfVertex(verticesCopy, v)
 		fmt.Fprintf(f, "%d\n", index)
 	}
 	fmt.Fprintf(f, "-1\n")
@@ -79,6 +91,9 @@ func (data *TspLibData) SolveAndCompare(solverName string, solver func([]model.C
 	return nil
 }
 
+// NewData reads in the file at the supplied path, parses it into a TspLibData, and returns the TspLibData.
+// If path does not refer to a file, the file cannot be read, or the file does not conform to the TspLibData format: an error will be returned.
+// Note: this implementation's naming convention differs from TSPLib in that the ".opt.tour" file needs to end in ".tsp.opt.tour".
 func NewData(filePath string) (*TspLibData, error) {
 	sourceFile, err := os.Open(filePath)
 	if err != nil {
@@ -108,7 +123,7 @@ func NewData(filePath string) (*TspLibData, error) {
 				if err != nil {
 					return nil, fmt.Errorf(`failed to parse Y coordinate from file=%s line=%s error=%v`, filePath, line, err)
 				}
-				data.vertices = append(data.vertices, model2d.NewVertex2D(x, y))
+				data.vertices = append(data.vertices, tspmodel2d.NewVertex2D(x, y))
 			} else {
 				break
 			}
@@ -120,8 +135,8 @@ func NewData(filePath string) (*TspLibData, error) {
 			data.comment = strings.TrimSpace(r[1])
 		} else if r := regexDimension.FindStringSubmatch(line); r != nil {
 			data.numPoints, _ = strconv.Atoi(strings.TrimSpace(r[1]))
-			data.vertices = make([]*model2d.Vertex2D, 0, data.numPoints)
-			data.bestRoute = make([]*model2d.Vertex2D, 0, data.numPoints)
+			data.vertices = make([]*tspmodel2d.Vertex2D, 0, data.numPoints)
+			data.bestRoute = make([]*tspmodel2d.Vertex2D, 0, data.numPoints)
 			data.bestRouteLength = 0.0
 		}
 	}

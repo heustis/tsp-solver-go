@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model3d"
-	"github.com/fealos/lee-tsp-go/solver"
+	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/tspmodel3d"
+	"github.com/fealos/lee-tsp-go/tspsolver"
 )
 
 func ComparePerformance3d() {
@@ -22,8 +22,8 @@ func ComparePerformance3d() {
 	circuits := []*NamedCircuit{}
 	circuits = append(circuits, &NamedCircuit{
 		name: "np",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, pathLength := solver.FindShortestPathNP(cv)
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c, pathLength := tspsolver.FindShortestPathNPWithChecks(cv)
 			return &circuit.CompletedCircuit{
 				Circuit: c,
 				Length:  pathLength,
@@ -33,8 +33,8 @@ func ComparePerformance3d() {
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "np_heap",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, pathLength := solver.FindShortestPathNPHeap(cv)
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c, pathLength := tspsolver.FindShortestPathNPHeap(cv)
 			return &circuit.CompletedCircuit{
 				Circuit: c,
 				Length:  pathLength,
@@ -44,55 +44,57 @@ func ComparePerformance3d() {
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, _, _ := solver.FindShortestPathHeap(circuit.NewHeapableCircuitImpl(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
-			return c.(model.Circuit)
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c := circuit.NewClonableCircuitSolver(circuit.NewHeapableCircuit(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter))
+			tspsolver.FindShortestPathCircuit(c)
+			return c
 		},
 	})
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap_mc",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c, _, _ := solver.FindShortestPathHeap(circuit.NewHeapableCircuitMinClones(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}))
-			return c.(model.Circuit)
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c := circuit.NewClonableCircuitSolver(circuit.NewHeapableCircuitMinClones(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter))
+			tspsolver.FindShortestPathCircuit(c)
+			return c
 		},
 	})
 
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge_withupdates",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, true)
-	// 		solver.FindShortestPathGreedy(c)
+	// 	circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+	// 		c := circuit.NewConvexConcaveByEdge(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter, true)
+	// 		tspsolver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
 	// })
 
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, false)
-	// 		solver.FindShortestPathGreedy(c)
+	// 	circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+	// 		c := circuit.NewConvexConcaveByEdge(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter, false)
+	// 		tspsolver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
 	// })
 
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_withupdates",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcave(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, true)
-	// 		solver.FindShortestPathGreedy(c)
+	// 	circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+	// 		c := circuit.NewConvexConcave(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter, true)
+	// 		tspsolver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
 	// })
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "convex_concave",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcave(cv, model3d.DeduplicateVertices3D, &model3d.PerimeterBuilder3D{}, false)
-			solver.FindShortestPathGreedy(c)
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c := circuit.NewConvexConcave(cv, tspmodel.DeduplicateVerticesNoSorting, tspmodel3d.BuildPerimiter, false)
+			tspsolver.FindShortestPathCircuit(c)
 			return c
 		},
 	})
 
-	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, model3d.GenerateVertices3D)
+	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, tspmodel3d.GenerateVertices)
 }

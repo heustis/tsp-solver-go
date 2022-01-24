@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/tspmodel"
 )
 
-func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits []*NamedCircuit, verticesFunc func(size int) []model.CircuitVertex) {
+func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits []*NamedCircuit, verticesFunc func(size int) []tspmodel.CircuitVertex) {
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits [
 	for numVertices := verticesConfig.initVertices; numVertices <= verticesConfig.maxVertices; numVertices += verticesConfig.incrementVertices {
 		for i := 0; i < verticesConfig.numIterations; i++ {
 			vertices := verticesFunc(numVertices)
-			circuitVerices := make([]model.CircuitVertex, numVertices)
+			circuitVerices := make([]tspmodel.CircuitVertex, numVertices)
 			copy(circuitVerices, vertices)
 
 			fmt.Fprintf(f, "%d\t", numVertices)
@@ -59,11 +59,11 @@ func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits [
 				// circuitJson, _ := json.Marshal(c.GetAttachedVertices())
 				fmt.Fprintf(f, "%f\t%f\t%d\t", circuitLen, minLen/circuitLen, t1.Nanoseconds()) //, string(circuitJson))
 
-				// if math.Abs(circuitLen-minLen) > model.Threshold {
+				// if math.Abs(circuitLen-minLen) > tspmodel.Threshold {
 				// 	fmt.Printf("test %d-%d: found mismatched circuits between %s and min solution\n", numVertices, i, circuitName)
 				// }
 
-				if d, okay := c.(model.Deletable); okay {
+				if d, okay := c.(tspmodel.Deletable); okay {
 					d.Delete()
 				}
 			}
@@ -79,7 +79,7 @@ func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits [
 
 type NamedCircuit struct {
 	name        string
-	circuitFunc func([]model.CircuitVertex) model.Circuit
+	circuitFunc func([]tspmodel.CircuitVertex) tspmodel.Circuit
 }
 
 type NumVertices struct {

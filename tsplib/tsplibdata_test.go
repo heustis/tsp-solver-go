@@ -5,12 +5,60 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/solver"
 	"github.com/fealos/lee-tsp-go/tsplib"
+	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/tspmodel2d"
+	"github.com/fealos/lee-tsp-go/tspsolver"
 	"github.com/stretchr/testify/assert"
 )
+
+var filenames []string = []string{
+	"a280",
+	"ali535",
+	"att48",
+	"att532",
+	"berlin52",
+	"bier127",
+	"brd14051",
+	"burma14",
+	"ch130",
+	"ch150",
+	"d198",
+	"d493",
+	"d657",
+	"d1291",
+	"d1655",
+	"d2103",
+	"d18512",
+	"dsj1000",
+	"eil51",
+	"eil76",
+	"eil101",
+	"fl417",
+	"fl1400",
+	"fl1577",
+	"fl3795",
+	"fnl4461",
+	"gil262",
+	"gr96",
+	"gr137",
+	"gr202",
+	"gr666",
+	"kroA100",
+	"kroC100",
+	"kroD100",
+	"lin105",
+	"pcb442",
+	"pr76",
+	"pr1002",
+	"pr2392",
+	"rd100",
+	"st70",
+	"tsp225",
+	"ulysses16",
+	"ulysses22",
+	"usa13509",
+}
 
 func TestNewData(t *testing.T) {
 	assert := assert.New(t)
@@ -38,20 +86,20 @@ func TestNewData(t *testing.T) {
 	vertices := data.GetVertices()
 	assert.Len(vertices, 280)
 
-	assert.Equal(model2d.NewVertex2D(288, 149), vertices[0])
-	assert.Equal(model2d.NewVertex2D(288, 129), vertices[1])
-	assert.Equal(model2d.NewVertex2D(32, 129), vertices[55])
-	assert.Equal(model2d.NewVertex2D(280, 133), vertices[279])
+	assert.Equal(tspmodel2d.NewVertex2D(288, 149), vertices[0])
+	assert.Equal(tspmodel2d.NewVertex2D(288, 129), vertices[1])
+	assert.Equal(tspmodel2d.NewVertex2D(32, 129), vertices[55])
+	assert.Equal(tspmodel2d.NewVertex2D(280, 133), vertices[279])
 
 	bestRoute := data.GetBestRoute()
 	assert.Len(bestRoute, 280)
-	assert.Equal(model2d.NewVertex2D(288, 149), bestRoute[0])
-	assert.Equal(model2d.NewVertex2D(288, 129), bestRoute[1])
-	assert.Equal(model2d.NewVertex2D(288, 109), bestRoute[2])
-	assert.Equal(model2d.NewVertex2D(270, 133), bestRoute[278])
-	assert.Equal(model2d.NewVertex2D(280, 133), bestRoute[279])
+	assert.Equal(tspmodel2d.NewVertex2D(288, 149), bestRoute[0])
+	assert.Equal(tspmodel2d.NewVertex2D(288, 129), bestRoute[1])
+	assert.Equal(tspmodel2d.NewVertex2D(288, 109), bestRoute[2])
+	assert.Equal(tspmodel2d.NewVertex2D(270, 133), bestRoute[278])
+	assert.Equal(tspmodel2d.NewVertex2D(280, 133), bestRoute[279])
 
-	assert.InDelta(2586.7696475631606, data.GetBestRouteLength(), model.Threshold)
+	assert.InDelta(2586.7696475631606, data.GetBestRouteLength(), tspmodel.Threshold)
 }
 
 func TestNewData_ShouldSupportExponents(t *testing.T) {
@@ -63,58 +111,12 @@ func TestNewData_ShouldSupportExponents(t *testing.T) {
 
 	vertices := data.GetVertices()
 	assert.Len(vertices, 1291)
-	assert.Equal(model2d.NewVertex2D(0.0, 0.0), vertices[0])
-	assert.Equal(model2d.NewVertex2D(837, 958.3), vertices[1])
+	assert.Equal(tspmodel2d.NewVertex2D(0.0, 0.0), vertices[0])
+	assert.Equal(tspmodel2d.NewVertex2D(837, 958.3), vertices[1])
 }
 
 func TestSolveAndCompare(t *testing.T) {
-	for _, filename := range []string{
-		"a280",
-		"ali535",
-		"att48",
-		"att532",
-		"berlin52",
-		"bier127",
-		"brd14051",
-		"burma14",
-		"ch130",
-		"ch150",
-		"d198",
-		"d493",
-		"d657",
-		"d1291",
-		"d1655",
-		"d2103",
-		"d18512",
-		"dsj1000",
-		"eil51",
-		"eil76",
-		"eil101",
-		"fl417",
-		"fl1400",
-		"fl1577",
-		"fl3795",
-		"fnl4461",
-		"gil262",
-		"gr96",
-		"gr137",
-		"gr202",
-		"gr666",
-		"kroA100",
-		"kroC100",
-		"kroD100",
-		"lin105",
-		"pcb442",
-		"pr76",
-		"pr1002",
-		"pr2392",
-		"rd100",
-		"st70",
-		"tsp225",
-		"ulysses16",
-		"ulysses22",
-		"usa13509",
-	} {
+	for _, filename := range filenames {
 		t.Run(filename, func(t *testing.T) {
 			fmt.Println(filename)
 			assert := assert.New(t)
@@ -122,26 +124,51 @@ func TestSolveAndCompare(t *testing.T) {
 			assert.Nil(err)
 			assert.NotNil(data)
 
-			err = data.SolveAndCompare("concon", func(cv []model.CircuitVertex) model.Circuit {
-				c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
-				solver.FindShortestPathGreedy(c)
+			err = data.SolveAndCompare("concon", func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+				c := circuit.NewConvexConcave(data.GetVertices(), tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter, false)
+				tspsolver.FindShortestPathCircuit(c)
 				return c
 			})
 			assert.Nil(err, filename)
 
-			// err = data.SolveAndCompare("concon_by_edge", func(cv []model.CircuitVertex) model.Circuit {
-			// 	c := circuit.NewConvexConcaveByEdge(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, false)
-			// 	solver.FindShortestPathGreedy(c)
+			// err = data.SolveAndCompare("concon_by_edge", func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			// 	c := circuit.NewConvexConcaveByEdge(data.GetVertices(), tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter, false)
+			// 	tspsolver.FindShortestPathCircuit(c)
 			// 	return c
 			// })
 			// assert.Nil(err)
 
-			// err = data.SolveAndCompare("concon_updates", func(cv []model.CircuitVertex) model.Circuit {
-			// 	c := circuit.NewConvexConcave(data.GetVertices(), model2d.DeduplicateVertices, &model2d.PerimeterBuilder2D{}, true)
-			// 	solver.FindShortestPathGreedy(c)
+			// err = data.SolveAndCompare("concon_updates", func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			// 	c := circuit.NewConvexConcave(data.GetVertices(), tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter, true)
+			// 	tspsolver.FindShortestPathCircuit(c)
 			// 	return c
 			// })
 			// assert.Nil(err)
 		})
+	}
+}
+
+func TestSolveAndCompareConfidence(t *testing.T) {
+	t.Skip("Confidence circuits are significantly less performant than greed Concave Convex and Disparity algorithms, but only occasionally provides a couple percentage points of improved accuracy")
+	filename := "eil76"
+	fmt.Println(filename)
+	assert := assert.New(t)
+	data, err := tsplib.NewData(fmt.Sprintf("../test-data/tsplib/%s.tsp", filename))
+	assert.Nil(err)
+	assert.NotNil(data)
+
+	for _, zscore := range []float64{
+		0.5,
+		0.75,
+		1.0,
+		1.5,
+	} {
+		err = data.SolveAndCompare(fmt.Sprintf("confidence_%g_", zscore), func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			c := circuit.NewConvexConcaveConfidence(data.GetVertices(), tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+			c.(*circuit.ConvexConcaveConfidence).Significance = zscore
+			tspsolver.FindShortestPathCircuit(c)
+			return c
+		})
+		assert.Nil(err, filename)
 	}
 }

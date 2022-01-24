@@ -4,26 +4,26 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/circuit/experimental"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
+	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/tspmodel2d"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildPerimeter_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert := assert.New(t)
-	circuit := experimental.NewConvexConcaveWeightedEdges([]model.CircuitVertex{
+	circuit := experimental.NewConvexConcaveWeightedEdges([]tspmodel.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	},
-		model2d.DeduplicateVertices,
-		&model2d.PerimeterBuilder2D{},
+		tspmodel2d.DeduplicateVertices,
+		tspmodel2d.BuildPerimiter,
 	).(*experimental.ConvexConcaveWeightedEdges)
 
 	circuit.Prepare()
@@ -32,13 +32,13 @@ func TestBuildPerimeter_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert.Len(circuit.Vertices, 8)
 
 	assert.Len(circuit.GetAttachedVertices(), 5)
-	assert.Equal(model2d.NewVertex2D(-15, -15), circuit.GetAttachedVertices()[0])
-	assert.Equal(model2d.NewVertex2D(15, -15), circuit.GetAttachedVertices()[1])
-	assert.Equal(model2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[2])
-	assert.Equal(model2d.NewVertex2D(3, 13), circuit.GetAttachedVertices()[3])
-	assert.Equal(model2d.NewVertex2D(-7, 6), circuit.GetAttachedVertices()[4])
+	assert.Equal(tspmodel2d.NewVertex2D(-15, -15), circuit.GetAttachedVertices()[0])
+	assert.Equal(tspmodel2d.NewVertex2D(15, -15), circuit.GetAttachedVertices()[1])
+	assert.Equal(tspmodel2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[2])
+	assert.Equal(tspmodel2d.NewVertex2D(3, 13), circuit.GetAttachedVertices()[3])
+	assert.Equal(tspmodel2d.NewVertex2D(-7, 6), circuit.GetAttachedVertices()[4])
 
-	assert.InDelta(95.73863479511238, circuit.GetLength(), model.Threshold)
+	assert.InDelta(95.73863479511238, circuit.GetLength(), tspmodel.Threshold)
 
 	edges := circuit.GetAttachedEdges()
 	assert.Len(edges, 5)
@@ -57,55 +57,55 @@ func TestBuildPerimeter_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert.Len(closestVertices, 5)
 	assert.NotNil(closestVertices[edges[0]])
 	assert.Len(closestVertices[edges[0]].GetClosestVertices(), 3)
-	assert.InDelta(12.081874046685233, closestVertices[edges[0]].GetDistance(), model.Threshold)
+	assert.InDelta(12.081874046685233, closestVertices[edges[0]].GetDistance(), tspmodel.Threshold)
 
 	assert.NotNil(closestVertices[edges[1]])
 	assert.Len(closestVertices[edges[1]].GetClosestVertices(), 3)
-	assert.InDelta(3.119024051416561, closestVertices[edges[1]].GetDistance(), model.Threshold)
+	assert.InDelta(3.119024051416561, closestVertices[edges[1]].GetDistance(), tspmodel.Threshold)
 
 	assert.NotNil(closestVertices[edges[2]])
 	assert.Len(closestVertices[edges[2]].GetClosestVertices(), 3)
-	assert.InDelta(5.748106026958004, closestVertices[edges[2]].GetDistance(), model.Threshold)
+	assert.InDelta(5.748106026958004, closestVertices[edges[2]].GetDistance(), tspmodel.Threshold)
 
 	assert.NotNil(closestVertices[edges[3]])
 	assert.Len(closestVertices[edges[3]].GetClosestVertices(), 3)
-	assert.InDelta(9.799425448261324, closestVertices[edges[3]].GetDistance(), model.Threshold)
+	assert.InDelta(9.799425448261324, closestVertices[edges[3]].GetDistance(), tspmodel.Threshold)
 
 	assert.NotNil(closestVertices[edges[4]])
 	assert.Len(closestVertices[edges[4]].GetClosestVertices(), 3)
-	assert.InDelta(10.015457439162253, closestVertices[edges[4]].GetDistance(), model.Threshold)
+	assert.InDelta(10.015457439162253, closestVertices[edges[4]].GetDistance(), tspmodel.Threshold)
 }
 
 func TestPrepare_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert := assert.New(t)
-	circuit := experimental.NewConvexConcaveWeightedEdges([]model.CircuitVertex{
-		model2d.NewVertex2D(-15, -15),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(15, -15),
-		model2d.NewVertex2D(-15-model.Threshold/3.0, -15),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
-		model2d.NewVertex2D(3, 0),
-		model2d.NewVertex2D(3, 13),
-		model2d.NewVertex2D(7, 6),
-		model2d.NewVertex2D(-7, 6),
+	circuit := experimental.NewConvexConcaveWeightedEdges([]tspmodel.CircuitVertex{
+		tspmodel2d.NewVertex2D(-15, -15),
+		tspmodel2d.NewVertex2D(0, 0),
+		tspmodel2d.NewVertex2D(15, -15),
+		tspmodel2d.NewVertex2D(-15-tspmodel.Threshold/3.0, -15),
+		tspmodel2d.NewVertex2D(0, 0),
+		tspmodel2d.NewVertex2D(-15+tspmodel.Threshold/3.0, -15-tspmodel.Threshold/3.0),
+		tspmodel2d.NewVertex2D(3, 0),
+		tspmodel2d.NewVertex2D(3, 13),
+		tspmodel2d.NewVertex2D(7, 6),
+		tspmodel2d.NewVertex2D(-7, 6),
 	},
-		model2d.DeduplicateVertices,
-		&model2d.PerimeterBuilder2D{},
+		tspmodel2d.DeduplicateVertices,
+		tspmodel2d.BuildPerimiter,
 	).(*experimental.ConvexConcaveWeightedEdges)
 
 	circuit.Prepare()
 
 	assert.NotNil(circuit.Vertices)
 	assert.Len(circuit.Vertices, 7)
-	assert.ElementsMatch(circuit.Vertices, []model.CircuitVertex{
-		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
-		model2d.NewVertex2D(-7, 6),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(3, 0),
-		model2d.NewVertex2D(3, 13),
-		model2d.NewVertex2D(7, 6),
-		model2d.NewVertex2D(15, -15),
+	assert.ElementsMatch(circuit.Vertices, []tspmodel.CircuitVertex{
+		tspmodel2d.NewVertex2D(-15+tspmodel.Threshold/3.0, -15-tspmodel.Threshold/3.0),
+		tspmodel2d.NewVertex2D(-7, 6),
+		tspmodel2d.NewVertex2D(0, 0),
+		tspmodel2d.NewVertex2D(3, 0),
+		tspmodel2d.NewVertex2D(3, 13),
+		tspmodel2d.NewVertex2D(7, 6),
+		tspmodel2d.NewVertex2D(15, -15),
 	})
 
 	assert.NotNil(circuit.GetUnattachedVertices())
@@ -123,19 +123,19 @@ func TestPrepare_ConvexConcave_WeightedEdges(t *testing.T) {
 
 func TestUpdate_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert := assert.New(t)
-	circuit := experimental.NewConvexConcaveWeightedEdges([]model.CircuitVertex{
+	circuit := experimental.NewConvexConcaveWeightedEdges([]tspmodel.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	},
-		model2d.DeduplicateVertices,
-		&model2d.PerimeterBuilder2D{},
+		tspmodel2d.DeduplicateVertices,
+		tspmodel2d.BuildPerimiter,
 	).(*experimental.ConvexConcaveWeightedEdges)
 
 	circuit.Prepare()
@@ -168,8 +168,8 @@ func TestUpdate_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[4])
 	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[5])
 
-	assert.Equal(model2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[2])
-	assert.Equal(model2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[3])
+	assert.Equal(tspmodel2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[2])
+	assert.Equal(tspmodel2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[3])
 
 	circuit.Update(circuit.FindNextVertexAndEdge())
 
@@ -190,9 +190,9 @@ func TestUpdate_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[5])
 	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[6])
 
-	assert.Equal(model2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[2])
-	assert.Equal(model2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[3])
-	assert.Equal(model2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[4])
+	assert.Equal(tspmodel2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[2])
+	assert.Equal(tspmodel2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[3])
+	assert.Equal(tspmodel2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[4])
 
 	circuit.Update(circuit.FindNextVertexAndEdge())
 
@@ -214,8 +214,8 @@ func TestUpdate_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[6])
 	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[7])
 
-	assert.Equal(model2d.NewVertex2D(0, 0), circuit.GetAttachedVertices()[2])
-	assert.Equal(model2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[3])
+	assert.Equal(tspmodel2d.NewVertex2D(0, 0), circuit.GetAttachedVertices()[2])
+	assert.Equal(tspmodel2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[3])
 
 	circuit.Update(circuit.FindNextVertexAndEdge())
 
@@ -231,16 +231,16 @@ func TestUpdate_ConvexConcave_WeightedEdges(t *testing.T) {
 
 func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserThanPreviousEdge_ConvexConcave_WeightedEdges(t *testing.T) {
 	assert := assert.New(t)
-	circuit := experimental.NewConvexConcaveWeightedEdges([]model.CircuitVertex{
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(4.7, 2.0),
-		model2d.NewVertex2D(5.0, 2.25),
-		model2d.NewVertex2D(5, 5),
-		model2d.NewVertex2D(6.0, 2.5),
-		model2d.NewVertex2D(10, 0),
+	circuit := experimental.NewConvexConcaveWeightedEdges([]tspmodel.CircuitVertex{
+		tspmodel2d.NewVertex2D(0, 0),
+		tspmodel2d.NewVertex2D(4.7, 2.0),
+		tspmodel2d.NewVertex2D(5.0, 2.25),
+		tspmodel2d.NewVertex2D(5, 5),
+		tspmodel2d.NewVertex2D(6.0, 2.5),
+		tspmodel2d.NewVertex2D(10, 0),
 	},
-		model2d.DeduplicateVertices,
-		&model2d.PerimeterBuilder2D{},
+		tspmodel2d.DeduplicateVertices,
+		tspmodel2d.BuildPerimiter,
 	).(*experimental.ConvexConcaveWeightedEdges)
 
 	circuit.Prepare()
@@ -285,19 +285,19 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 
 func TestUpdate_ConvexConcave_WeightedEdges_ShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
-	circuit := experimental.NewConvexConcaveWeightedEdges([]model.CircuitVertex{
+	circuit := experimental.NewConvexConcaveWeightedEdges([]tspmodel.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	},
-		model2d.DeduplicateVertices,
-		&model2d.PerimeterBuilder2D{},
+		tspmodel2d.DeduplicateVertices,
+		tspmodel2d.BuildPerimiter,
 	).(*experimental.ConvexConcaveWeightedEdges)
 
 	circuit.Prepare()

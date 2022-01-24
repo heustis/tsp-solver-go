@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/graph"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/solver"
+	"github.com/fealos/lee-tsp-go/tspgraph"
+	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/tspsolver"
 )
 
 func ComparePerformanceGraph() {
@@ -23,8 +23,8 @@ func ComparePerformanceGraph() {
 
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "np",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit, pathLength := solver.FindShortestPathNP(cv)
+	// 	circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+	// 		circuit, pathLength := tspsolver.FindShortestPathNPWithChecks(cv)
 	// 		return &circuit.CompletedCircuit{
 	// 			Circuit: circuit,
 	// 			Length:  pathLength,
@@ -34,8 +34,8 @@ func ComparePerformanceGraph() {
 
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "np_heap",
-	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit, pathLength := solver.FindShortestPathNPHeap(cv)
+	// 	circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+	// 		circuit, pathLength := tspsolver.FindShortestPathNPHeap(cv)
 	// 		return &circuit.CompletedCircuit{
 	// 			Circuit: circuit,
 	// 			Length:  pathLength,
@@ -45,18 +45,18 @@ func ComparePerformanceGraph() {
 
 	circuits = append(circuits, &NamedCircuit{
 		name: "greedy",
-		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			v := make([]*graph.GraphVertex, len(cv))
+		circuitFunc: func(cv []tspmodel.CircuitVertex) tspmodel.Circuit {
+			v := make([]*tspgraph.GraphVertex, len(cv))
 			for i, vertex := range cv {
-				v[i] = vertex.(*graph.GraphVertex)
+				v[i] = vertex.(*tspgraph.GraphVertex)
 			}
-			g := &graph.Graph{
+			g := &tspgraph.Graph{
 				Vertices: v,
 			}
-			c := graph.NewGraphCircuit(g)
+			c := tspgraph.NewGraphCircuit(g)
 			defer c.Delete()
 
-			solver.FindShortestPathGreedy(c)
+			tspsolver.FindShortestPathCircuit(c)
 
 			return &circuit.CompletedCircuit{
 				Circuit: c.GetAttachedVertices(),
@@ -65,8 +65,8 @@ func ComparePerformanceGraph() {
 		},
 	})
 
-	ComparePerformance("results_graph_perf_greedy_1.tsv", &NumVertices{initVertices: 100, incrementVertices: 50, maxVertices: 1500, numIterations: 100}, circuits, func(size int) []model.CircuitVertex {
-		gen := &graph.GraphGenerator{
+	ComparePerformance("results_graph_perf_greedy_1.tsv", &NumVertices{initVertices: 100, incrementVertices: 50, maxVertices: 1500, numIterations: 100}, circuits, func(size int) []tspmodel.CircuitVertex {
+		gen := &tspgraph.GraphGenerator{
 			NumVertices: uint32(size),
 			MinEdges:    3,
 			MaxEdges:    5,
@@ -74,7 +74,7 @@ func ComparePerformanceGraph() {
 
 		g := gen.Create()
 
-		cv := make([]model.CircuitVertex, len(g.Vertices))
+		cv := make([]tspmodel.CircuitVertex, len(g.Vertices))
 		for i, vertex := range g.Vertices {
 			cv[i] = vertex
 		}

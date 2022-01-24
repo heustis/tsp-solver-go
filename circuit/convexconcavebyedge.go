@@ -3,18 +3,18 @@ package circuit
 import (
 	"math"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/tspmodel"
 )
 
 type ConvexConcaveByEdge struct {
-	Vertices              []model.CircuitVertex
-	deduplicator          func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder      model.PerimeterBuilder
-	circuits              []model.Circuit
+	Vertices              []tspmodel.CircuitVertex
+	deduplicator          func([]tspmodel.CircuitVertex) []tspmodel.CircuitVertex
+	perimeterBuilder      tspmodel.PerimeterBuilder
+	circuits              []tspmodel.Circuit
 	enableInteriorUpdates bool
 }
 
-func NewConvexConcaveByEdge(vertices []model.CircuitVertex, deduplicator func([]model.CircuitVertex) []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+func NewConvexConcaveByEdge(vertices []tspmodel.CircuitVertex, deduplicator tspmodel.Deduplicator, perimeterBuilder tspmodel.PerimeterBuilder, enableInteriorUpdates bool) tspmodel.Circuit {
 	return &ConvexConcaveByEdge{
 		Vertices:              vertices,
 		deduplicator:          deduplicator,
@@ -24,10 +24,10 @@ func NewConvexConcaveByEdge(vertices []model.CircuitVertex, deduplicator func([]
 }
 
 func (c *ConvexConcaveByEdge) BuildPerimiter() {
-	circuitEdges, unattachedVertices := c.perimeterBuilder.BuildPerimiter(c.Vertices)
+	circuitEdges, unattachedVertices := c.perimeterBuilder(c.Vertices)
 
-	closestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)
-	toAttach := make(map[*ConvexConcave]*model.DistanceToEdge)
+	closestEdges := make(map[tspmodel.CircuitVertex]*tspmodel.DistanceToEdge)
+	toAttach := make(map[*ConvexConcave]*tspmodel.DistanceToEdge)
 
 	initLength := 0.0
 	for _, edge := range circuitEdges {
@@ -39,10 +39,10 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 	// This increases the complexity of this circuit implementation to O(n^3), the unsmiplified form being O(e*(n-e)*(n-e)), since the greedy implementation is O(n^2) or O((n-e)^2).
 	for _, e := range circuitEdges {
 		circuit := &ConvexConcave{
-			circuitEdges:          make([]model.CircuitEdge, len(circuitEdges)),
+			circuitEdges:          make([]tspmodel.CircuitEdge, len(circuitEdges)),
 			Vertices:              c.Vertices,
-			closestEdges:          model.NewHeap(model.GetDistanceToEdgeForHeap),
-			unattachedVertices:    make(map[model.CircuitVertex]bool),
+			closestEdges:          tspmodel.NewHeap(tspmodel.GetDistanceToEdgeForHeap),
+			unattachedVertices:    make(map[tspmodel.CircuitVertex]bool),
 			length:                initLength,
 			enableInteriorUpdates: c.enableInteriorUpdates,
 		}
@@ -52,13 +52,13 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 			circuit.unattachedVertices[k] = v
 		}
 
-		vertexClosestToEdge := &model.DistanceToEdge{
+		vertexClosestToEdge := &tspmodel.DistanceToEdge{
 			Distance: math.MaxFloat64,
 		}
 		for v := range unattachedVertices {
 			d := e.DistanceIncrease(v)
 			if d < vertexClosestToEdge.Distance {
-				vertexClosestToEdge = &model.DistanceToEdge{
+				vertexClosestToEdge = &tspmodel.DistanceToEdge{
 					Vertex:   v,
 					Edge:     e,
 					Distance: d,
@@ -66,7 +66,7 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 			}
 
 			if prevClosest, okay := closestEdges[v]; !okay || d < prevClosest.Distance {
-				closestEdges[v] = &model.DistanceToEdge{
+				closestEdges[v] = &tspmodel.DistanceToEdge{
 					Vertex:   v,
 					Edge:     e,
 					Distance: d,
@@ -80,8 +80,8 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 	for circuit, closestToEdge := range toAttach {
 		for _, dist := range closestEdges {
 			if dist.Vertex != closestToEdge.Vertex {
-				// Need to create a new model.DistanceToEdge for each circuit, due to how greedy circuits update DistanceToEdges
-				circuit.closestEdges.Push(&model.DistanceToEdge{
+				// Need to create a new tspmodel.DistanceToEdge for each circuit, due to how greedy circuits update DistanceToEdges
+				circuit.closestEdges.Push(&tspmodel.DistanceToEdge{
 					Vertex:   dist.Vertex,
 					Edge:     dist.Edge,
 					Distance: dist.Distance,
@@ -92,20 +92,20 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 	}
 }
 
-func (c *ConvexConcaveByEdge) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *ConvexConcaveByEdge) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
 	if shortest := c.getShortestCircuit(); shortest != nil && len(shortest.GetUnattachedVertices()) > 0 {
-		next := shortest.(*ConvexConcave).closestEdges.Peek().(*model.DistanceToEdge)
+		next := shortest.(*ConvexConcave).closestEdges.Peek().(*tspmodel.DistanceToEdge)
 		return next.Vertex, next.Edge
 	} else {
 		return nil, nil
 	}
 }
 
-func (c *ConvexConcaveByEdge) GetAttachedVertices() []model.CircuitVertex {
+func (c *ConvexConcaveByEdge) GetAttachedVertices() []tspmodel.CircuitVertex {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetAttachedVertices()
 	}
-	return []model.CircuitVertex{}
+	return []tspmodel.CircuitVertex{}
 }
 
 func (c *ConvexConcaveByEdge) GetLength() float64 {
@@ -115,27 +115,27 @@ func (c *ConvexConcaveByEdge) GetLength() float64 {
 	return 0.0
 }
 
-func (c *ConvexConcaveByEdge) GetUnattachedVertices() map[model.CircuitVertex]bool {
+func (c *ConvexConcaveByEdge) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetUnattachedVertices()
 	}
-	return make(map[model.CircuitVertex]bool)
+	return make(map[tspmodel.CircuitVertex]bool)
 }
 
 func (c *ConvexConcaveByEdge) Prepare() {
-	c.circuits = []model.Circuit{}
+	c.circuits = []tspmodel.Circuit{}
 	c.Vertices = c.deduplicator(c.Vertices)
 }
 
-func (c *ConvexConcaveByEdge) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
+func (c *ConvexConcaveByEdge) Update(ignoredVertex tspmodel.CircuitVertex, ignoredEdge tspmodel.CircuitEdge) {
 	for _, circuit := range c.circuits {
 		circuit.Update(circuit.FindNextVertexAndEdge())
 	}
 }
 
-func (c *ConvexConcaveByEdge) getShortestCircuit() model.Circuit {
+func (c *ConvexConcaveByEdge) getShortestCircuit() tspmodel.Circuit {
 	shortestLen := math.MaxFloat64
-	var shortest model.Circuit
+	var shortest tspmodel.Circuit
 	for _, circuit := range c.circuits {
 		if l := circuit.GetLength(); l < shortestLen {
 			shortest = circuit
@@ -145,4 +145,4 @@ func (c *ConvexConcaveByEdge) getShortestCircuit() model.Circuit {
 	return shortest
 }
 
-var _ model.Circuit = (*ConvexConcaveByEdge)(nil)
+var _ tspmodel.Circuit = (*ConvexConcaveByEdge)(nil)

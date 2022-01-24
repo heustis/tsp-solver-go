@@ -1,16 +1,16 @@
 package circuit
 
-import "github.com/fealos/lee-tsp-go/model"
+import "github.com/fealos/lee-tsp-go/tspmodel"
 
 type CompletedCircuit struct {
-	Circuit []model.CircuitVertex
+	Circuit []tspmodel.CircuitVertex
 	Length  float64
 }
 
 func (c *CompletedCircuit) BuildPerimiter() {
 }
 
-func (c *CompletedCircuit) CloneAndUpdate() model.HeapableCircuit {
+func (c *CompletedCircuit) CloneAndUpdate() ClonableCircuit {
 	return c
 }
 
@@ -18,11 +18,11 @@ func (c *CompletedCircuit) Delete() {
 	c.Circuit = nil
 }
 
-func (c *CompletedCircuit) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *CompletedCircuit) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
 	return nil, nil
 }
 
-func (c *CompletedCircuit) GetAttachedVertices() []model.CircuitVertex {
+func (c *CompletedCircuit) GetAttachedVertices() []tspmodel.CircuitVertex {
 	return c.Circuit
 }
 
@@ -34,15 +34,15 @@ func (c *CompletedCircuit) GetLengthWithNext() float64 {
 	return c.Length
 }
 
-func (c *CompletedCircuit) GetUnattachedVertices() map[model.CircuitVertex]bool {
-	return make(map[model.CircuitVertex]bool)
+func (c *CompletedCircuit) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
+	return make(map[tspmodel.CircuitVertex]bool)
 }
 
 func (c *CompletedCircuit) Prepare() {
 }
 
-func (c *CompletedCircuit) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
+func (c *CompletedCircuit) Update(vertexToAdd tspmodel.CircuitVertex, edgeToSplit tspmodel.CircuitEdge) {
 }
 
-var _ model.HeapableCircuit = (*CompletedCircuit)(nil)
-var _ model.Circuit = (*CompletedCircuit)(nil)
+var _ ClonableCircuit = (*CompletedCircuit)(nil)
+var _ tspmodel.Circuit = (*CompletedCircuit)(nil)
