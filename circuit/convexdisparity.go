@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/fealos/lee-tsp-go/tspmodel"
+	"github.com/fealos/lee-tsp-go/model"
 )
 
 type ConvexConcaveDisparity struct {
-	Vertices             []tspmodel.CircuitVertex
-	deduplicator         func([]tspmodel.CircuitVertex) []tspmodel.CircuitVertex
-	perimeterBuilder     tspmodel.PerimeterBuilder
-	circuitEdges         []tspmodel.CircuitEdge
-	edgeDistances        map[tspmodel.CircuitVertex]*vertexDisparity
+	Vertices             []model.CircuitVertex
+	deduplicator         func([]model.CircuitVertex) []model.CircuitVertex
+	perimeterBuilder     model.PerimeterBuilder
+	circuitEdges         []model.CircuitEdge
+	edgeDistances        map[model.CircuitVertex]*vertexDisparity
 	length               float64
 	useRelativeDisparity bool
 }
 
-func NewConvexConcaveDisparity(vertices []tspmodel.CircuitVertex, deduplicator tspmodel.Deduplicator, perimeterBuilder tspmodel.PerimeterBuilder, useRelativeDisparity bool) tspmodel.Circuit {
+func NewConvexConcaveDisparity(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) model.Circuit {
 	return &ConvexConcaveDisparity{
 		Vertices:             vertices,
 		deduplicator:         deduplicator,
@@ -28,25 +28,25 @@ func NewConvexConcaveDisparity(vertices []tspmodel.CircuitVertex, deduplicator t
 }
 
 func (c *ConvexConcaveDisparity) BuildPerimiter() {
-	var unattachedVertices map[tspmodel.CircuitVertex]bool
+	var unattachedVertices map[model.CircuitVertex]bool
 	c.circuitEdges, unattachedVertices = c.perimeterBuilder(c.Vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	for vertex := range unattachedVertices {
 		disparity := &vertexDisparity{
-			closestEdge:       &tspmodel.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
-			secondClosestEdge: &tspmodel.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
+			closestEdge:       &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
+			secondClosestEdge: &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
 		}
 
 		if c.useRelativeDisparity {
-			disparity.disparityFunction = func(closer *tspmodel.DistanceToEdge, farther *tspmodel.DistanceToEdge) float64 {
-				if closer.Distance < tspmodel.Threshold {
+			disparity.disparityFunction = func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64 {
+				if closer.Distance < model.Threshold {
 					return math.MaxFloat64
 				}
 				return farther.Distance / closer.Distance
 			}
 		} else {
-			disparity.disparityFunction = func(closer *tspmodel.DistanceToEdge, farther *tspmodel.DistanceToEdge) float64 {
+			disparity.disparityFunction = func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64 {
 				return farther.Distance - closer.Distance
 			}
 		}
@@ -65,13 +65,13 @@ func (c *ConvexConcaveDisparity) BuildPerimiter() {
 	}
 }
 
-func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
+func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	maxDisparityAmount := -1.0
-	next := &tspmodel.DistanceToEdge{
+	next := &model.DistanceToEdge{
 		Distance: math.MaxFloat64,
 	}
 	for _, v := range c.edgeDistances {
-		if v.amount > maxDisparityAmount+tspmodel.Threshold || (v.amount > maxDisparityAmount-tspmodel.Threshold && v.closestEdge.Distance < next.Distance) {
+		if v.amount > maxDisparityAmount+model.Threshold || (v.amount > maxDisparityAmount-model.Threshold && v.closestEdge.Distance < next.Distance) {
 			next = v.closestEdge
 			maxDisparityAmount = v.amount
 		}
@@ -79,12 +79,12 @@ func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (tspmodel.CircuitVertex
 	return next.Vertex, next.Edge
 }
 
-func (c *ConvexConcaveDisparity) GetAttachedEdges() []tspmodel.CircuitEdge {
+func (c *ConvexConcaveDisparity) GetAttachedEdges() []model.CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *ConvexConcaveDisparity) GetAttachedVertices() []tspmodel.CircuitVertex {
-	vertices := make([]tspmodel.CircuitVertex, len(c.circuitEdges))
+func (c *ConvexConcaveDisparity) GetAttachedVertices() []model.CircuitVertex {
+	vertices := make([]model.CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
 	}
@@ -95,8 +95,8 @@ func (c *ConvexConcaveDisparity) GetLength() float64 {
 	return c.length
 }
 
-func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
-	unattachedVertices := make(map[tspmodel.CircuitVertex]bool)
+func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[model.CircuitVertex]bool {
+	unattachedVertices := make(map[model.CircuitVertex]bool)
 	for k := range c.edgeDistances {
 		unattachedVertices[k] = true
 	}
@@ -104,17 +104,17 @@ func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[tspmodel.CircuitVer
 }
 
 func (c *ConvexConcaveDisparity) Prepare() {
-	c.edgeDistances = make(map[tspmodel.CircuitVertex]*vertexDisparity)
-	c.circuitEdges = []tspmodel.CircuitEdge{}
+	c.edgeDistances = make(map[model.CircuitVertex]*vertexDisparity)
+	c.circuitEdges = []model.CircuitEdge{}
 	c.length = 0.0
 
 	c.Vertices = c.deduplicator(c.Vertices)
 }
 
-func (c *ConvexConcaveDisparity) Update(vertexToAdd tspmodel.CircuitVertex, edgeToSplit tspmodel.CircuitEdge) {
+func (c *ConvexConcaveDisparity) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
 	if vertexToAdd != nil {
 		var edgeIndex int
-		c.circuitEdges, edgeIndex = tspmodel.SplitEdge(c.circuitEdges, edgeToSplit, vertexToAdd)
+		c.circuitEdges, edgeIndex = model.SplitEdge(c.circuitEdges, edgeToSplit, vertexToAdd)
 		if edgeIndex < 0 {
 			expectedEdgeJson, _ := json.Marshal(edgeToSplit)
 			actualCircuitJson, _ := json.Marshal(c.circuitEdges)
@@ -134,13 +134,13 @@ func (c *ConvexConcaveDisparity) Update(vertexToAdd tspmodel.CircuitVertex, edge
 }
 
 type vertexDisparity struct {
-	closestEdge       *tspmodel.DistanceToEdge
-	secondClosestEdge *tspmodel.DistanceToEdge
+	closestEdge       *model.DistanceToEdge
+	secondClosestEdge *model.DistanceToEdge
 	amount            float64
-	disparityFunction func(closer *tspmodel.DistanceToEdge, farther *tspmodel.DistanceToEdge) float64
+	disparityFunction func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64
 }
 
-func (disparity *vertexDisparity) update(e tspmodel.CircuitEdge, distance float64) {
+func (disparity *vertexDisparity) update(e model.CircuitEdge, distance float64) {
 	if distance < disparity.secondClosestEdge.Distance {
 		disparity.secondClosestEdge.Distance = distance
 		disparity.secondClosestEdge.Edge = e
@@ -152,7 +152,7 @@ func (disparity *vertexDisparity) update(e tspmodel.CircuitEdge, distance float6
 	}
 }
 
-func (disparity *vertexDisparity) remove(e tspmodel.CircuitEdge) bool {
+func (disparity *vertexDisparity) remove(e model.CircuitEdge) bool {
 	if e == disparity.closestEdge.Edge {
 		disparity.closestEdge.Distance = math.MaxFloat64
 		disparity.closestEdge.Edge = nil
@@ -166,4 +166,4 @@ func (disparity *vertexDisparity) remove(e tspmodel.CircuitEdge) bool {
 	return false
 }
 
-var _ tspmodel.Circuit = (*ConvexConcaveDisparity)(nil)
+var _ model.Circuit = (*ConvexConcaveDisparity)(nil)

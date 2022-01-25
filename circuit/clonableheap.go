@@ -1,18 +1,18 @@
 package circuit
 
-import "github.com/fealos/lee-tsp-go/tspmodel"
+import "github.com/fealos/lee-tsp-go/model"
 
 type HeapableCircuit struct {
-	Vertices           []tspmodel.CircuitVertex
-	deduplicator       func([]tspmodel.CircuitVertex) []tspmodel.CircuitVertex
-	perimeterBuilder   tspmodel.PerimeterBuilder
-	circuitEdges       []tspmodel.CircuitEdge
-	closestEdges       *tspmodel.Heap
+	Vertices           []model.CircuitVertex
+	deduplicator       func([]model.CircuitVertex) []model.CircuitVertex
+	perimeterBuilder   model.PerimeterBuilder
+	circuitEdges       []model.CircuitEdge
+	closestEdges       *model.Heap
 	length             float64
-	unattachedVertices map[tspmodel.CircuitVertex]bool
+	unattachedVertices map[model.CircuitVertex]bool
 }
 
-func NewHeapableCircuit(vertices []tspmodel.CircuitVertex, deduplicator tspmodel.Deduplicator, perimeterBuilder tspmodel.PerimeterBuilder) *HeapableCircuit {
+func NewHeapableCircuit(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder) *HeapableCircuit {
 	return &HeapableCircuit{
 		Vertices:         vertices,
 		deduplicator:     deduplicator,
@@ -35,7 +35,7 @@ func (c *HeapableCircuit) BuildPerimiter() {
 	initialCandidates := []interface{}{}
 	for v := range c.unattachedVertices {
 		for _, edge := range c.circuitEdges {
-			initialCandidates = append(initialCandidates, &tspmodel.DistanceToEdge{
+			initialCandidates = append(initialCandidates, &model.DistanceToEdge{
 				Edge:     edge,
 				Distance: edge.DistanceIncrease(v),
 				Vertex:   v,
@@ -47,7 +47,7 @@ func (c *HeapableCircuit) BuildPerimiter() {
 
 func (c *HeapableCircuit) CloneAndUpdate() ClonableCircuit {
 	// 1. Remove 'next closest' from heap
-	next, okay := c.closestEdges.PopHeap().(*tspmodel.DistanceToEdge)
+	next, okay := c.closestEdges.PopHeap().(*model.DistanceToEdge)
 
 	if next == nil || !okay {
 		return nil
@@ -62,11 +62,11 @@ func (c *HeapableCircuit) CloneAndUpdate() ClonableCircuit {
 		//     clone the circuit so that in the clone the vertex will be attached to the 'next closest' edge,
 		//     but in the original circuit that vertex can attach to a different edge.
 		clone := &HeapableCircuit{
-			Vertices:           append(make([]tspmodel.CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
-			circuitEdges:       append(make([]tspmodel.CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
+			Vertices:           append(make([]model.CircuitVertex, 0, len(c.Vertices)), c.Vertices...),
+			circuitEdges:       append(make([]model.CircuitEdge, 0, len(c.circuitEdges)), c.circuitEdges...),
 			closestEdges:       c.closestEdges.Clone(),
 			length:             c.length,
-			unattachedVertices: make(map[tspmodel.CircuitVertex]bool),
+			unattachedVertices: make(map[model.CircuitVertex]bool),
 		}
 		for k, v := range c.unattachedVertices {
 			clone.unattachedVertices[k] = v
@@ -89,26 +89,26 @@ func (c *HeapableCircuit) Delete() {
 	c.closestEdges = nil
 }
 
-func (c *HeapableCircuit) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
-	if next, okay := c.closestEdges.Peek().(*tspmodel.DistanceToEdge); okay && next != nil {
+func (c *HeapableCircuit) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+	if next, okay := c.closestEdges.Peek().(*model.DistanceToEdge); okay && next != nil {
 		return next.Vertex, next.Edge
 	}
 	return nil, nil
 }
 
-func (c *HeapableCircuit) GetAttachedVertices() []tspmodel.CircuitVertex {
-	vertices := make([]tspmodel.CircuitVertex, len(c.circuitEdges))
+func (c *HeapableCircuit) GetAttachedVertices() []model.CircuitVertex {
+	vertices := make([]model.CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
 	}
 	return vertices
 }
 
-func (c *HeapableCircuit) GetAttachedEdges() []tspmodel.CircuitEdge {
+func (c *HeapableCircuit) GetAttachedEdges() []model.CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *HeapableCircuit) GetClosestEdges() *tspmodel.Heap {
+func (c *HeapableCircuit) GetClosestEdges() *model.Heap {
 	return c.closestEdges
 }
 
@@ -118,28 +118,28 @@ func (c *HeapableCircuit) GetLength() float64 {
 
 func (c *HeapableCircuit) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
-		return c.length + next.(*tspmodel.DistanceToEdge).Distance
+		return c.length + next.(*model.DistanceToEdge).Distance
 	} else {
 		return c.length
 	}
 }
 
-func (c *HeapableCircuit) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
+func (c *HeapableCircuit) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.unattachedVertices
 }
 
 func (c *HeapableCircuit) Prepare() {
 	c.Vertices = c.deduplicator(c.Vertices)
-	c.circuitEdges = []tspmodel.CircuitEdge{}
-	c.closestEdges = tspmodel.NewHeap(tspmodel.GetDistanceToEdgeForHeap)
+	c.circuitEdges = []model.CircuitEdge{}
+	c.closestEdges = model.NewHeap(model.GetDistanceToEdgeForHeap)
 	c.length = 0.0
-	c.unattachedVertices = make(map[tspmodel.CircuitVertex]bool)
+	c.unattachedVertices = make(map[model.CircuitVertex]bool)
 }
 
-func (c *HeapableCircuit) attachVertex(toAttach *tspmodel.DistanceToEdge) {
+func (c *HeapableCircuit) attachVertex(toAttach *model.DistanceToEdge) {
 	// 1. Update the circuitEdges
 	var edgeIndex int
-	c.circuitEdges, edgeIndex = tspmodel.SplitEdge(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
+	c.circuitEdges, edgeIndex = model.SplitEdge(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
 
 	// 2. Update the circuit
 	delete(c.unattachedVertices, toAttach.Vertex)
@@ -149,19 +149,19 @@ func (c *HeapableCircuit) attachVertex(toAttach *tspmodel.DistanceToEdge) {
 	edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1%len(c.circuitEdges)]
 
 	c.closestEdges.ReplaceAll(func(x interface{}) interface{} {
-		current := x.(*tspmodel.DistanceToEdge)
+		current := x.(*model.DistanceToEdge)
 		if current.Vertex == toAttach.Vertex {
 			// 4a. Remove any items in the heap with the vertex that was attached to the circuit.
 			return nil
 		} else if current.Edge == toAttach.Edge {
 			// 4b. Replace any items in the heap with the edge that was split, with one entry for each of the newly created edges.
 			return []interface{}{
-				&tspmodel.DistanceToEdge{
+				&model.DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeA,
 					Distance: edgeA.DistanceIncrease(current.Vertex),
 				},
-				&tspmodel.DistanceToEdge{
+				&model.DistanceToEdge{
 					Vertex:   current.Vertex,
 					Edge:     edgeB,
 					Distance: edgeB.DistanceIncrease(current.Vertex),

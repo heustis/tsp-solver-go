@@ -1,11 +1,11 @@
 package circuit
 
-import "github.com/fealos/lee-tsp-go/tspmodel"
+import "github.com/fealos/lee-tsp-go/model"
 
 // ClonableCircuit is a Circuit variant where the circuit may be cloned with each update, depending on the implementation,
 // so that each clone represents a different branch of solving the circuit.
 type ClonableCircuit interface {
-	tspmodel.Deletable
+	model.Deletable
 
 	// BuildPerimeter creates an initial circuit, using the minimum vertices required to fully enclose the other (interior) vertices.
 	// For example, when using 2-D points, this constructs a convex polygon such that all points are either vertices or inside the polygon.
@@ -20,21 +20,21 @@ type ClonableCircuit interface {
 
 	// FindNextVertexAndEdge determines the next vertex to add to the circuit, along with which edge it should be added to.
 	// For example, when using 2-D points, this finds the point with the minimum distance to its nearest edge (returning both that point and edge).
-	FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge)
+	FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge)
 
 	// GetAttachedVertices returns all vertices that have been added to the circuit (either as part of BuildPerimeter or Update).
 	// This returns them in the order they should be traversed as part of the circuit (ignoring any unattached vertices).
-	GetAttachedVertices() []tspmodel.CircuitVertex
+	GetAttachedVertices() []model.CircuitVertex
 
 	// GetLength returns the length of the circuit (at the current stage of processing).
 	GetLength() float64
 
 	// GetLengthWithNext returns the length of the circuit, if the next cloesest vertex were attached.
-	// This allows the tspsolver to prioritize combinations that may reduce the length increase of detached vertices (due to new edges being closer to those vertices).
+	// This allows the solver to prioritize combinations that may reduce the length increase of detached vertices (due to new edges being closer to those vertices).
 	GetLengthWithNext() float64
 
 	// GetUnattachedVertices returns the set of vertices that have not been added to the circuit yet. (all of these points are internal to the perimeter)
-	GetUnattachedVertices() map[tspmodel.CircuitVertex]bool
+	GetUnattachedVertices() map[model.CircuitVertex]bool
 
 	// Prepare may be used by a circuit to pre-compute values that will save time while processing the circuit.
 	// Prepare should be called prior to performing any other operations on a circuit.
@@ -43,17 +43,17 @@ type ClonableCircuit interface {
 
 // ClonableCircuitSolver is a wrapper for a ClonableCircuit and its clones that allows them to match the Circuit interface.
 type ClonableCircuitSolver struct {
-	circuits      *tspmodel.Heap
+	circuits      *model.Heap
 	numClones     int
 	numIterations int
 }
 
-func NewClonableCircuitSolver(initialCircuit ClonableCircuit) tspmodel.Circuit {
-	tspsolver := &ClonableCircuitSolver{
-		circuits: tspmodel.NewHeap(getClonableLength),
+func NewClonableCircuitSolver(initialCircuit ClonableCircuit) model.Circuit {
+	solver := &ClonableCircuitSolver{
+		circuits: model.NewHeap(getClonableLength),
 	}
-	tspsolver.circuits.PushHeap(initialCircuit)
-	return tspsolver
+	solver.circuits.PushHeap(initialCircuit)
+	return solver
 }
 
 func getClonableLength(a interface{}) float64 {
@@ -64,11 +64,11 @@ func (c *ClonableCircuitSolver) BuildPerimiter() {
 	c.circuits.Peek().(ClonableCircuit).BuildPerimiter()
 }
 
-func (c *ClonableCircuitSolver) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
+func (c *ClonableCircuitSolver) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	return c.circuits.Peek().(ClonableCircuit).FindNextVertexAndEdge()
 }
 
-func (c *ClonableCircuitSolver) GetAttachedVertices() []tspmodel.CircuitVertex {
+func (c *ClonableCircuitSolver) GetAttachedVertices() []model.CircuitVertex {
 	return c.circuits.Peek().(ClonableCircuit).GetAttachedVertices()
 }
 
@@ -84,7 +84,7 @@ func (c *ClonableCircuitSolver) GetNumIterations() int {
 	return c.numIterations
 }
 
-func (c *ClonableCircuitSolver) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
+func (c *ClonableCircuitSolver) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.circuits.Peek().(ClonableCircuit).GetUnattachedVertices()
 }
 
@@ -94,7 +94,7 @@ func (c *ClonableCircuitSolver) Prepare() {
 	c.numClones = 0
 }
 
-func (c *ClonableCircuitSolver) Update(vertexToAdd tspmodel.CircuitVertex, edgeToSplit tspmodel.CircuitEdge) {
+func (c *ClonableCircuitSolver) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
 	if _, isCompleted := c.circuits.Peek().(*CompletedCircuit); isCompleted {
 		return
 	}
@@ -121,9 +121,9 @@ func (c *ClonableCircuitSolver) Update(vertexToAdd tspmodel.CircuitVertex, edgeT
 		next.Delete()
 
 		// Create a new heap with only the completed circuit in it.
-		c.circuits = tspmodel.NewHeap(getClonableLength)
+		c.circuits = model.NewHeap(getClonableLength)
 		c.circuits.PushHeap(result)
 	}
 }
 
-var _ tspmodel.Circuit = (*ClonableCircuitSolver)(nil)
+var _ model.Circuit = (*ClonableCircuitSolver)(nil)

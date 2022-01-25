@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/fealos/lee-tsp-go/tspmodel"
-	"github.com/fealos/lee-tsp-go/tspstats"
+	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/stats"
 )
 
 const minimumSignificance = 1.0
@@ -25,15 +25,15 @@ const maxClones uint16 = 1000
 //        However, if it is near a convex corner, the farther edge would have to cross the closer edge to attach to the point.
 //    2c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
 type ConvexConcaveConfidence struct {
-	Vertices         []tspmodel.CircuitVertex
+	Vertices         []model.CircuitVertex
 	Significance     float64
 	MaxClones        uint16
-	deduplicator     func([]tspmodel.CircuitVertex) []tspmodel.CircuitVertex
-	perimeterBuilder tspmodel.PerimeterBuilder
+	deduplicator     func([]model.CircuitVertex) []model.CircuitVertex
+	perimeterBuilder model.PerimeterBuilder
 	circuits         []*confidenceCircuit
 }
 
-func NewConvexConcaveConfidence(vertices []tspmodel.CircuitVertex, deduplicator tspmodel.Deduplicator, perimeterBuilder tspmodel.PerimeterBuilder) tspmodel.Circuit {
+func NewConvexConcaveConfidence(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	return &ConvexConcaveConfidence{
 		Vertices:         vertices,
 		Significance:     minimumSignificance,
@@ -48,14 +48,14 @@ func (c *ConvexConcaveConfidence) BuildPerimiter() {
 
 	initCircuit := &confidenceCircuit{
 		edges:     circuitEdges,
-		distances: make(map[tspmodel.CircuitVertex]*tspstats.DistanceGaps),
+		distances: make(map[model.CircuitVertex]*stats.DistanceGaps),
 		length:    0.0,
 	}
 	c.circuits = []*confidenceCircuit{initCircuit}
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	for vertex := range unattachedVertices {
-		initCircuit.distances[vertex] = tspstats.NewDistanceGaps(vertex, circuitEdges)
+		initCircuit.distances[vertex] = stats.NewDistanceGaps(vertex, circuitEdges)
 	}
 
 	for _, edge := range circuitEdges {
@@ -63,7 +63,7 @@ func (c *ConvexConcaveConfidence) BuildPerimiter() {
 	}
 }
 
-func (c *ConvexConcaveConfidence) FindNextVertexAndEdge() (tspmodel.CircuitVertex, tspmodel.CircuitEdge) {
+func (c *ConvexConcaveConfidence) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	// Since updating may need to clone the circuits, and each circuit may need to updated with a different vertex, we just need to return any unattached point and edge.
 	if len(c.circuits) > 0 {
 		for k, v := range c.circuits[0].distances {
@@ -73,22 +73,22 @@ func (c *ConvexConcaveConfidence) FindNextVertexAndEdge() (tspmodel.CircuitVerte
 	return nil, nil
 }
 
-func (c *ConvexConcaveConfidence) GetAttachedEdges() []tspmodel.CircuitEdge {
+func (c *ConvexConcaveConfidence) GetAttachedEdges() []model.CircuitEdge {
 	if len(c.circuits) > 0 {
 		return c.circuits[0].edges
 	}
-	return []tspmodel.CircuitEdge{}
+	return []model.CircuitEdge{}
 }
 
-func (c *ConvexConcaveConfidence) GetAttachedVertices() []tspmodel.CircuitVertex {
+func (c *ConvexConcaveConfidence) GetAttachedVertices() []model.CircuitVertex {
 	if len(c.circuits) > 0 && len(c.circuits[0].edges) > 0 {
-		vertices := make([]tspmodel.CircuitVertex, len(c.circuits[0].edges))
+		vertices := make([]model.CircuitVertex, len(c.circuits[0].edges))
 		for i, edge := range c.circuits[0].edges {
 			vertices[i] = edge.GetStart()
 		}
 		return vertices
 	}
-	return []tspmodel.CircuitVertex{}
+	return []model.CircuitVertex{}
 }
 
 func (c *ConvexConcaveConfidence) GetLength() float64 {
@@ -98,8 +98,8 @@ func (c *ConvexConcaveConfidence) GetLength() float64 {
 	return 0.0
 }
 
-func (c *ConvexConcaveConfidence) GetUnattachedVertices() map[tspmodel.CircuitVertex]bool {
-	unattachedVertices := make(map[tspmodel.CircuitVertex]bool)
+func (c *ConvexConcaveConfidence) GetUnattachedVertices() map[model.CircuitVertex]bool {
+	unattachedVertices := make(map[model.CircuitVertex]bool)
 	if len(c.circuits) > 0 {
 		for k := range c.circuits[0].distances {
 			unattachedVertices[k] = true
@@ -112,7 +112,7 @@ func (c *ConvexConcaveConfidence) Prepare() {
 	c.Vertices = c.deduplicator(c.Vertices)
 }
 
-func (c *ConvexConcaveConfidence) Update(ignoredVertex tspmodel.CircuitVertex, ignoredEdge tspmodel.CircuitEdge) {
+func (c *ConvexConcaveConfidence) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
 	// Don't update if the perimeter has not been built, nor if the shortest circuit is completed.
 	if len(c.circuits) == 0 || len(c.circuits[0].distances) == 0 {
 		return
@@ -149,8 +149,8 @@ func (c *ConvexConcaveConfidence) Update(ignoredVertex tspmodel.CircuitVertex, i
 func (c *ConvexConcaveConfidence) String() string {
 	s := "{\r\n\t\"vertices\":["
 
-	vertexIndexLookup := make(map[tspmodel.CircuitVertex]int)
-	edgeIndexLookup := make(map[tspmodel.CircuitEdge]int)
+	vertexIndexLookup := make(map[model.CircuitVertex]int)
+	edgeIndexLookup := make(map[model.CircuitEdge]int)
 
 	lastIndex := len(c.Vertices) - 1
 	for i, v := range c.Vertices {
@@ -192,4 +192,4 @@ func (c *ConvexConcaveConfidence) String() string {
 	return s
 }
 
-var _ tspmodel.Circuit = (*ConvexConcaveConfidence)(nil)
+var _ model.Circuit = (*ConvexConcaveConfidence)(nil)

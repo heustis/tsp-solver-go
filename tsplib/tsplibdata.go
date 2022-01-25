@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fealos/lee-tsp-go/tspmodel"
-	"github.com/fealos/lee-tsp-go/tspmodel2d"
+	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/model2d"
 )
 
 // TspLibData represents data used in "Symmetric traveling salesman problem" files from http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsplib.html.
@@ -19,15 +19,15 @@ type TspLibData struct {
 	name            string
 	comment         string
 	numPoints       int
-	vertices        []*tspmodel2d.Vertex2D
-	bestRoute       []*tspmodel2d.Vertex2D
+	vertices        []*model2d.Vertex2D
+	bestRoute       []*model2d.Vertex2D
 	bestRouteLength float64
 }
 
 // GetBestRoute returns the best known route according to the source file (if an optimal tour file is supplied)
 // This is not dynamic, it is reliant on the source having accurate data.
-func (data *TspLibData) GetBestRoute() []*tspmodel2d.Vertex2D {
-	bestRouteCopy := make([]*tspmodel2d.Vertex2D, len(data.bestRoute))
+func (data *TspLibData) GetBestRoute() []*model2d.Vertex2D {
+	bestRouteCopy := make([]*model2d.Vertex2D, len(data.bestRoute))
 	copy(bestRouteCopy, data.bestRoute)
 	return bestRouteCopy
 }
@@ -54,8 +54,8 @@ func (data *TspLibData) GetNumPoints() int {
 }
 
 // GetVertices returns the vertices in the order they appear in the source file.
-func (data *TspLibData) GetVertices() []tspmodel.CircuitVertex {
-	verticesCopy := make([]tspmodel.CircuitVertex, len(data.vertices))
+func (data *TspLibData) GetVertices() []model.CircuitVertex {
+	verticesCopy := make([]model.CircuitVertex, len(data.vertices))
 	for i, v := range data.vertices {
 		verticesCopy[i] = v
 	}
@@ -63,12 +63,12 @@ func (data *TspLibData) GetVertices() []tspmodel.CircuitVertex {
 }
 
 // SolveAndCompare uses the supplied solver to process the current TspLibData and writes its output to a file in TspLib format.
-func (data *TspLibData) SolveAndCompare(solverName string, tspsolver func([]tspmodel.CircuitVertex) tspmodel.Circuit) error {
-	verticesCopy := make([]tspmodel.CircuitVertex, len(data.vertices))
+func (data *TspLibData) SolveAndCompare(solverName string, solver func([]model.CircuitVertex) model.Circuit) error {
+	verticesCopy := make([]model.CircuitVertex, len(data.vertices))
 	for i, v := range data.vertices {
 		verticesCopy[i] = v
 	}
-	result := tspsolver(verticesCopy)
+	result := solver(verticesCopy)
 
 	f, err := os.OpenFile(fmt.Sprintf(`../results/tsplib/%s.tsp.%s.tour`, data.name, solverName), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -83,7 +83,7 @@ func (data *TspLibData) SolveAndCompare(solverName string, tspsolver func([]tspm
 	fmt.Fprintf(f, "COMPUTED LENGTH : %f\n", result.GetLength())
 	fmt.Fprintf(f, "TOUR_SECTION\n")
 	for _, v := range result.GetAttachedVertices() {
-		index := tspmodel.IndexOfVertex(verticesCopy, v)
+		index := model.IndexOfVertex(verticesCopy, v)
 		fmt.Fprintf(f, "%d\n", index)
 	}
 	fmt.Fprintf(f, "-1\n")
@@ -123,7 +123,7 @@ func NewData(filePath string) (*TspLibData, error) {
 				if err != nil {
 					return nil, fmt.Errorf(`failed to parse Y coordinate from file=%s line=%s error=%v`, filePath, line, err)
 				}
-				data.vertices = append(data.vertices, tspmodel2d.NewVertex2D(x, y))
+				data.vertices = append(data.vertices, model2d.NewVertex2D(x, y))
 			} else {
 				break
 			}
@@ -135,8 +135,8 @@ func NewData(filePath string) (*TspLibData, error) {
 			data.comment = strings.TrimSpace(r[1])
 		} else if r := regexDimension.FindStringSubmatch(line); r != nil {
 			data.numPoints, _ = strconv.Atoi(strings.TrimSpace(r[1]))
-			data.vertices = make([]*tspmodel2d.Vertex2D, 0, data.numPoints)
-			data.bestRoute = make([]*tspmodel2d.Vertex2D, 0, data.numPoints)
+			data.vertices = make([]*model2d.Vertex2D, 0, data.numPoints)
+			data.bestRoute = make([]*model2d.Vertex2D, 0, data.numPoints)
 			data.bestRouteLength = 0.0
 		}
 	}

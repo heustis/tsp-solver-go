@@ -6,35 +6,35 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/tspmodel"
-	"github.com/fealos/lee-tsp-go/tspmodel2d"
+	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildPerimeter_HeapMinClones(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
 	assert.Len(c.Vertices, 8)
 
 	assert.Len(c.GetAttachedVertices(), 5)
-	assert.Equal(tspmodel2d.NewVertex2D(-15, -15), c.GetAttachedVertices()[0])
-	assert.Equal(tspmodel2d.NewVertex2D(15, -15), c.GetAttachedVertices()[1])
-	assert.Equal(tspmodel2d.NewVertex2D(9, 6), c.GetAttachedVertices()[2])
-	assert.Equal(tspmodel2d.NewVertex2D(3, 13), c.GetAttachedVertices()[3])
-	assert.Equal(tspmodel2d.NewVertex2D(-7, 6), c.GetAttachedVertices()[4])
+	assert.Equal(model2d.NewVertex2D(-15, -15), c.GetAttachedVertices()[0])
+	assert.Equal(model2d.NewVertex2D(15, -15), c.GetAttachedVertices()[1])
+	assert.Equal(model2d.NewVertex2D(9, 6), c.GetAttachedVertices()[2])
+	assert.Equal(model2d.NewVertex2D(3, 13), c.GetAttachedVertices()[3])
+	assert.Equal(model2d.NewVertex2D(-7, 6), c.GetAttachedVertices()[4])
 	assert.Equal(c.GetAttachedVertices(), c.GetAttachedVertices())
 
 	assert.Len(c.GetAttachedEdges(), 5)
@@ -48,7 +48,7 @@ func TestBuildPerimeter_HeapMinClones(t *testing.T) {
 	for _, edge := range c.GetAttachedEdges() {
 		expectedLength += edge.GetLength()
 	}
-	assert.InDelta(expectedLength, c.GetLength(), tspmodel.Threshold)
+	assert.InDelta(expectedLength, c.GetLength(), model.Threshold)
 
 	// assert.NotNil(c.GetConvexVertices())
 	// assert.Len(c.GetConvexVertices(), 5)
@@ -63,25 +63,25 @@ func TestBuildPerimeter_HeapMinClones(t *testing.T) {
 	assert.True(c.GetUnattachedVertices()[c.Vertices[3]])
 	assert.True(c.GetUnattachedVertices()[c.Vertices[5]])
 
-	assert.InDelta(95.738634795112368+0.763503994948632, c.GetLengthWithNext(), tspmodel.Threshold)
+	assert.InDelta(95.738634795112368+0.763503994948632, c.GetLengthWithNext(), model.Threshold)
 
 	assert.Equal(15, c.GetClosestEdges().Len())
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[1],
 		Vertex:   c.Vertices[5],
 		Distance: 0.763503994948632,
 	}, c.GetClosestEdges().PopHeap())
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[2],
 		Vertex:   c.Vertices[5],
 		Distance: 1.628650237136812,
 	}, c.GetClosestEdges().PopHeap())
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[1],
 		Vertex:   c.Vertices[3],
 		Distance: 5.854324418695558,
 	}, c.GetClosestEdges().PopHeap())
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[4],
 		Vertex:   c.Vertices[2],
 		Distance: 7.9605428386450825,
@@ -91,25 +91,25 @@ func TestBuildPerimeter_HeapMinClones(t *testing.T) {
 func TestAttachAndMove(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(0, 0),   // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 3),   // Index 1 after sorting
-		tspmodel2d.NewVertex2D(3, 3),   // Index 5 after sorting
-		tspmodel2d.NewVertex2D(3, 0),   // Index 4 after sorting
-		tspmodel2d.NewVertex2D(1, 1),   // Index 2 after sorting
-		tspmodel2d.NewVertex2D(1, 2.1), // Index 3 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
+		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
+		model2d.NewVertex2D(3, 3),   // Index 5 after sorting
+		model2d.NewVertex2D(3, 0),   // Index 4 after sorting
+		model2d.NewVertex2D(1, 1),   // Index 2 after sorting
+		model2d.NewVertex2D(1, 2.1), // Index 3 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
-	testVert := c.GetClosestEdges().PopHeap().(*tspmodel.DistanceToEdge)
+	testVert := c.GetClosestEdges().PopHeap().(*model.DistanceToEdge)
 	c.AttachVertex(testVert)
 
-	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), tspmodel.Threshold)
+	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), model.Threshold)
 	assert.Equal(8, c.GetClosestEdges().Len())
 
-	c.MoveVertex(&tspmodel.DistanceToEdge{
+	c.MoveVertex(&model.DistanceToEdge{
 		Vertex:   testVert.Vertex,
 		Edge:     c.GetAttachedEdges()[1],
 		Distance: -1.0,
@@ -125,19 +125,19 @@ func TestAttachAndMove(t *testing.T) {
 func TestAttachAndMoveIndexZero(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(0, 0),   // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 3),   // Index 1 after sorting
-		tspmodel2d.NewVertex2D(3, 3),   // Index 5 after sorting
-		tspmodel2d.NewVertex2D(3, 0),   // Index 4 after sorting
-		tspmodel2d.NewVertex2D(1, 1),   // Index 2 after sorting
-		tspmodel2d.NewVertex2D(1, 2.1), // Index 3 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
+		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
+		model2d.NewVertex2D(3, 3),   // Index 5 after sorting
+		model2d.NewVertex2D(3, 0),   // Index 4 after sorting
+		model2d.NewVertex2D(1, 1),   // Index 2 after sorting
+		model2d.NewVertex2D(1, 2.1), // Index 3 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
-	testVert := &tspmodel.DistanceToEdge{
+	testVert := &model.DistanceToEdge{
 		Vertex:   c.Vertices[2],
 		Edge:     c.GetAttachedEdges()[0],
 		Distance: 1.0,
@@ -148,7 +148,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 	assert.True(c.Vertices[5].EdgeTo(c.Vertices[1]).Equals(c.GetAttachedEdges()[2]))
 	assert.True(c.Vertices[1].EdgeTo(c.Vertices[0]).Equals(c.GetAttachedEdges()[3]))
 	assert.True(c.Vertices[0].EdgeTo(c.Vertices[4]).Equals(c.GetAttachedEdges()[4]))
-	assert.Equal([]tspmodel.CircuitVertex{
+	assert.Equal([]model.CircuitVertex{
 		c.Vertices[4],
 		c.Vertices[2],
 		c.Vertices[5],
@@ -156,7 +156,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 		c.Vertices[0],
 	}, c.GetAttachedVertices())
 
-	c.MoveVertex(&tspmodel.DistanceToEdge{
+	c.MoveVertex(&model.DistanceToEdge{
 		Vertex:   c.Vertices[2],
 		Edge:     c.GetAttachedEdges()[4],
 		Distance: 2.25,
@@ -166,7 +166,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 	assert.True(c.Vertices[1].EdgeTo(c.Vertices[0]).Equals(c.GetAttachedEdges()[2]))
 	assert.True(c.Vertices[0].EdgeTo(c.Vertices[2]).Equals(c.GetAttachedEdges()[3]))
 	assert.True(c.Vertices[2].EdgeTo(c.Vertices[4]).Equals(c.GetAttachedEdges()[4]))
-	assert.Equal([]tspmodel.CircuitVertex{
+	assert.Equal([]model.CircuitVertex{
 		c.Vertices[4],
 		c.Vertices[5],
 		c.Vertices[1],
@@ -174,7 +174,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 		c.Vertices[2],
 	}, c.GetAttachedVertices())
 
-	c.MoveVertex(&tspmodel.DistanceToEdge{
+	c.MoveVertex(&model.DistanceToEdge{
 		Vertex:   c.Vertices[2],
 		Edge:     c.GetAttachedEdges()[0],
 		Distance: 3.5,
@@ -184,7 +184,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 	assert.True(c.Vertices[5].EdgeTo(c.Vertices[1]).Equals(c.GetAttachedEdges()[2]))
 	assert.True(c.Vertices[1].EdgeTo(c.Vertices[0]).Equals(c.GetAttachedEdges()[3]))
 	assert.True(c.Vertices[0].EdgeTo(c.Vertices[4]).Equals(c.GetAttachedEdges()[4]))
-	assert.Equal([]tspmodel.CircuitVertex{
+	assert.Equal([]model.CircuitVertex{
 		c.Vertices[4],
 		c.Vertices[2],
 		c.Vertices[5],
@@ -202,19 +202,19 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 func TestAttachAndMoveLastIndex(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(0, 0),   // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 3),   // Index 1 after sorting
-		tspmodel2d.NewVertex2D(3, 3),   // Index 5 after sorting
-		tspmodel2d.NewVertex2D(3, 0),   // Index 4 after sorting
-		tspmodel2d.NewVertex2D(1, 1),   // Index 2 after sorting
-		tspmodel2d.NewVertex2D(1, 2.1), // Index 3 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
+		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
+		model2d.NewVertex2D(3, 3),   // Index 5 after sorting
+		model2d.NewVertex2D(3, 0),   // Index 4 after sorting
+		model2d.NewVertex2D(1, 1),   // Index 2 after sorting
+		model2d.NewVertex2D(1, 2.1), // Index 3 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
-	testVert := &tspmodel.DistanceToEdge{
+	testVert := &model.DistanceToEdge{
 		Vertex:   c.Vertices[2],
 		Edge:     c.GetAttachedEdges()[3],
 		Distance: 0.5,
@@ -225,7 +225,7 @@ func TestAttachAndMoveLastIndex(t *testing.T) {
 	assert.True(c.Vertices[1].EdgeTo(c.Vertices[0]).Equals(c.GetAttachedEdges()[2]))
 	assert.True(c.Vertices[0].EdgeTo(c.Vertices[2]).Equals(c.GetAttachedEdges()[3]))
 	assert.True(c.Vertices[2].EdgeTo(c.Vertices[4]).Equals(c.GetAttachedEdges()[4]))
-	assert.Equal([]tspmodel.CircuitVertex{
+	assert.Equal([]model.CircuitVertex{
 		c.Vertices[4],
 		c.Vertices[5],
 		c.Vertices[1],
@@ -233,7 +233,7 @@ func TestAttachAndMoveLastIndex(t *testing.T) {
 		c.Vertices[2],
 	}, c.GetAttachedVertices())
 
-	c.MoveVertex(&tspmodel.DistanceToEdge{
+	c.MoveVertex(&model.DistanceToEdge{
 		Vertex:   c.Vertices[2],
 		Edge:     c.GetAttachedEdges()[2],
 		Distance: 0.25,
@@ -243,7 +243,7 @@ func TestAttachAndMoveLastIndex(t *testing.T) {
 	assert.True(c.Vertices[1].EdgeTo(c.Vertices[2]).Equals(c.GetAttachedEdges()[2]))
 	assert.True(c.Vertices[2].EdgeTo(c.Vertices[0]).Equals(c.GetAttachedEdges()[3]))
 	assert.True(c.Vertices[0].EdgeTo(c.Vertices[4]).Equals(c.GetAttachedEdges()[4]))
-	assert.Equal([]tspmodel.CircuitVertex{
+	assert.Equal([]model.CircuitVertex{
 		c.Vertices[4],
 		c.Vertices[5],
 		c.Vertices[1],
@@ -261,24 +261,24 @@ func TestAttachAndMoveLastIndex(t *testing.T) {
 func TestAttachShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
 	assert.Panics(func() {
-		c.AttachVertex(&tspmodel.DistanceToEdge{
+		c.AttachVertex(&model.DistanceToEdge{
 			Vertex:   c.Vertices[0],
-			Edge:     tspmodel2d.NewVertex2D(3, 3).EdgeTo(tspmodel2d.NewVertex2D(5, 5)),
+			Edge:     model2d.NewVertex2D(3, 3).EdgeTo(model2d.NewVertex2D(5, 5)),
 			Distance: 1.234,
 		})
 	})
@@ -287,24 +287,24 @@ func TestAttachShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 func TestMoveShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
 	assert.Panics(func() {
-		c.MoveVertex(&tspmodel.DistanceToEdge{
+		c.MoveVertex(&model.DistanceToEdge{
 			Vertex:   c.Vertices[0],
-			Edge:     tspmodel2d.NewVertex2D(3, 3).EdgeTo(tspmodel2d.NewVertex2D(5, 5)),
+			Edge:     model2d.NewVertex2D(3, 3).EdgeTo(model2d.NewVertex2D(5, 5)),
 			Distance: 1.234,
 		})
 	})
@@ -313,17 +313,17 @@ func TestMoveShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
@@ -339,7 +339,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Len(c.GetAttachedEdges(), 6)
 	assert.Equal(16, c.GetClosestEdges().Len())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[3],
 		Vertex:   c.Vertices[5],
 		Distance: 0.8651462421881799,
@@ -357,13 +357,13 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Len(clone.GetAttachedEdges(), 6)
 	assert.Equal(15, c.GetClosestEdges().Len())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[1],
 		Vertex:   c.Vertices[3],
 		Distance: 5.09082042374693,
 	}, c.GetClosestEdges().Peek())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     clone.GetAttachedEdges()[1],
 		Vertex:   clone.Vertices[3],
 		Distance: 5.854324418695558,
@@ -377,13 +377,13 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Len(clone.GetUnattachedVertices(), 1)
 	assert.Equal(12, clone.GetClosestEdges().Len())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     c.GetAttachedEdges()[1],
 		Vertex:   c.Vertices[2],
 		Distance: 5.003830723297881,
 	}, c.GetClosestEdges().Peek())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     clone.GetAttachedEdges()[4],
 		Vertex:   clone.Vertices[3],
 		Distance: 4.782762261113314,
@@ -400,7 +400,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Len(cloneOfClone.GetUnattachedVertices(), 1)
 
 	// Index 2 should attach to edge 1, no cloning required
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     clone.GetAttachedEdges()[1],
 		Vertex:   clone.Vertices[2],
 		Distance: 5.003830723297881,
@@ -408,7 +408,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.Nil(clone.CloneAndUpdate())
 
 	// Index 2 should move to edge 3, cloning required
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     clone.GetAttachedEdges()[3],
 		Vertex:   clone.Vertices[2],
 		Distance: 0.32754172885551824,
@@ -416,7 +416,7 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 	assert.NotNil(clone.CloneAndUpdate())
 
 	// Index 2 should move to edge 4, cloning required
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Edge:     cloneOfClone.GetAttachedEdges()[4],
 		Vertex:   cloneOfClone.Vertices[2],
 		Distance: 3.341664064126334,
@@ -427,15 +427,15 @@ func TestCloneAndUpdate_HeapMinClones(t *testing.T) {
 func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(0, 0),   // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 3),   // Index 1 after sorting
-		tspmodel2d.NewVertex2D(3, 3),   // Index 5 after sorting
-		tspmodel2d.NewVertex2D(3, 0),   // Index 4 after sorting
-		tspmodel2d.NewVertex2D(1, 1),   // Index 2 after sorting
-		tspmodel2d.NewVertex2D(1, 2.1), // Index 3 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
+		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
+		model2d.NewVertex2D(3, 3),   // Index 5 after sorting
+		model2d.NewVertex2D(3, 0),   // Index 4 after sorting
+		model2d.NewVertex2D(1, 1),   // Index 2 after sorting
+		model2d.NewVertex2D(1, 2.1), // Index 3 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
@@ -452,10 +452,10 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert.Len(c.GetUnattachedVertices(), 1)
 	assert.True(c.GetUnattachedVertices()[c.Vertices[2]])
 
-	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), tspmodel.Threshold)
+	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), model.Threshold)
 	assert.Equal(8, c.GetClosestEdges().Len())
 
-	assert.Equal(&tspmodel.DistanceToEdge{
+	assert.Equal(&model.DistanceToEdge{
 		Distance: 0.1327694499764709,
 		Vertex:   c.Vertices[3],
 		Edge:     c.GetAttachedEdges()[3],
@@ -468,14 +468,14 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 	assert.Len(c.GetUnattachedVertices(), 1)
 	assert.True(c.GetUnattachedVertices()[c.Vertices[2]])
 
-	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), tspmodel.Threshold)
+	assert.InDelta(12.5385336246535019133711157158298, c.GetLength(), model.Threshold)
 	assert.Equal(7, c.GetClosestEdges().Len())
 
 	// Validate that the clone is updated correctly.
 	assert.Len(clone.GetUnattachedVertices(), 1)
 	assert.True(clone.GetUnattachedVertices()[clone.Vertices[2]])
 
-	assert.InDelta(12.6713030746299724753709331208575, clone.GetLength(), tspmodel.Threshold)
+	assert.InDelta(12.6713030746299724753709331208575, clone.GetLength(), model.Threshold)
 	assert.Equal(5, clone.GetClosestEdges().Len())
 
 	// No clone on third update of c - vertex {1,1} to edge {0,0}->{0,3} or to edge {3,0}->{0,0}
@@ -483,7 +483,7 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 
 	assert.Len(c.GetUnattachedVertices(), 0)
 
-	assert.InDelta(13.1888151645263866585819781087708, c.GetLength(), tspmodel.Threshold)
+	assert.InDelta(13.1888151645263866585819781087708, c.GetLength(), model.Threshold)
 	assert.Equal(7, c.GetClosestEdges().Len())
 
 	// No clone on first update of clone - vertex {1,1} to edge {0,0}->{1,2.1}
@@ -491,24 +491,24 @@ func TestCloneAndUpdate_HeapMinClones_Distances(t *testing.T) {
 
 	assert.Len(clone.GetUnattachedVertices(), 0)
 
-	assert.InDelta(12.85957596708046608051799727042668, clone.GetLength(), tspmodel.Threshold)
+	assert.InDelta(12.85957596708046608051799727042668, clone.GetLength(), model.Threshold)
 	assert.Equal(4, clone.GetClosestEdges().Len())
 }
 
 func TestDelete_HeapMinClones(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
 		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
-		tspmodel2d.NewVertex2D(-15, -15), // Index 0 after sorting
-		tspmodel2d.NewVertex2D(0, 0),     // Index 2 after sorting
-		tspmodel2d.NewVertex2D(15, -15),  // Index 7 after sorting
-		tspmodel2d.NewVertex2D(3, 0),     // Index 3 after sorting
-		tspmodel2d.NewVertex2D(3, 13),    // Index 4 after sorting
-		tspmodel2d.NewVertex2D(8, 5),     // Index 5 after sorting
-		tspmodel2d.NewVertex2D(9, 6),     // Index 6 after sorting
-		tspmodel2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
+		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
+		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
+		model2d.NewVertex2D(3, 0),     // Index 3 after sorting
+		model2d.NewVertex2D(3, 13),    // Index 4 after sorting
+		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
+		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
+		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 	c.Prepare()
 	c.BuildPerimiter()
 
@@ -558,31 +558,31 @@ func TestDelete_HeapMinClones(t *testing.T) {
 
 func TestPrepare_HeapMinClones(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewHeapableCircuitMinClones([]tspmodel.CircuitVertex{
-		tspmodel2d.NewVertex2D(-15, -15),
-		tspmodel2d.NewVertex2D(0, 0),
-		tspmodel2d.NewVertex2D(15, -15),
-		tspmodel2d.NewVertex2D(-15-tspmodel.Threshold/3.0, -15),
-		tspmodel2d.NewVertex2D(0, 0),
-		tspmodel2d.NewVertex2D(-15+tspmodel.Threshold/3.0, -15-tspmodel.Threshold/3.0),
-		tspmodel2d.NewVertex2D(3, 0),
-		tspmodel2d.NewVertex2D(3, 13),
-		tspmodel2d.NewVertex2D(7, 6),
-		tspmodel2d.NewVertex2D(-7, 6),
-	}, tspmodel2d.DeduplicateVertices, tspmodel2d.BuildPerimiter)
+	c := circuit.NewHeapableCircuitMinClones([]model.CircuitVertex{
+		model2d.NewVertex2D(-15, -15),
+		model2d.NewVertex2D(0, 0),
+		model2d.NewVertex2D(15, -15),
+		model2d.NewVertex2D(-15-model.Threshold/3.0, -15),
+		model2d.NewVertex2D(0, 0),
+		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
+		model2d.NewVertex2D(3, 0),
+		model2d.NewVertex2D(3, 13),
+		model2d.NewVertex2D(7, 6),
+		model2d.NewVertex2D(-7, 6),
+	}, model2d.DeduplicateVertices, model2d.BuildPerimiter)
 
 	c.Prepare()
 
 	assert.NotNil(c.Vertices)
 	assert.Len(c.Vertices, 7)
-	assert.ElementsMatch(c.Vertices, []*tspmodel2d.Vertex2D{
-		tspmodel2d.NewVertex2D(-15+tspmodel.Threshold/3.0, -15-tspmodel.Threshold/3.0),
-		tspmodel2d.NewVertex2D(-7, 6),
-		tspmodel2d.NewVertex2D(0, 0),
-		tspmodel2d.NewVertex2D(3, 0),
-		tspmodel2d.NewVertex2D(3, 13),
-		tspmodel2d.NewVertex2D(7, 6),
-		tspmodel2d.NewVertex2D(15, -15),
+	assert.ElementsMatch(c.Vertices, []*model2d.Vertex2D{
+		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
+		model2d.NewVertex2D(-7, 6),
+		model2d.NewVertex2D(0, 0),
+		model2d.NewVertex2D(3, 0),
+		model2d.NewVertex2D(3, 13),
+		model2d.NewVertex2D(7, 6),
+		model2d.NewVertex2D(15, -15),
 	})
 
 	// assert.NotNil(c.GetConvexVertices())
@@ -637,10 +637,10 @@ func TestSolve_HeapMinClones(t *testing.T) {
 	}
 
 	for i, t := range testData {
-		vertices2d := make([]*tspmodel2d.Vertex2D, t.len)
+		vertices2d := make([]*model2d.Vertex2D, t.len)
 		err := json.Unmarshal([]byte(t.vertices), &vertices2d)
 
-		vertices := make([]tspmodel.CircuitVertex, t.len)
+		vertices := make([]model.CircuitVertex, t.len)
 		for i, v2d := range vertices2d {
 			vertices[i] = v2d
 		}
@@ -649,7 +649,7 @@ func TestSolve_HeapMinClones(t *testing.T) {
 		actual := solveWithLogging_HeapMinClones(&circuit.HeapableCircuitMinClones{
 			Vertices: vertices,
 		})
-		assert.InDelta(t.expectedLength, actual.GetLength(), tspmodel.Threshold)
+		assert.InDelta(t.expectedLength, actual.GetLength(), model.Threshold)
 	}
 }
 
@@ -657,7 +657,7 @@ func solveWithLogging_HeapMinClones(c *circuit.HeapableCircuitMinClones) *circui
 	c.Prepare()
 	c.BuildPerimiter()
 
-	circuitHeap := tspmodel.NewHeap(func(a interface{}) float64 {
+	circuitHeap := model.NewHeap(func(a interface{}) float64 {
 		return a.(*circuit.HeapableCircuitMinClones).GetLengthWithNext()
 	})
 	circuitHeap.PushHeap(c)
@@ -669,11 +669,11 @@ func solveWithLogging_HeapMinClones(c *circuit.HeapableCircuitMinClones) *circui
 		circuitHeap.PushHeap(next)
 		if clone != nil {
 			circuitBytes, _ := json.Marshal(clone.(*circuit.HeapableCircuitMinClones).GetAttachedVertices())
-			fmt.Printf("Step %d: Created clone=%p from existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, clone, next, toAttach.(*tspmodel.DistanceToEdge).String(), string(circuitBytes), clone.(*circuit.HeapableCircuitMinClones).GetClosestEdges().String())
+			fmt.Printf("Step %d: Created clone=%p from existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, clone, next, toAttach.(*model.DistanceToEdge).String(), string(circuitBytes), clone.(*circuit.HeapableCircuitMinClones).GetClosestEdges().String())
 			circuitHeap.PushHeap(clone)
 		} else {
 			circuitBytes, _ := json.Marshal(next.GetAttachedVertices())
-			fmt.Printf("Step %d: Updated existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, next, toAttach.(*tspmodel.DistanceToEdge).String(), string(circuitBytes), next.GetClosestEdges().String())
+			fmt.Printf("Step %d: Updated existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, next, toAttach.(*model.DistanceToEdge).String(), string(circuitBytes), next.GetClosestEdges().String())
 		}
 		i++
 	}

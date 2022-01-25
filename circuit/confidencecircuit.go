@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/fealos/lee-tsp-go/tspmodel"
-	"github.com/fealos/lee-tsp-go/tspstats"
+	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/stats"
 )
 
 type confidenceCircuit struct {
-	edges     []tspmodel.CircuitEdge
-	distances map[tspmodel.CircuitVertex]*tspstats.DistanceGaps
+	edges     []model.CircuitEdge
+	distances map[model.CircuitVertex]*stats.DistanceGaps
 	length    float64
 }
 
-func (c *confidenceCircuit) attachVertex(distance *tspmodel.DistanceToEdge) {
+func (c *confidenceCircuit) attachVertex(distance *model.DistanceToEdge) {
 	var edgeIndex int
-	c.edges, edgeIndex = tspmodel.SplitEdgeCopy(c.edges, distance.Edge, distance.Vertex)
+	c.edges, edgeIndex = model.SplitEdgeCopy(c.edges, distance.Edge, distance.Vertex)
 	if edgeIndex < 0 {
 		expectedEdgeJson, _ := json.Marshal(distance.Edge)
 		actualCircuitJson, _ := json.Marshal(c.edges)
@@ -32,8 +32,8 @@ func (c *confidenceCircuit) attachVertex(distance *tspmodel.DistanceToEdge) {
 
 func (c *confidenceCircuit) clone() *confidenceCircuit {
 	clone := &confidenceCircuit{
-		edges:     make([]tspmodel.CircuitEdge, len(c.edges)),
-		distances: make(map[tspmodel.CircuitVertex]*tspstats.DistanceGaps),
+		edges:     make([]model.CircuitEdge, len(c.edges)),
+		distances: make(map[model.CircuitVertex]*stats.DistanceGaps),
 		length:    c.length,
 	}
 	copy(clone.edges, c.edges)
@@ -45,7 +45,7 @@ func (c *confidenceCircuit) clone() *confidenceCircuit {
 	return clone
 }
 
-func (c *confidenceCircuit) findNext(significance float64) []*tspmodel.DistanceToEdge {
+func (c *confidenceCircuit) findNext(significance float64) []*model.DistanceToEdge {
 	// If there is only one vertex left to attach, attach it to its closest edge.
 	if len(c.distances) == 1 {
 		for _, stats := range c.distances {
@@ -53,8 +53,8 @@ func (c *confidenceCircuit) findNext(significance float64) []*tspmodel.DistanceT
 		}
 	}
 
-	var vertexToUpdate tspmodel.CircuitVertex
-	var closestVertex *tspmodel.DistanceToEdge
+	var vertexToUpdate model.CircuitVertex
+	var closestVertex *model.DistanceToEdge
 
 	// Find the most significant early gap to determine which vertex to attach to which edge (or edges).
 	// Prioritize earlier significant gaps over later, but more significant, gaps (e.g. a gap with a Z-score of 3.5 at index 1 should be prioritized over a gap with a Z-score of 5 at index 2).

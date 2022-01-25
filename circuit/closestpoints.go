@@ -3,7 +3,7 @@ package circuit
 // ClosestPoints attempts to find the optimal circuit by:
 // 1. (optional) Create the optimal convex perimeter.
 // 2. Attach each non-perimeter point to its 2 closest points (this applies to all points if the perimeter was not created).
-// 2a. If more points are within DistanceTo(farther point) + tspmodel.Threshold, attach them as well.
+// 2a. If more points are within DistanceTo(farther point) + model.Threshold, attach them as well.
 // 3. Group each set of attached points, to determine how many distinct circuits exist (e.g. if A<->B<->C<->D<->B would be one group of points, E<->F<->G<->E would be another)
 // 3a. If the convex perimeter is created, treat that as its own group.
 // 4. While more than one group exists, determine the most efficient way to combine two of the groups and merge them

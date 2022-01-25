@@ -4,35 +4,35 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/tspmodel"
-	"github.com/fealos/lee-tsp-go/tspmodel2d"
+	"github.com/fealos/lee-tsp-go/model"
+	"github.com/fealos/lee-tsp-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCompletedCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	expectedPath := []tspmodel.CircuitVertex{
-		tspmodel2d.NewVertex2D(-15, -15),
-		tspmodel2d.NewVertex2D(0, 0),
-		tspmodel2d.NewVertex2D(15, -15),
-		tspmodel2d.NewVertex2D(3, 0),
-		tspmodel2d.NewVertex2D(3, 13),
-		tspmodel2d.NewVertex2D(8, 5),
-		tspmodel2d.NewVertex2D(9, 6),
-		tspmodel2d.NewVertex2D(-7, 6),
+	expectedPath := []model.CircuitVertex{
+		model2d.NewVertex2D(-15, -15),
+		model2d.NewVertex2D(0, 0),
+		model2d.NewVertex2D(15, -15),
+		model2d.NewVertex2D(3, 0),
+		model2d.NewVertex2D(3, 13),
+		model2d.NewVertex2D(8, 5),
+		model2d.NewVertex2D(9, 6),
+		model2d.NewVertex2D(-7, 6),
 	}
 
 	c := &circuit.CompletedCircuit{
-		Circuit: []tspmodel.CircuitVertex{
-			tspmodel2d.NewVertex2D(-15, -15),
-			tspmodel2d.NewVertex2D(0, 0),
-			tspmodel2d.NewVertex2D(15, -15),
-			tspmodel2d.NewVertex2D(3, 0),
-			tspmodel2d.NewVertex2D(3, 13),
-			tspmodel2d.NewVertex2D(8, 5),
-			tspmodel2d.NewVertex2D(9, 6),
-			tspmodel2d.NewVertex2D(-7, 6),
+		Circuit: []model.CircuitVertex{
+			model2d.NewVertex2D(-15, -15),
+			model2d.NewVertex2D(0, 0),
+			model2d.NewVertex2D(15, -15),
+			model2d.NewVertex2D(3, 0),
+			model2d.NewVertex2D(3, 13),
+			model2d.NewVertex2D(8, 5),
+			model2d.NewVertex2D(9, 6),
+			model2d.NewVertex2D(-7, 6),
 		},
 
 		Length: 12345.6789,
