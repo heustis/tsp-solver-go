@@ -149,3 +149,17 @@ func InsertVertex(vertices []CircuitVertex, index int, vertex CircuitVertex) []C
 func IsEdgeCloser(v CircuitVertex, candidateEdge CircuitEdge, currentEdge CircuitEdge) bool {
 	return candidateEdge.DistanceIncrease(v) < currentEdge.DistanceIncrease(v)
 }
+
+// Length returns the total length of the circuit (including the return to the start).
+func Length(circuit []CircuitVertex) float64 {
+	numVertices := len(circuit)
+	if numVertices < 2 {
+		return 0.0
+	}
+
+	length := circuit[numVertices-1].DistanceTo(circuit[0])
+	for i, j := 0, 1; j < numVertices; i, j = i+1, j+1 {
+		length += circuit[i].DistanceTo(circuit[j])
+	}
+	return length
+}

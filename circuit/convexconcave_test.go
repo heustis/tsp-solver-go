@@ -203,6 +203,7 @@ func TestUpdate_ConvexConcave(t *testing.T) {
 
 	assert.Equal(model2d.NewVertex2D(0, 0), c.GetAttachedVertices()[2])
 	assert.Equal(model2d.NewVertex2D(3, 0), c.GetAttachedVertices()[3])
+	assert.InDelta(model.Length(c.GetAttachedVertices()), c.GetLength(), model.Threshold)
 
 	c.Update(c.FindNextVertexAndEdge())
 

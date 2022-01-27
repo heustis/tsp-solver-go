@@ -13,7 +13,7 @@ import (
 )
 
 func BenchmarkFindClosestEdge(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	vertices := model2d.GenerateVertices(b.N * 10)
 	edges, _ := model2d.BuildPerimiter(vertices)
 	edgesList := list.New()
@@ -36,7 +36,7 @@ func BenchmarkFindClosestEdge(b *testing.B) {
 }
 
 func BenchmarkDeleteVertex(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	//BenchmarkDeleteVertex/DeleteVertex-16         	   31269	    168491 ns/op	    1080 B/op	      10 allocs/op
 	b.Run("DeleteVertex", func(b *testing.B) {
 		vertices := model2d.GenerateVertices(b.N * 10)
@@ -505,4 +505,25 @@ func TestIsEdgeCloser_3D(t *testing.T) {
 	for i, tc := range testCases {
 		assert.Equal(tc.expected, model.IsEdgeCloser(v, tc.candiate, tc.current), i)
 	}
+}
+
+func TestLength(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal(0.0, model.Length([]model.CircuitVertex{}))
+
+	vertices := []model.CircuitVertex{
+		model2d.NewVertex2D(1, 1),
+		model2d.NewVertex2D(-2, 2),
+		model2d.NewVertex2D(3, -3),
+		model2d.NewVertex2D(-4, -4),
+		model2d.NewVertex2D(5, -5),
+		model2d.NewVertex2D(-6, 6),
+		model2d.NewVertex2D(7, 7),
+		model2d.NewVertex2D(-8, -8),
+	}
+
+	assert.InDelta(88.8956779, model.Length(vertices), model.Threshold)
+	assert.InDelta(84.6673819, model.Length(vertices[1:]), model.Threshold)
+	assert.InDelta(63.4398337, model.Length(vertices[:len(vertices)-1]), model.Threshold)
+	assert.InDelta(34.8097733, model.Length(vertices[3:6]), model.Threshold)
 }

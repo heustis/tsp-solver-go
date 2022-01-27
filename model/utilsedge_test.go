@@ -13,7 +13,7 @@ import (
 )
 
 func BenchmarkMergeEdges(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	numVertices := int(math.Max(10000000, float64(b.N)*100.0))
 	vertices := model2d.GenerateVertices(numVertices)
@@ -53,7 +53,7 @@ func BenchmarkMergeEdges(b *testing.B) {
 }
 
 func BenchmarkSplitEdges(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	numVertices := int(math.Max(10000000, float64(b.N)*1000.0))
 	vertices := model2d.GenerateVertices(numVertices)
