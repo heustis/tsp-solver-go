@@ -8,6 +8,7 @@ import (
 	"github.com/fealos/lee-tsp-go/model"
 )
 
+// SimulatedAnnealing - TODO
 type SimulatedAnnealing struct {
 	circuit              []model.CircuitVertex
 	farthestDistance     float64
