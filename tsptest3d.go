@@ -45,7 +45,9 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewClonableCircuitSolver(circuit.NewHeapableCircuit(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter))
+			cImpl := circuit.NewClonableCircuitImpl(cv, model3d.BuildPerimiter)
+			cImpl.CloneOnFirstAttach = true
+			c := circuit.NewClonableCircuitSolver(cImpl)
 			solver.FindShortestPathCircuit(c)
 			return c
 		},
@@ -54,7 +56,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap_mc",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewClonableCircuitSolver(circuit.NewHeapableCircuitMinClones(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter))
+			c := circuit.NewClonableCircuitSolver(circuit.NewClonableCircuitImpl(cv, model3d.BuildPerimiter))
 			solver.FindShortestPathCircuit(c)
 			return c
 		},

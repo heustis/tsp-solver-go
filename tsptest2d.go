@@ -22,7 +22,7 @@ func ComparePerformance2d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "heap_mc",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewClonableCircuitSolver(circuit.NewHeapableCircuitMinClones(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter))
+	// 		c := circuit.NewClonableCircuitSolver(circuit.NewClonableCircuitImpl(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter))
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},

@@ -43,6 +43,7 @@ type ClonableCircuit interface {
 
 // ClonableCircuitSolver is a wrapper for a ClonableCircuit and its clones that allows them to match the Circuit interface.
 type ClonableCircuitSolver struct {
+	MaxClones     int
 	circuits      *model.Heap
 	numClones     int
 	numIterations int
@@ -50,7 +51,10 @@ type ClonableCircuitSolver struct {
 
 func NewClonableCircuitSolver(initialCircuit ClonableCircuit) model.Circuit {
 	solver := &ClonableCircuitSolver{
-		circuits: model.NewHeap(getClonableLength),
+		circuits:      model.NewHeap(getClonableLength),
+		numClones:     0,
+		numIterations: 0,
+		MaxClones:     -1,
 	}
 	solver.circuits.PushHeap(initialCircuit)
 	return solver
@@ -61,7 +65,6 @@ func getClonableLength(a interface{}) float64 {
 }
 
 func (c *ClonableCircuitSolver) BuildPerimiter() {
-	c.circuits.Peek().(ClonableCircuit).BuildPerimiter()
 }
 
 func (c *ClonableCircuitSolver) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
@@ -89,9 +92,6 @@ func (c *ClonableCircuitSolver) GetUnattachedVertices() map[model.CircuitVertex]
 }
 
 func (c *ClonableCircuitSolver) Prepare() {
-	c.circuits.Peek().(ClonableCircuit).Prepare()
-	c.numIterations = 0
-	c.numClones = 0
 }
 
 func (c *ClonableCircuitSolver) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
@@ -123,7 +123,34 @@ func (c *ClonableCircuitSolver) Update(vertexToAdd model.CircuitVertex, edgeToSp
 		// Create a new heap with only the completed circuit in it.
 		c.circuits = model.NewHeap(getClonableLength)
 		c.circuits.PushHeap(result)
+	} else if c.MaxClones > 0 && c.numClones > c.MaxClones {
+		c.trimClones()
 	}
+}
+
+func (c *ClonableCircuitSolver) trimClones() {
+	// trimClones() is only called when there is MaxClones+1 circuits, so we only need to discard the worst circuit.
+	worstCircuit := c.circuits.PopHeap().(ClonableCircuit)
+
+	// Prioritize preserving clones that are the closest to completion, so use the length per attached vertex rather than raw length of the circuit.
+	worstLength := worstCircuit.GetLengthWithNext() / float64(len(worstCircuit.GetAttachedVertices()))
+
+	retainedCircuits := make([]interface{}, 0, c.MaxClones)
+
+	for current := c.circuits.PopHeap(); current != nil; current = c.circuits.PopHeap() {
+		currentCircuit := current.(ClonableCircuit)
+		// If the current circuit is worse than the previous worst, add the previous worst to the retained circuits, and track the current circuit as the new worst.
+		if currentLength := currentCircuit.GetLengthWithNext() / float64(len(currentCircuit.GetAttachedVertices())); currentLength > worstLength {
+			retainedCircuits = append(retainedCircuits, worstCircuit)
+			worstCircuit = currentCircuit
+			worstLength = currentLength
+		} else {
+			// If the current circuit is better than the previous worst, retain the current circuit.
+			retainedCircuits = append(retainedCircuits, currentCircuit)
+		}
+	}
+
+	c.circuits.PushAll(retainedCircuits...)
 }
 
 var _ model.Circuit = (*ClonableCircuitSolver)(nil)
