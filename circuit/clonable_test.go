@@ -13,7 +13,7 @@ func TestClonableCircuitSolver(t *testing.T) {
 	assert := assert.New(t)
 
 	initVertices := []model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15),                    // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),                        // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),                     // Index 7 after sorting
@@ -27,12 +27,6 @@ func TestClonableCircuitSolver(t *testing.T) {
 
 	c := circuit.NewClonableCircuitSolver(
 		circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices(initVertices), model2d.BuildPerimiter)).(*circuit.ClonableCircuitSolver)
-
-	assert.Len(c.GetAttachedVertices(), 0)
-	assert.Len(c.GetUnattachedVertices(), 0)
-	assert.Equal(0.0, c.GetLength())
-	assert.Equal(0, c.GetNumClones())
-	assert.Equal(0, c.GetNumIterations())
 
 	assert.Len(c.GetAttachedVertices(), 5)
 
@@ -95,11 +89,10 @@ func TestClonableCircuitSolver(t *testing.T) {
 }
 
 func TestClonableCircuitSolver_CloneOnAttach(t *testing.T) {
-	//TODO
 	assert := assert.New(t)
 
 	initVertices := []model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15),                    // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),                        // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),                     // Index 7 after sorting
@@ -114,12 +107,6 @@ func TestClonableCircuitSolver_CloneOnAttach(t *testing.T) {
 	cImpl := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices(initVertices), model2d.BuildPerimiter)
 	cImpl.CloneOnFirstAttach = true
 	c := circuit.NewClonableCircuitSolver(cImpl).(*circuit.ClonableCircuitSolver)
-
-	assert.Len(c.GetAttachedVertices(), 0)
-	assert.Len(c.GetUnattachedVertices(), 0)
-	assert.Equal(0.0, c.GetLength())
-	assert.Equal(0, c.GetNumClones())
-	assert.Equal(0, c.GetNumIterations())
 
 	assert.Len(c.GetAttachedVertices(), 5)
 
@@ -139,53 +126,28 @@ func TestClonableCircuitSolver_CloneOnAttach(t *testing.T) {
 	assert.True(initVertices[7].EdgeTo(initVertices[6]).Equals(nextEdge))
 
 	c.Update(nextVertex, nextEdge)
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(96.50213879006101, c.GetLength(), model.Threshold)
-	assert.Equal(0, c.GetNumClones())
+	assert.Len(c.GetAttachedVertices(), 5)
+	assert.Len(c.GetUnattachedVertices(), 3)
+	assert.InDelta(95.73863479511238, c.GetLength(), model.Threshold)
+	assert.Equal(1, c.GetNumClones())
 	assert.Equal(1, c.GetNumIterations())
 
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(96.50213879006101, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(2, c.GetNumIterations())
+	for i := 0; i < 50; i++ {
+		c.Update(c.FindNextVertexAndEdge())
+	}
 
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(97.36728503224919, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(3, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 7)
-	assert.Len(c.GetUnattachedVertices(), 1)
-	assert.InDelta(101.59295921380794, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(4, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
 	assert.Len(c.GetAttachedVertices(), 8)
 	assert.Len(c.GetUnattachedVertices(), 0)
 	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(5, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 8)
-	assert.Len(c.GetUnattachedVertices(), 0)
-	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(5, c.GetNumIterations())
+	assert.Equal(12, c.GetNumClones())
+	assert.Equal(13, c.GetNumIterations())
 }
+
 func TestClonableCircuitSolver_MaxClones(t *testing.T) {
-	//TODO
 	assert := assert.New(t)
 
 	initVertices := []model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15),                    // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),                        // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),                     // Index 7 after sorting
@@ -202,12 +164,6 @@ func TestClonableCircuitSolver_MaxClones(t *testing.T) {
 	c := circuit.NewClonableCircuitSolver(cImpl).(*circuit.ClonableCircuitSolver)
 	c.MaxClones = 5
 
-	assert.Len(c.GetAttachedVertices(), 0)
-	assert.Len(c.GetUnattachedVertices(), 0)
-	assert.Equal(0.0, c.GetLength())
-	assert.Equal(0, c.GetNumClones())
-	assert.Equal(0, c.GetNumIterations())
-
 	assert.Len(c.GetAttachedVertices(), 5)
 
 	unattached := c.GetUnattachedVertices()
@@ -226,44 +182,19 @@ func TestClonableCircuitSolver_MaxClones(t *testing.T) {
 	assert.True(initVertices[7].EdgeTo(initVertices[6]).Equals(nextEdge))
 
 	c.Update(nextVertex, nextEdge)
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(96.50213879006101, c.GetLength(), model.Threshold)
-	assert.Equal(0, c.GetNumClones())
+	assert.Len(c.GetAttachedVertices(), 5)
+	assert.Len(c.GetUnattachedVertices(), 3)
+	assert.InDelta(95.73863479511238, c.GetLength(), model.Threshold)
+	assert.Equal(1, c.GetNumClones())
 	assert.Equal(1, c.GetNumIterations())
 
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(96.50213879006101, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(2, c.GetNumIterations())
+	for i := 0; i < 50; i++ {
+		c.Update(c.FindNextVertexAndEdge())
+	}
 
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 6)
-	assert.Len(c.GetUnattachedVertices(), 2)
-	assert.InDelta(97.36728503224919, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(3, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 7)
-	assert.Len(c.GetUnattachedVertices(), 1)
-	assert.InDelta(101.59295921380794, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(4, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
 	assert.Len(c.GetAttachedVertices(), 8)
 	assert.Len(c.GetUnattachedVertices(), 0)
 	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(5, c.GetNumIterations())
-
-	c.Update(c.FindNextVertexAndEdge())
-	assert.Len(c.GetAttachedVertices(), 8)
-	assert.Len(c.GetUnattachedVertices(), 0)
-	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
-	assert.Equal(1, c.GetNumClones())
-	assert.Equal(5, c.GetNumIterations())
+	assert.Equal(10, c.GetNumClones())
+	assert.Equal(11, c.GetNumIterations())
 }

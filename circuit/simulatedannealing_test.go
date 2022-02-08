@@ -32,22 +32,12 @@ func TestNewSimulatedAnnealing(t *testing.T) {
 	nextVertex, nextEdge := c.FindNextVertexAndEdge()
 	assert.NotNil(nextVertex)
 	assert.Nil(nextEdge)
-
-	//Prepare does nothing to the circuit
-	c.Prepare()
-	assert.Equal(initVertices, c.GetAttachedVertices())
-	assert.InDelta(123.95617933216532, c.GetLength(), model.Threshold)
-
-	// Build Perimiter does nothing
-	c.BuildPerimiter()
-	assert.Equal(initVertices, c.GetAttachedVertices())
-	assert.InDelta(123.95617933216532, c.GetLength(), model.Threshold)
 }
 
 func TestNewSimulatedAnnealingFromCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	initVertices := []model.CircuitVertex{
+	initVertices := model2d.DeduplicateVertices([]model.CircuitVertex{
 		model2d.NewVertex2D(-15, -15),
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(15, -15),
@@ -56,11 +46,11 @@ func TestNewSimulatedAnnealingFromCircuit(t *testing.T) {
 		model2d.NewVertex2D(8, 5),
 		model2d.NewVertex2D(9, 6),
 		model2d.NewVertex2D(-7, 6),
-	}
+	})
 
 	circuitVertices := make([]model.CircuitVertex, len(initVertices))
 	copy(circuitVertices, initVertices)
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, false), 100, false)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
 
 	assert.NotNil(c)
 
@@ -81,16 +71,6 @@ func TestNewSimulatedAnnealingFromCircuit(t *testing.T) {
 	nextVertex, nextEdge := c.FindNextVertexAndEdge()
 	assert.NotNil(nextVertex)
 	assert.Nil(nextEdge)
-
-	//Prepare does nothing to the circuit
-	c.Prepare()
-	assert.Equal(expectedVertices, c.GetAttachedVertices())
-	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
-
-	// Build Perimiter does nothing
-	c.BuildPerimiter()
-	assert.Equal(expectedVertices, c.GetAttachedVertices())
-	assert.InDelta(106.59678993710583, c.GetLength(), model.Threshold)
 }
 
 func TestUpdate_SimulatedAnnealing(t *testing.T) {
@@ -108,7 +88,6 @@ func TestUpdate_SimulatedAnnealing(t *testing.T) {
 	}
 
 	c := circuit.NewSimulatedAnnealing(initVertices, 100, false).(*circuit.SimulatedAnnealing)
-	c.Prepare()
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -181,7 +160,6 @@ func TestUpdate_SimulatedAnnealing(t *testing.T) {
 	}, c.GetAttachedVertices())
 
 	c = circuit.NewSimulatedAnnealing(initVertices, 1000, false).(*circuit.SimulatedAnnealing)
-	c.Prepare()
 	c.SetSeed(1)
 	for i := 0; i < 1000; i++ {
 		c.Update(c.FindNextVertexAndEdge())
@@ -214,7 +192,6 @@ func TestUpdate_SimulatedAnnealing_PreferCloseNeighbors(t *testing.T) {
 	}
 
 	c := circuit.NewSimulatedAnnealing(initVertices, 100, true).(*circuit.SimulatedAnnealing)
-	c.Prepare()
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -286,7 +263,7 @@ func TestUpdate_SimulatedAnnealing_PreferCloseNeighbors(t *testing.T) {
 func TestUpdate_SimulatedAnnealingFromCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	initVertices := []model.CircuitVertex{
+	initVertices := model2d.DeduplicateVertices([]model.CircuitVertex{
 		model2d.NewVertex2D(-15, -15),
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(15, -15),
@@ -295,10 +272,9 @@ func TestUpdate_SimulatedAnnealingFromCircuit(t *testing.T) {
 		model2d.NewVertex2D(8, 5),
 		model2d.NewVertex2D(9, 6),
 		model2d.NewVertex2D(-7, 6),
-	}
+	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
-	c.Prepare()
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -382,7 +358,7 @@ func TestUpdate_SimulatedAnnealingFromCircuit(t *testing.T) {
 func TestUpdate_SimulatedAnnealingFromCircuit_GeometricTemperature(t *testing.T) {
 	assert := assert.New(t)
 
-	initVertices := []model.CircuitVertex{
+	initVertices := model2d.DeduplicateVertices([]model.CircuitVertex{
 		model2d.NewVertex2D(-15, -15),
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(15, -15),
@@ -391,10 +367,9 @@ func TestUpdate_SimulatedAnnealingFromCircuit_GeometricTemperature(t *testing.T)
 		model2d.NewVertex2D(8, 5),
 		model2d.NewVertex2D(9, 6),
 		model2d.NewVertex2D(-7, 6),
-	}
+	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
-	c.Prepare()
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
 	c.SetSeed(1)
 	c.SetTemperatureFunction(circuit.CalculateTemperatureGeometric)
 

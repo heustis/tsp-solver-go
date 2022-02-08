@@ -40,8 +40,7 @@ func (g *geneticCircuit) setLength() {
 	g.length = model.Length(g.circuit)
 }
 
-func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, deduplicator model.Deduplicator, numParents int, numChildren int, maxIterations int) model.Circuit {
-	initCircuit = deduplicator(initCircuit)
+func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, numParents int, numChildren int, maxIterations int) model.Circuit {
 	circuitLen := len(initCircuit)
 	initGeneration := make([]*geneticCircuit, numParents)
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -62,7 +61,7 @@ func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, deduplicator model.D
 		current.setLength()
 	}
 
-	return &GeneticAlgorithm{
+	g := &GeneticAlgorithm{
 		currentGeneration: initGeneration,
 		maxIterations:     maxIterations,
 		mutationRate:      0.1,
@@ -71,10 +70,12 @@ func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, deduplicator model.D
 		numIterations:     0,
 		random:            random,
 	}
+	g.sortGeneration()
+	return g
 }
 
-func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder, numParents int, numChildren int, maxIterations int) model.Circuit {
-	initEdges, interiorVertices := perimeterBuilder(deduplicator(initCircuit))
+func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, numParents int, numChildren int, maxIterations int) model.Circuit {
+	initEdges, interiorVertices := perimeterBuilder(initCircuit)
 	circuitLen := len(interiorVertices)
 	initGeneration := make([]*geneticCircuit, numParents)
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -98,7 +99,7 @@ func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, 
 		current.setLength()
 	}
 
-	return &GeneticAlgorithm{
+	g := &GeneticAlgorithm{
 		currentGeneration: initGeneration,
 		maxIterations:     maxIterations,
 		mutationRate:      0.1,
@@ -107,9 +108,8 @@ func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, 
 		numIterations:     0,
 		random:            random,
 	}
-}
-
-func (g *GeneticAlgorithm) BuildPerimiter() {
+	g.sortGeneration()
+	return g
 }
 
 func (g *GeneticAlgorithm) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
@@ -131,10 +131,6 @@ func (g *GeneticAlgorithm) GetLength() float64 {
 
 func (g *GeneticAlgorithm) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return make(map[model.CircuitVertex]bool)
-}
-
-func (g *GeneticAlgorithm) Prepare() {
-	g.sortGeneration()
 }
 
 // SetMutationRate updates the GeneticAlgorithm's mutation rate, which determines how frequently child circuits will be mutated (after cross-over).

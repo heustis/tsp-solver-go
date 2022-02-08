@@ -28,7 +28,7 @@ func TestFindShortestPathCircuit_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		cir := circuit.NewConvexConcave(vertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, true)
+		cir := circuit.NewConvexConcave(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter, true)
 		solver.FindShortestPathCircuit(cir)
 		shortest := cir.GetAttachedVertices()
 		actual := cir.GetLength()

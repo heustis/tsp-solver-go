@@ -28,30 +28,19 @@ type ConvexConcaveConfidence struct {
 	Vertices         []model.CircuitVertex
 	Significance     float64
 	MaxClones        uint16
-	deduplicator     func([]model.CircuitVertex) []model.CircuitVertex
 	perimeterBuilder model.PerimeterBuilder
 	circuits         []*confidenceCircuit
 }
 
-func NewConvexConcaveConfidence(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	return &ConvexConcaveConfidence{
-		Vertices:         vertices,
-		Significance:     minimumSignificance,
-		MaxClones:        maxClones,
-		deduplicator:     deduplicator,
-		perimeterBuilder: perimeterBuilder,
-	}
-}
-
-func (c *ConvexConcaveConfidence) BuildPerimiter() {
-	circuitEdges, unattachedVertices := c.perimeterBuilder(c.Vertices)
+func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	initCircuit := &confidenceCircuit{
 		edges:     circuitEdges,
 		distances: make(map[model.CircuitVertex]*stats.DistanceGaps),
 		length:    0.0,
 	}
-	c.circuits = []*confidenceCircuit{initCircuit}
+	circuits := []*confidenceCircuit{initCircuit}
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	for vertex := range unattachedVertices {
@@ -60,6 +49,14 @@ func (c *ConvexConcaveConfidence) BuildPerimiter() {
 
 	for _, edge := range circuitEdges {
 		initCircuit.length += edge.GetLength()
+	}
+
+	return &ConvexConcaveConfidence{
+		Vertices:         vertices,
+		Significance:     minimumSignificance,
+		MaxClones:        maxClones,
+		circuits:         circuits,
+		perimeterBuilder: perimeterBuilder,
 	}
 }
 
@@ -106,10 +103,6 @@ func (c *ConvexConcaveConfidence) GetUnattachedVertices() map[model.CircuitVerte
 		}
 	}
 	return unattachedVertices
-}
-
-func (c *ConvexConcaveConfidence) Prepare() {
-	c.Vertices = c.deduplicator(c.Vertices)
 }
 
 func (c *ConvexConcaveConfidence) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {

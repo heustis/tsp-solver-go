@@ -8,12 +8,8 @@ const Threshold = 0.0000001
 // Circuit provides an abstract representation of a set of points (locations, vertices) for the TSP solver to interact with.
 // This allows it to ignore whether the implementation is a set of N-dimentional points, a graph, or any other representation of points.
 type Circuit interface {
-	// BuildPerimeter creates an initial circuit, using the minimum vertices required to fully enclose the other (interior) vertices.
-	// For example, when using 2-D points, this constructs a convex polygon such that all points are either vertices or inside the polygon.
-	BuildPerimiter()
-
 	// FindNextVertexAndEdge determines the next vertex to add to the circuit, along with which edge it should be added to.
-	// For example, when using 2-D points, this finds the point with the minimum distance to its nearest edge (returning both that point and edge).
+	// For example, in the ConvexConcave algorithm this returns the vertex and edge with the minimum distance increase.
 	FindNextVertexAndEdge() (CircuitVertex, CircuitEdge)
 
 	// GetAttachedVertices returns all vertices that have been added to the circuit (either as part of BuildPerimeter or Update).
@@ -25,10 +21,6 @@ type Circuit interface {
 
 	// GetUnattachedVertices returns the set of vertices that have not been added to the circuit yet. (all of these points are internal to the perimeter)
 	GetUnattachedVertices() map[CircuitVertex]bool
-
-	// Prepare may be used by a circuit to pre-compute values that will save time while processing the circuit.
-	// Prepare should be called prior to performing any other operations on a circuit.
-	Prepare()
 
 	// Update adds the supplied vertex to circuit by splitting the supplied edge and creating two edges with the supplied point as the common vertex of the edges.
 	Update(vertexToAdd CircuitVertex, edgeToSplit CircuitEdge)

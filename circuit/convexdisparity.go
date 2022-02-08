@@ -9,37 +9,29 @@ import (
 )
 
 type ConvexConcaveDisparity struct {
-	Vertices             []model.CircuitVertex
-	deduplicator         func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder     model.PerimeterBuilder
-	circuitEdges         []model.CircuitEdge
-	edgeDistances        map[model.CircuitVertex]*vertexDisparity
-	length               float64
-	useRelativeDisparity bool
+	Vertices      []model.CircuitVertex
+	circuitEdges  []model.CircuitEdge
+	edgeDistances map[model.CircuitVertex]*vertexDisparity
+	length        float64
 }
 
-func NewConvexConcaveDisparity(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) model.Circuit {
-	return &ConvexConcaveDisparity{
-		Vertices:             vertices,
-		deduplicator:         deduplicator,
-		perimeterBuilder:     perimeterBuilder,
-		useRelativeDisparity: useRelativeDisparity,
-	}
-}
+func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) model.Circuit {
+	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
-func (c *ConvexConcaveDisparity) BuildPerimiter() {
-	var unattachedVertices map[model.CircuitVertex]bool
-	c.circuitEdges, unattachedVertices = c.perimeterBuilder(c.Vertices)
+	edgeDistances := make(map[model.CircuitVertex]*vertexDisparity)
 
-	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
+	// Find the two closest edges for each unattached vertex, so that we can compute the disparity between those two edges' distance increases.
+	// We will use that disparity to determine which vertex to attach during each iteration.
+	// Since we are only looking at the first change in distance increases, we only need to store the closest two edges, and update them as the circuit changes.
 	for vertex := range unattachedVertices {
 		disparity := &vertexDisparity{
 			closestEdge:       &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
 			secondClosestEdge: &model.DistanceToEdge{Vertex: vertex, Distance: math.MaxFloat64},
 		}
 
-		if c.useRelativeDisparity {
+		if useRelativeDisparity {
 			disparity.disparityFunction = func(closer *model.DistanceToEdge, farther *model.DistanceToEdge) float64 {
+				// Avoid divide by 0, also it should be impossible to have a negative distance increase at this stage of computation.
 				if closer.Distance < model.Threshold {
 					return math.MaxFloat64
 				}
@@ -51,17 +43,24 @@ func (c *ConvexConcaveDisparity) BuildPerimiter() {
 			}
 		}
 
-		for _, e := range c.circuitEdges {
+		for _, e := range circuitEdges {
 			disparity.update(e, e.DistanceIncrease(vertex))
 		}
 
 		disparity.amount = disparity.secondClosestEdge.Distance - disparity.closestEdge.Distance
-		c.edgeDistances[vertex] = disparity
+		edgeDistances[vertex] = disparity
 	}
 
-	c.length = 0.0
-	for _, edge := range c.circuitEdges {
-		c.length += edge.GetLength()
+	length := 0.0
+	for _, edge := range circuitEdges {
+		length += edge.GetLength()
+	}
+
+	return &ConvexConcaveDisparity{
+		Vertices:      vertices,
+		circuitEdges:  circuitEdges,
+		edgeDistances: edgeDistances,
+		length:        length,
 	}
 }
 
@@ -70,6 +69,8 @@ func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (model.CircuitVertex, m
 	next := &model.DistanceToEdge{
 		Distance: math.MaxFloat64,
 	}
+	// Find the vertex with the largest gap between its two closest edges.
+	// If two vertices have approximately the same gap between their closest edges, select the vertex that is closer to its closest edge.
 	for _, v := range c.edgeDistances {
 		if v.amount > maxDisparityAmount+model.Threshold || (v.amount > maxDisparityAmount-model.Threshold && v.closestEdge.Distance < next.Distance) {
 			next = v.closestEdge
@@ -101,14 +102,6 @@ func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[model.CircuitVertex
 		unattachedVertices[k] = true
 	}
 	return unattachedVertices
-}
-
-func (c *ConvexConcaveDisparity) Prepare() {
-	c.edgeDistances = make(map[model.CircuitVertex]*vertexDisparity)
-	c.circuitEdges = []model.CircuitEdge{}
-	c.length = 0.0
-
-	c.Vertices = c.deduplicator(c.Vertices)
 }
 
 func (c *ConvexConcaveDisparity) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {

@@ -23,14 +23,9 @@ func TestNewGeneticAlgorithm(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewGeneticAlgorithm(initVertices, model2d.DeduplicateVertices, 10, 50, 10)
+	c := circuit.NewGeneticAlgorithm(initVertices, 10, 50, 10)
 	assert.NotNil(c)
 
-	unpreparedLen := c.GetLength()
-
-	c.Prepare()
-	initLen := c.GetLength()
-	assert.LessOrEqual(initLen, unpreparedLen)
 	initCircuit := c.GetAttachedVertices()
 	assert.Len(initCircuit, len(initVertices))
 	assert.Len(c.GetUnattachedVertices(), 0)
@@ -38,13 +33,6 @@ func TestNewGeneticAlgorithm(t *testing.T) {
 	assert.NotNil(nextVertex)
 	assert.Equal(initCircuit[0], nextVertex)
 	assert.Nil(nextEdge)
-
-	c.BuildPerimiter()
-	assert.Equal(initLen, c.GetLength())
-	assert.Equal(initCircuit, c.GetAttachedVertices())
-	assert.Len(c.GetUnattachedVertices(), 0)
-	v, _ := c.FindNextVertexAndEdge()
-	assert.Equal(nextVertex, v)
 }
 
 func TestNewGeneticAlgorithmWithPerimeterBuilder(t *testing.T) {
@@ -61,14 +49,9 @@ func TestNewGeneticAlgorithmWithPerimeterBuilder(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewGeneticAlgorithmWithPerimeterBuilder(initVertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, 10, 50, 10)
+	c := circuit.NewGeneticAlgorithmWithPerimeterBuilder(initVertices, model2d.BuildPerimiter, 10, 50, 10)
 	assert.NotNil(c)
 
-	unpreparedLen := c.GetLength()
-
-	c.Prepare()
-	initLen := c.GetLength()
-	assert.LessOrEqual(initLen, unpreparedLen)
 	initCircuit := c.GetAttachedVertices()
 	assert.Len(initCircuit, len(initVertices))
 	assert.Len(c.GetUnattachedVertices(), 0)
@@ -76,13 +59,6 @@ func TestNewGeneticAlgorithmWithPerimeterBuilder(t *testing.T) {
 	assert.NotNil(nextVertex)
 	assert.Equal(initCircuit[0], nextVertex)
 	assert.Nil(nextEdge)
-
-	c.BuildPerimiter()
-	assert.Equal(initLen, c.GetLength())
-	assert.Equal(initCircuit, c.GetAttachedVertices())
-	assert.Len(c.GetUnattachedVertices(), 0)
-	v, _ := c.FindNextVertexAndEdge()
-	assert.Equal(nextVertex, v)
 }
 
 func TestUpdate_GeneticAlgorithm(t *testing.T) {
@@ -99,9 +75,8 @@ func TestUpdate_GeneticAlgorithm(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewGeneticAlgorithm(initVertices, model2d.DeduplicateVertices, 10, 50, 10)
+	c := circuit.NewGeneticAlgorithm(initVertices, 10, 50, 10)
 	assert.NotNil(c)
-	c.Prepare()
 	previousLen := c.GetLength()
 	previousCircuit := c.GetAttachedVertices()
 
@@ -136,9 +111,8 @@ func TestUpdate_GeneticAlgorithmWithPerimeterBuilder(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewGeneticAlgorithmWithPerimeterBuilder(initVertices, model2d.DeduplicateVertices, model2d.BuildPerimiter, 10, 50, 10)
+	c := circuit.NewGeneticAlgorithmWithPerimeterBuilder(initVertices, model2d.BuildPerimiter, 10, 50, 10)
 	assert.NotNil(c)
-	c.Prepare()
 	previousLen := c.GetLength()
 	previousCircuit := c.GetAttachedVertices()
 

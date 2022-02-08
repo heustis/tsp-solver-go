@@ -14,30 +14,29 @@ import (
 // With 1 point this produced the same results as `circuitgreedy_impl.go`, which was expected since weighing only one point is the same as only considering which point is closest to its closest edge.
 type ConvexConcaveWeightedEdges struct {
 	Vertices           []model.CircuitVertex
-	deduplicator       func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder   model.PerimeterBuilder
 	circuitEdges       []model.CircuitEdge
 	closestVertices    map[model.CircuitEdge]*weightedEdge
 	unattachedVertices map[model.CircuitVertex]bool
 	length             float64
 }
 
-func NewConvexConcaveWeightedEdges(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	return &ConvexConcaveWeightedEdges{
-		Vertices:         vertices,
-		deduplicator:     deduplicator,
-		perimeterBuilder: perimeterBuilder,
-	}
-}
-
-func (c *ConvexConcaveWeightedEdges) BuildPerimiter() {
-	c.circuitEdges, c.unattachedVertices = c.perimeterBuilder(c.Vertices)
+func NewConvexConcaveWeightedEdges(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
-	c.length = 0.0
-	for _, edge := range c.circuitEdges {
-		c.closestVertices[edge] = newWeightedEdge(edge, c.unattachedVertices)
-		c.length += edge.GetLength()
+	length := 0.0
+	closestVertices := make(map[model.CircuitEdge]*weightedEdge)
+	for _, edge := range circuitEdges {
+		closestVertices[edge] = newWeightedEdge(edge, unattachedVertices)
+		length += edge.GetLength()
+	}
+
+	return &ConvexConcaveWeightedEdges{
+		Vertices:           vertices,
+		circuitEdges:       circuitEdges,
+		closestVertices:    closestVertices,
+		unattachedVertices: unattachedVertices,
+		length:             length,
 	}
 }
 
@@ -81,15 +80,6 @@ func (c *ConvexConcaveWeightedEdges) GetLength() float64 {
 
 func (c *ConvexConcaveWeightedEdges) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.unattachedVertices
-}
-
-func (c *ConvexConcaveWeightedEdges) Prepare() {
-	c.unattachedVertices = make(map[model.CircuitVertex]bool)
-	c.closestVertices = make(map[model.CircuitEdge]*weightedEdge)
-	c.circuitEdges = []model.CircuitEdge{}
-	c.length = 0.0
-
-	c.Vertices = c.deduplicator(c.Vertices)
 }
 
 func (c *ConvexConcaveWeightedEdges) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {

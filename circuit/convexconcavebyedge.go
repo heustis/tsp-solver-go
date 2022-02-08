@@ -8,23 +8,12 @@ import (
 
 type ConvexConcaveByEdge struct {
 	Vertices              []model.CircuitVertex
-	deduplicator          func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder      model.PerimeterBuilder
 	circuits              []model.Circuit
 	enableInteriorUpdates bool
 }
 
-func NewConvexConcaveByEdge(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
-	return &ConvexConcaveByEdge{
-		Vertices:              vertices,
-		deduplicator:          deduplicator,
-		perimeterBuilder:      perimeterBuilder,
-		enableInteriorUpdates: enableInteriorUpdates,
-	}
-}
-
-func (c *ConvexConcaveByEdge) BuildPerimiter() {
-	circuitEdges, unattachedVertices := c.perimeterBuilder(c.Vertices)
+func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	closestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)
 	toAttach := make(map[*ConvexConcave]*model.DistanceToEdge)
@@ -34,17 +23,18 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 		initLength += edge.GetLength()
 	}
 
+	circuits := make([]model.Circuit, len(circuitEdges))
 	// Create a greedy circuit for each edge, with each circuit attaching that edge to its closest point.
 	// This allows the greedy algorithm to detect scenarios where the points are individually closer to various edges, but are collectively closer to a different edge.
 	// This increases the complexity of this circuit implementation to O(n^3), the unsmiplified form being O(e*(n-e)*(n-e)), since the greedy implementation is O(n^2) or O((n-e)^2).
-	for _, e := range circuitEdges {
+	for i, e := range circuitEdges {
 		circuit := &ConvexConcave{
 			circuitEdges:          make([]model.CircuitEdge, len(circuitEdges)),
-			Vertices:              c.Vertices,
+			Vertices:              vertices,
 			closestEdges:          model.NewHeap(model.GetDistanceToEdgeForHeap),
 			unattachedVertices:    make(map[model.CircuitVertex]bool),
 			length:                initLength,
-			enableInteriorUpdates: c.enableInteriorUpdates,
+			enableInteriorUpdates: enableInteriorUpdates,
 		}
 
 		copy(circuit.circuitEdges, circuitEdges)
@@ -74,7 +64,7 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 			}
 		}
 		toAttach[circuit] = vertexClosestToEdge
-		c.circuits = append(c.circuits, circuit)
+		circuits[i] = circuit
 	}
 
 	for circuit, closestToEdge := range toAttach {
@@ -89,6 +79,12 @@ func (c *ConvexConcaveByEdge) BuildPerimiter() {
 			}
 		}
 		circuit.Update(closestToEdge.Vertex, closestToEdge.Edge)
+	}
+
+	return &ConvexConcaveByEdge{
+		Vertices:              vertices,
+		enableInteriorUpdates: enableInteriorUpdates,
+		circuits:              circuits,
 	}
 }
 
@@ -120,11 +116,6 @@ func (c *ConvexConcaveByEdge) GetUnattachedVertices() map[model.CircuitVertex]bo
 		return shortest.GetUnattachedVertices()
 	}
 	return make(map[model.CircuitVertex]bool)
-}
-
-func (c *ConvexConcaveByEdge) Prepare() {
-	c.circuits = []model.Circuit{}
-	c.Vertices = c.deduplicator(c.Vertices)
 }
 
 func (c *ConvexConcaveByEdge) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {

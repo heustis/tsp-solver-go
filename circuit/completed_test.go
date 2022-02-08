@@ -38,13 +38,6 @@ func TestCompletedCircuit(t *testing.T) {
 		Length: 12345.6789,
 	}
 
-	c.Prepare()
-	assert.Equal(expectedPath, c.GetAttachedVertices())
-	assert.Equal(12345.6789, c.GetLength())
-	assert.Equal(12345.6789, c.GetLengthWithNext())
-	assert.Len(c.GetUnattachedVertices(), 0)
-
-	c.BuildPerimiter()
 	assert.Equal(expectedPath, c.GetAttachedVertices())
 	assert.Equal(12345.6789, c.GetLength())
 	assert.Equal(12345.6789, c.GetLengthWithNext())

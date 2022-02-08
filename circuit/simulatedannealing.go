@@ -22,6 +22,7 @@ type SimulatedAnnealing struct {
 func NewSimulatedAnnealing(circuit []model.CircuitVertex, maxIterations int, preferCloseNeighbors bool) model.Circuit {
 	return &SimulatedAnnealing{
 		circuit:              circuit,
+		farthestDistance:     computeFarthestDistance(circuit),
 		maxIterations:        float64(maxIterations),
 		numIterations:        0.0,
 		preferCloseNeighbors: preferCloseNeighbors,
@@ -31,26 +32,20 @@ func NewSimulatedAnnealing(circuit []model.CircuitVertex, maxIterations int, pre
 }
 
 func NewSimulatedAnnealingFromCircuit(circuit model.Circuit, maxIterations int, preferCloseNeighbors bool) model.Circuit {
-	// Set the initial circuit to that solved by the supplied circuit.
-	circuit.Prepare()
-	circuit.BuildPerimiter()
-
 	for nextVertex, nextEdge := circuit.FindNextVertexAndEdge(); nextVertex != nil; nextVertex, nextEdge = circuit.FindNextVertexAndEdge() {
 		circuit.Update(nextVertex, nextEdge)
 	}
 
+	initCircuit := circuit.GetAttachedVertices()
 	return &SimulatedAnnealing{
-		circuit:              circuit.GetAttachedVertices(),
-		farthestDistance:     0.0,
+		circuit:              initCircuit,
+		farthestDistance:     computeFarthestDistance(initCircuit),
 		maxIterations:        float64(maxIterations),
 		numIterations:        0.0,
 		preferCloseNeighbors: preferCloseNeighbors,
 		random:               rand.New(rand.NewSource(time.Now().UnixNano())),
 		temperatureFunction:  CalculateTemperatureLinear,
 	}
-}
-
-func (s *SimulatedAnnealing) BuildPerimiter() {
 }
 
 func (s *SimulatedAnnealing) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
@@ -72,16 +67,6 @@ func (s *SimulatedAnnealing) GetLength() float64 {
 
 func (s *SimulatedAnnealing) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return make(map[model.CircuitVertex]bool)
-}
-
-func (s *SimulatedAnnealing) Prepare() {
-	// Find the distance between the two farthest vertices, for scaling the delta
-	for _, v := range s.circuit {
-		farthestFromV := model.FindFarthestPoint(v, s.circuit)
-		if testDistance := farthestFromV.DistanceTo(v); testDistance > s.farthestDistance {
-			s.farthestDistance = testDistance
-		}
-	}
 }
 
 // SetSeed sets the seed used by the SimulatedAnnealing for random number generation.
@@ -206,6 +191,18 @@ func CalculateTemperatureGeometric(currentIteration float64, maxIterations float
 // CalculateTemperatureLinear calculates temperature according to the function t'=t-X, so that it decreases linearly as the model iterates.
 func CalculateTemperatureLinear(currentIteration float64, maxIterations float64) float64 {
 	return 1.0 - currentIteration/maxIterations
+}
+
+func computeFarthestDistance(circuit []model.CircuitVertex) float64 {
+	farthestDistance := 0.0
+	// Find the distance between the two farthest vertices, for scaling the delta
+	for _, v := range circuit {
+		farthestFromV := model.FindFarthestPoint(v, circuit)
+		if testDistance := farthestFromV.DistanceTo(v); testDistance > farthestDistance {
+			farthestDistance = testDistance
+		}
+	}
+	return farthestDistance
 }
 
 var _ model.Circuit = (*SimulatedAnnealing)(nil)

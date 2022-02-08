@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildPerimeter_ConvexConcaveDisparity(t *testing.T) {
+func TestNewConvexConcaveDisparity(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+	c := circuit.NewConvexConcaveDisparity(model2d.DeduplicateVertices([]model.CircuitVertex{
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
@@ -21,14 +21,10 @@ func TestBuildPerimeter_ConvexConcaveDisparity(t *testing.T) {
 		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
 		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	},
-		model2d.DeduplicateVertices,
+	}),
 		model2d.BuildPerimiter,
 		false,
 	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-	c.BuildPerimiter()
 
 	assert.Len(c.Vertices, 8)
 
@@ -54,53 +50,10 @@ func TestBuildPerimeter_ConvexConcaveDisparity(t *testing.T) {
 	assert.True(c.GetUnattachedVertices()[c.Vertices[5]])
 }
 
-func TestPrepare_ConvexConcaveDisparity(t *testing.T) {
-	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
-		model2d.NewVertex2D(-15, -15),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(15, -15),
-		model2d.NewVertex2D(-15-model.Threshold/3.0, -15),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
-		model2d.NewVertex2D(3, 0),
-		model2d.NewVertex2D(3, 13),
-		model2d.NewVertex2D(7, 6),
-		model2d.NewVertex2D(-7, 6),
-	},
-		model2d.DeduplicateVertices,
-		model2d.BuildPerimiter,
-		false,
-	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-
-	assert.NotNil(c.Vertices)
-	assert.Len(c.Vertices, 7)
-	assert.ElementsMatch(c.Vertices, []model.CircuitVertex{
-		model2d.NewVertex2D(-15+model.Threshold/3.0, -15-model.Threshold/3.0),
-		model2d.NewVertex2D(-7, 6),
-		model2d.NewVertex2D(0, 0),
-		model2d.NewVertex2D(3, 0),
-		model2d.NewVertex2D(3, 13),
-		model2d.NewVertex2D(7, 6),
-		model2d.NewVertex2D(15, -15),
-	})
-
-	assert.NotNil(c.GetUnattachedVertices())
-	assert.Len(c.GetUnattachedVertices(), 0)
-
-	assert.NotNil(c.GetAttachedVertices())
-	assert.Len(c.GetAttachedVertices(), 0)
-
-	assert.NotNil(c.GetAttachedEdges())
-	assert.Len(c.GetAttachedEdges(), 0)
-}
-
 func TestUpdate_ConvexConcaveDisparity(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+	c := circuit.NewConvexConcaveDisparity(model2d.DeduplicateVertices([]model.CircuitVertex{
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
@@ -109,14 +62,10 @@ func TestUpdate_ConvexConcaveDisparity(t *testing.T) {
 		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
 		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	},
-		model2d.DeduplicateVertices,
+	}),
 		model2d.BuildPerimiter,
 		false,
 	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-	c.BuildPerimiter()
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -192,8 +141,8 @@ func TestUpdate_ConvexConcaveDisparity(t *testing.T) {
 
 func TestUpdate_ConvexConcaveDisparityRelative(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+	c := circuit.NewConvexConcaveDisparity(model2d.DeduplicateVertices([]model.CircuitVertex{
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
@@ -202,14 +151,10 @@ func TestUpdate_ConvexConcaveDisparityRelative(t *testing.T) {
 		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
 		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	},
-		model2d.DeduplicateVertices,
+	}),
 		model2d.BuildPerimiter,
 		true,
 	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-	c.BuildPerimiter()
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -285,21 +230,17 @@ func TestUpdate_ConvexConcaveDisparityRelative(t *testing.T) {
 
 func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserThanPreviousEdge_ConvexConcaveDisparity(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
+	c := circuit.NewConvexConcaveDisparity(model2d.DeduplicateVertices([]model.CircuitVertex{
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(4.7, 2.0),
 		model2d.NewVertex2D(5.0, 2.25),
 		model2d.NewVertex2D(5, 5),
 		model2d.NewVertex2D(6.0, 2.5),
 		model2d.NewVertex2D(10, 0),
-	},
-		model2d.DeduplicateVertices,
+	}),
 		model2d.BuildPerimiter,
 		false,
 	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-	c.BuildPerimiter()
 
 	c.Update(c.FindNextVertexAndEdge())
 	assert.Len(c.GetAttachedVertices(), 4)
@@ -340,8 +281,8 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 
 func TestUpdate_ConvexConcaveDisparity_ShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveDisparity([]model.CircuitVertex{
-		// Note: the circuit is sorted by Prepare(), so the indices will change as specified below.
+	c := circuit.NewConvexConcaveDisparity(model2d.DeduplicateVertices([]model.CircuitVertex{
+		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
 		model2d.NewVertex2D(15, -15),  // Index 7 after sorting
@@ -350,14 +291,10 @@ func TestUpdate_ConvexConcaveDisparity_ShouldPanicIfEdgeIsNotInCircuit(t *testin
 		model2d.NewVertex2D(8, 5),     // Index 5 after sorting
 		model2d.NewVertex2D(9, 6),     // Index 6 after sorting
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
-	},
-		model2d.DeduplicateVertices,
+	}),
 		model2d.BuildPerimiter,
 		false,
 	).(*circuit.ConvexConcaveDisparity)
-
-	c.Prepare()
-	c.BuildPerimiter()
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)

@@ -15,9 +15,18 @@ type GraphCircuit struct {
 }
 
 func NewGraphCircuit(g *Graph) *GraphCircuit {
-	return &GraphCircuit{
-		graph: g,
+	c := &GraphCircuit{
+		graph:              g,
+		circuit:            []model.CircuitEdge{},
+		edges:              g.PathToAllFromAll(),
+		length:             0.0,
+		unattachedVertices: make(map[model.CircuitVertex]bool),
 	}
+	for _, v := range c.graph.Vertices {
+		c.unattachedVertices[v] = true
+	}
+	c.BuildPerimiter()
+	return c
 }
 
 func (c *GraphCircuit) BuildPerimiter() {
@@ -171,16 +180,6 @@ func (c *GraphCircuit) GetLength() float64 {
 
 func (c *GraphCircuit) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.unattachedVertices
-}
-
-func (c *GraphCircuit) Prepare() {
-	c.circuit = []model.CircuitEdge{}
-	c.edges = c.graph.PathToAllFromAll()
-	c.length = 0.0
-	c.unattachedVertices = make(map[model.CircuitVertex]bool)
-	for _, v := range c.graph.Vertices {
-		c.unattachedVertices[v] = true
-	}
 }
 
 func (c *GraphCircuit) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {

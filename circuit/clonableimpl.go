@@ -69,10 +69,6 @@ func NewClonableCircuitImpl(vertices []model.CircuitVertex, perimeterBuilder mod
 	}
 }
 
-func (c *ClonableCircuitImpl) BuildPerimiter() {
-
-}
-
 func (c *ClonableCircuitImpl) CloneAndUpdate() ClonableCircuit {
 	// 1. Remove 'next closest' from heap - complexity O(log n)
 	next, okay := c.closestEdges.PopHeap().(*model.DistanceToEdge)
@@ -180,9 +176,6 @@ func (c *ClonableCircuitImpl) GetUnattachedVertices() map[model.CircuitVertex]bo
 		}
 	}
 	return unattachedVertices
-}
-
-func (c *ClonableCircuitImpl) Prepare() {
 }
 
 func (c *ClonableCircuitImpl) AttachVertex(toAttach *model.DistanceToEdge) {

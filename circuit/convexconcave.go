@@ -10,44 +10,45 @@ import (
 
 type ConvexConcave struct {
 	Vertices              []model.CircuitVertex
-	deduplicator          func([]model.CircuitVertex) []model.CircuitVertex
-	perimeterBuilder      model.PerimeterBuilder
 	circuitEdges          []model.CircuitEdge
 	closestEdges          *model.Heap
-	interiorVertices      map[model.CircuitVertex]bool
-	unattachedVertices    map[model.CircuitVertex]bool
-	length                float64
 	enableInteriorUpdates bool
+	interiorVertices      map[model.CircuitVertex]bool
+	length                float64
+	unattachedVertices    map[model.CircuitVertex]bool
 }
 
-func NewConvexConcave(vertices []model.CircuitVertex, deduplicator model.Deduplicator, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
-	return &ConvexConcave{
-		Vertices:              vertices,
-		deduplicator:          deduplicator,
-		perimeterBuilder:      perimeterBuilder,
-		enableInteriorUpdates: enableInteriorUpdates,
-	}
-}
-
-func (c *ConvexConcave) BuildPerimiter() {
-	c.circuitEdges, c.unattachedVertices = c.perimeterBuilder(c.Vertices)
+func NewConvexConcave(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
-	for vertex := range c.unattachedVertices {
-		if c.enableInteriorUpdates {
-			c.interiorVertices[vertex] = true
+	interiorVertices := make(map[model.CircuitVertex]bool)
+	closestEdges := model.NewHeap(model.GetDistanceToEdgeForHeap)
+	for vertex := range unattachedVertices {
+		if enableInteriorUpdates {
+			interiorVertices[vertex] = true
 		}
-		closest := model.FindClosestEdge(vertex, c.circuitEdges)
-		c.closestEdges.PushHeap(&model.DistanceToEdge{
+		closest := model.FindClosestEdge(vertex, circuitEdges)
+		closestEdges.PushHeap(&model.DistanceToEdge{
 			Vertex:   vertex,
 			Edge:     closest,
 			Distance: closest.DistanceIncrease(vertex),
 		})
 	}
 
-	c.length = 0.0
-	for _, edge := range c.circuitEdges {
-		c.length += edge.GetLength()
+	length := 0.0
+	for _, edge := range circuitEdges {
+		length += edge.GetLength()
+	}
+
+	return &ConvexConcave{
+		Vertices:              vertices,
+		circuitEdges:          circuitEdges,
+		closestEdges:          closestEdges,
+		enableInteriorUpdates: enableInteriorUpdates,
+		interiorVertices:      interiorVertices,
+		length:                length,
+		unattachedVertices:    unattachedVertices,
 	}
 }
 
@@ -85,16 +86,6 @@ func (c *ConvexConcave) GetLength() float64 {
 
 func (c *ConvexConcave) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return c.unattachedVertices
-}
-
-func (c *ConvexConcave) Prepare() {
-	c.interiorVertices = make(map[model.CircuitVertex]bool)
-	c.unattachedVertices = make(map[model.CircuitVertex]bool)
-	c.closestEdges = model.NewHeap(model.GetDistanceToEdgeForHeap)
-	c.circuitEdges = []model.CircuitEdge{}
-	c.length = 0.0
-
-	c.Vertices = c.deduplicator(c.Vertices)
 }
 
 func (c *ConvexConcave) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
