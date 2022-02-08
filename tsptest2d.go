@@ -22,7 +22,7 @@ func ComparePerformance2d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "heap_mc",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewClonableCircuitSolver(circuit.NewClonableCircuitImpl(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter))
+	// 		c := circuit.NewClonableCircuitSolver(circuit.NewClonableCircuitImpl(cv, model2d.BuildPerimiter))
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -32,7 +32,7 @@ func ComparePerformance2d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter, true)
+	// 		c := circuit.NewConvexConcaveByEdge(cv, model2d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -41,7 +41,7 @@ func ComparePerformance2d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "convex_concave_byedge",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcaveByEdge(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter, false)
+			c := circuit.NewConvexConcaveByEdge(cv, model2d.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 			return c
 		},
@@ -50,7 +50,7 @@ func ComparePerformance2d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		circuit := circuit.NewConvexConcave(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter, true)
+	// 		circuit := circuit.NewConvexConcave(cv, model2d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(circuit)
 	// 		return circuit
 	// 	},
@@ -59,7 +59,7 @@ func ComparePerformance2d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "convex_concave",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcave(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter, false)
+			c := circuit.NewConvexConcave(cv, model2d.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 			return c
 		},
@@ -68,11 +68,13 @@ func ComparePerformance2d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_weighted_edge",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := experimental.NewConvexConcaveWeightedEdges(cv, model2d.DeduplicateVertices, model2d.BuildPerimiter)
+	// 		c := experimental.NewConvexConcaveWeightedEdges(cv, model2d.BuildPerimiter)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
 	// })
 
-	ComparePerformance("results_2d_comp_convex_concave_3.tsv", &NumVertices{initVertices: 100, incrementVertices: 100, maxVertices: 2000, numIterations: 100}, circuits, model2d.GenerateVertices)
+	ComparePerformance("results_2d_comp_convex_concave_3.tsv", &NumVertices{initVertices: 100, incrementVertices: 100, maxVertices: 2000, numIterations: 100}, circuits, func(size int) []model.CircuitVertex {
+		return model2d.DeduplicateVertices(model2d.GenerateVertices(size))
+	})
 }

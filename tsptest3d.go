@@ -65,7 +65,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter, true)
+	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -74,7 +74,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter, false)
+	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.BuildPerimiter, false)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -83,7 +83,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcave(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter, true)
+	// 		c := circuit.NewConvexConcave(cv, model3d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -92,11 +92,13 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "convex_concave",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcave(cv, model.DeduplicateVerticesNoSorting, model3d.BuildPerimiter, false)
+			c := circuit.NewConvexConcave(cv, model3d.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 			return c
 		},
 	})
 
-	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, model3d.GenerateVertices)
+	ComparePerformance("results_3d_comp_np_1.tsv", &NumVertices{initVertices: 7, incrementVertices: 1, maxVertices: 15, numIterations: 100}, circuits, func(size int) []model.CircuitVertex {
+		return model.DeduplicateVerticesNoSorting(model3d.GenerateVertices(size))
+	})
 }
