@@ -8,54 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewGraphEdge_ShouldReturnShortestPath(t *testing.T) {
-	assert := assert.New(t)
-
-	g := createTestGraphSymmetric()
-	defer g.Delete()
-
-	expectedDistances := [][]float64{
-		{0.0, 10.0, 60.0, 170.0, 70.0},
-		{10, 0.0, 50.0, 160.0, 60.0},
-		{60.0, 50.0, 0.0, 110.0, 10.0},
-		{170.0, 160.0, 110.0, 0.0, 100.0},
-		{70.0, 60.0, 10.0, 100.0, 0.0},
-	}
-
-	expectedLengths := [][]int{
-		{1, 2, 3, 5, 4},
-		{2, 1, 2, 4, 3},
-		{3, 2, 1, 3, 2},
-		{5, 4, 3, 1, 2},
-		{4, 3, 2, 2, 1},
-	}
-
-	for start := 0; start < 5; start++ {
-		for end := 0; end < 5; end++ {
-			edge := graph.NewGraphEdge(g.Vertices[start], g.Vertices[end])
-			assert.NotNil(edge)
-			assert.Equal(g.Vertices[start], edge.GetStart())
-			assert.Equal(g.Vertices[end], edge.GetEnd())
-			assert.Equal(expectedDistances[start][end], edge.GetLength())
-			assert.Len(edge.GetPath(), expectedLengths[start][end])
-			edge.Delete()
-			assert.Nil(edge.GetPath())
-		}
-	}
-}
-
 func TestDistanceIncrease_ShouldReturnTheAmountThePathWillIncreaseByInsertingTheSuppliedVertex(t *testing.T) {
 	assert := assert.New(t)
 
 	g := createTestGraphSymmetric()
 	defer g.Delete()
 
-	edgeAToC := graph.NewGraphEdge(g.Vertices[0], g.Vertices[2])
-	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.Vertices[0]), model.Threshold)
-	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.Vertices[1]), model.Threshold)
-	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.Vertices[2]), model.Threshold)
-	assert.InDelta(170.0+110.0-60.0, edgeAToC.DistanceIncrease(g.Vertices[3]), model.Threshold)
-	assert.InDelta(70.0+10.0-60.0, edgeAToC.DistanceIncrease(g.Vertices[4]), model.Threshold)
+	edgeAToC := g.GetVertices()[0].EdgeTo(g.GetVertices()[2])
+	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.GetVertices()[0]), model.Threshold)
+	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.GetVertices()[1]), model.Threshold)
+	assert.InDelta(0.0, edgeAToC.DistanceIncrease(g.GetVertices()[2]), model.Threshold)
+	assert.InDelta(170.0+110.0-60.0, edgeAToC.DistanceIncrease(g.GetVertices()[3]), model.Threshold)
+	assert.InDelta(70.0+10.0-60.0, edgeAToC.DistanceIncrease(g.GetVertices()[4]), model.Threshold)
 }
 
 func TestIntersects_ShouldReturnTrueIfTheEdgesContainACommonPoint(t *testing.T) {
@@ -73,11 +37,11 @@ func TestIntersects_ShouldReturnTrueIfTheEdgesContainACommonPoint(t *testing.T) 
 	g := gen.Create()
 	defer g.Delete()
 
-	edge0To7 := graph.NewGraphEdge(g.Vertices[0], (g.Vertices[7])) // B -> F
-	edge0To5 := graph.NewGraphEdge(g.Vertices[0], (g.Vertices[5])) // B -> J
-	edge7To9 := graph.NewGraphEdge(g.Vertices[7], (g.Vertices[9])) // F -> G -> D
-	edge9To2 := graph.NewGraphEdge(g.Vertices[9], (g.Vertices[2])) // D -> C
-	edge1To8 := graph.NewGraphEdge(g.Vertices[1], (g.Vertices[8])) // H -> G -> D -> A
+	edge0To7 := g.GetVertices()[0].EdgeTo(g.GetVertices()[7]) // B -> F
+	edge0To5 := g.GetVertices()[0].EdgeTo(g.GetVertices()[5]) // B -> J
+	edge7To9 := g.GetVertices()[7].EdgeTo(g.GetVertices()[9]) // F -> G -> D
+	edge9To2 := g.GetVertices()[9].EdgeTo(g.GetVertices()[2]) // D -> C
+	edge1To8 := g.GetVertices()[1].EdgeTo(g.GetVertices()[8]) // H -> G -> D -> A
 
 	assert.NotNil(edge0To7)
 	assert.NotNil(edge0To5)
@@ -119,22 +83,22 @@ func TestMergeAndSplit(t *testing.T) {
 	for start := 0; start < 5; start++ {
 		for end := 0; end < 5; end++ {
 			for split := 0; split < 5; split++ {
-				edge := graph.NewGraphEdge(g.Vertices[start], g.Vertices[end])
+				edge := g.GetVertices()[start].EdgeTo(g.GetVertices()[end])
 				assert.NotNil(edge)
-				assert.Equal(g.Vertices[start], edge.GetStart())
-				assert.Equal(g.Vertices[end], edge.GetEnd())
+				assert.Equal(g.GetVertices()[start], edge.GetStart())
+				assert.Equal(g.GetVertices()[end], edge.GetEnd())
 
-				a, b := edge.Split(g.Vertices[split])
-				assert.Equal(g.Vertices[start], a.GetStart())
-				assert.Equal(g.Vertices[split], a.GetEnd())
+				a, b := edge.Split(g.GetVertices()[split])
+				assert.Equal(g.GetVertices()[start], a.GetStart())
+				assert.Equal(g.GetVertices()[split], a.GetEnd())
 				if split != end {
 					assert.False(edge.Equals(a))
 				} else {
 					assert.True(edge.Equals(a))
 				}
 
-				assert.Equal(g.Vertices[split], b.GetStart())
-				assert.Equal(g.Vertices[end], b.GetEnd())
+				assert.Equal(g.GetVertices()[split], b.GetStart())
+				assert.Equal(g.GetVertices()[end], b.GetEnd())
 				if split != start {
 					assert.False(edge.Equals(b))
 				} else {
@@ -145,15 +109,15 @@ func TestMergeAndSplit(t *testing.T) {
 				assert.True(edge.Equals(merged))
 
 				mergedReverse := b.Merge(a)
-				assert.Equal(g.Vertices[split], mergedReverse.GetStart())
-				assert.Equal(g.Vertices[split], mergedReverse.GetEnd())
+				assert.Equal(g.GetVertices()[split], mergedReverse.GetStart())
+				assert.Equal(g.GetVertices()[split], mergedReverse.GetEnd())
 				if start == end && (split == start || split == end) {
 					assert.True(edge.Equals(mergedReverse))
 				} else {
 					assert.False(edge.Equals(mergedReverse))
 				}
 
-				edge.Delete()
+				edge.(*graph.GraphEdge).Delete()
 				a.(*graph.GraphEdge).Delete()
 				b.(*graph.GraphEdge).Delete()
 				merged.(*graph.GraphEdge).Delete()
@@ -169,13 +133,13 @@ func TestString_ShouldReturnTheEdgeAsAStringArrayOfIds(t *testing.T) {
 	g := createTestGraphSymmetric()
 	defer g.Delete()
 
-	edgeAToD := graph.NewGraphEdge(g.Vertices[0], g.Vertices[3])
-	defer edgeAToD.Delete()
+	edgeAToD := g.GetVertices()[0].EdgeTo(g.GetVertices()[3])
+	defer edgeAToD.(*graph.GraphEdge).Delete()
 
 	assert.Equal(`["a","b","c","e","d"]`, edgeAToD.String())
 
-	edgeAToA := graph.NewGraphEdge(g.Vertices[0], g.Vertices[0])
-	defer edgeAToA.Delete()
+	edgeAToA := g.GetVertices()[0].EdgeTo(g.GetVertices()[0])
+	defer edgeAToA.(*graph.GraphEdge).Delete()
 
 	assert.Equal(`["a"]`, edgeAToA.String())
 }

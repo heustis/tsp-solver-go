@@ -77,11 +77,11 @@ func TestCreate_ShouldProduceVerticesWithPathsToAllOtherVertices(t *testing.T) {
 	defer g.Delete()
 
 	assert.NotNil(g)
-	assert.Len(g.Vertices, 10)
+	assert.Len(g.GetVertices(), 10)
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
 			if j != i {
-				e := g.Vertices[i].EdgeTo(g.Vertices[j])
+				e := g.GetVertices()[i].EdgeTo(g.GetVertices()[j])
 				assert.NotNil(e, fmt.Sprintf(`cannot create path fromIndex=%d toIndex=%d graph=%s`, i, j, g.String()))
 			}
 		}
@@ -101,7 +101,7 @@ func TestCreate_ShouldProduceVerticesWithoutDuplicateNames(t *testing.T) {
 	defer g.Delete()
 
 	assert.NotNil(g)
-	assert.Len(g.Vertices, 30)
+	assert.Len(g.GetVertices(), 30)
 
 	expectedNamesArray := []string{`a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`, `aa`, `ab`, `ac`, `ad`}
 	expectedNames := make(map[string]bool)
@@ -109,7 +109,7 @@ func TestCreate_ShouldProduceVerticesWithoutDuplicateNames(t *testing.T) {
 		expectedNames[name] = true
 	}
 
-	for _, v := range g.Vertices {
+	for _, v := range g.GetVertices() {
 		assert.True(expectedNames[v.GetId()], fmt.Sprintf(`unexpected or duplicate name for vertex, name=%s graph=%s`, v.GetId(), g.String()))
 		delete(expectedNames, v.GetId())
 	}
@@ -141,9 +141,9 @@ func TestCreate_ShouldProduceVerticesWithCorrectNames(t *testing.T) {
 		}
 	}
 
-	assert.Len(g.Vertices, len(expectedNames))
+	assert.Len(g.GetVertices(), len(expectedNames))
 
-	for _, v := range g.Vertices {
+	for _, v := range g.GetVertices() {
 		assert.True(expectedNames[v.GetId()], fmt.Sprintf(`unexpected or duplicate name for vertex, name=%s`, v.GetId()))
 		delete(expectedNames, v.GetId())
 	}
@@ -168,8 +168,8 @@ func TestCreate_ShouldProduceSameGraphForSameSeed(t *testing.T) {
 
 		assert.NotNil(g)
 		assert.NotNil(g2)
-		assert.Len(g.Vertices, 30)
-		assert.Len(g2.Vertices, 30)
+		assert.Len(g.GetVertices(), 30)
+		assert.Len(g2.GetVertices(), 30)
 
 		assert.Equal(g.String(), g2.String(), seed)
 
@@ -192,8 +192,8 @@ func TestCreate_ShouldProduceVerticesWithAppropriateNumberOfEdges(t *testing.T) 
 			g := gen.Create()
 
 			assert.NotNil(g)
-			assert.Len(g.Vertices, 30)
-			for _, v := range g.Vertices {
+			assert.Len(g.GetVertices(), 30)
+			for _, v := range g.GetVertices() {
 				adj := v.GetAdjacentVertices()
 				assert.GreaterOrEqual(len(adj), min, fmt.Sprintf(`vertex has too few adjacent vertices, name=%s graph=%s`, v.GetId(), g.String()))
 				for other := range adj {
@@ -224,10 +224,10 @@ func TestCreate_ShouldProduceAsymmetricEdgesIfEnabled(t *testing.T) {
 	g := gen.Create()
 
 	assert.NotNil(g)
-	assert.Len(g.Vertices, 30)
+	assert.Len(g.GetVertices(), 30)
 
 	hasAsymmetricEdge := false
-	for _, v := range g.Vertices {
+	for _, v := range g.GetVertices() {
 		adj := v.GetAdjacentVertices()
 		assert.GreaterOrEqual(len(adj), min, fmt.Sprintf(`vertex has too few adjacent vertices, name=%s graph=%s`, v.GetId(), g.String()))
 		for other := range adj {
@@ -259,10 +259,10 @@ func TestCreate_ShouldProduceUnidirectionalEdgesIfEnabled(t *testing.T) {
 	g := gen.Create()
 
 	assert.NotNil(g)
-	assert.Len(g.Vertices, 30)
+	assert.Len(g.GetVertices(), 30)
 
 	hasUnidirectionalEdge := false
-	for _, v := range g.Vertices {
+	for _, v := range g.GetVertices() {
 		adj := v.GetAdjacentVertices()
 		assert.GreaterOrEqual(len(adj), min, fmt.Sprintf(`vertex has too few adjacent vertices, name=%s graph=%s`, v.GetId(), g.String()))
 		for other := range adj {
@@ -278,7 +278,7 @@ func TestCreate_ShouldProduceUnidirectionalEdgesIfEnabled(t *testing.T) {
 	for i := 0; i < 30; i++ {
 		for j := 0; j < 30; j++ {
 			if j != i {
-				e := g.Vertices[i].EdgeTo(g.Vertices[j])
+				e := g.GetVertices()[i].EdgeTo(g.GetVertices()[j])
 				assert.NotNil(e, fmt.Sprintf(`cannot create path fromIndex=%d toIndex=%d graph=%s`, i, j, g.String()))
 			}
 		}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/graph"
+	"github.com/fealos/lee-tsp-go/modelapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,7 @@ func TestDelete_ShouldClearAdjacentVertices(t *testing.T) {
 	assert.NotNil(g)
 	defer g.Delete()
 
-	for _, v := range g.Vertices {
+	for _, v := range g.GetVertices() {
 		v.Delete()
 		assert.Nil(v.GetAdjacentVertices())
 	}
@@ -42,7 +43,7 @@ func TestDistanceTo_ShouldReturnShortestPath(t *testing.T) {
 
 	for start := 0; start < 5; start++ {
 		for end := 0; end < 5; end++ {
-			distance := g.Vertices[start].DistanceTo(g.Vertices[end])
+			distance := g.GetVertices()[start].DistanceTo(g.GetVertices()[end])
 			assert.Equal(expectedDistances[start][end], distance)
 		}
 	}
@@ -72,11 +73,11 @@ func TestEdgeTo_ShouldReturnShortestPath(t *testing.T) {
 
 	for start := 0; start < 5; start++ {
 		for end := 0; end < 5; end++ {
-			edge, okay := g.Vertices[start].EdgeTo(g.Vertices[end]).(*graph.GraphEdge)
+			edge, okay := g.GetVertices()[start].EdgeTo(g.GetVertices()[end]).(*graph.GraphEdge)
 			assert.True(okay)
 			assert.NotNil(edge)
-			assert.Equal(g.Vertices[start], edge.GetStart())
-			assert.Equal(g.Vertices[end], edge.GetEnd())
+			assert.Equal(g.GetVertices()[start], edge.GetStart())
+			assert.Equal(g.GetVertices()[end], edge.GetEnd())
 			assert.Equal(expectedDistances[start][end], edge.GetLength())
 			assert.Len(edge.GetPath(), expectedLengths[start][end])
 			edge.Delete()
@@ -92,18 +93,18 @@ func TestEquals_ShouldCompareIds(t *testing.T) {
 	defer g.Delete()
 
 	for i := 0; i < 5; i++ {
-		current := g.Vertices[i]
+		current := g.GetVertices()[i]
 
-		g2 := g.ToApi().ToGraph()
-		assert.True(current.Equals(g2.Vertices[i]))
+		g2 := modelapi.ToApiGraph(g).ToGraph()
+		assert.True(current.Equals(g2.GetVertices()[i]))
 		g2.Delete()
 
 		assert.False(current.Equals(nil))
 		assert.False(current.Equals(g))
-		assert.False(current.Equals(g.Vertices))
+		assert.False(current.Equals(g.GetVertices()))
 
 		for j := 0; j < 5; j++ {
-			other := g.Vertices[j]
+			other := g.GetVertices()[j]
 			if i == j {
 				assert.True(current.Equals(other))
 			} else {
@@ -136,13 +137,12 @@ func TestPathToAll_ShouldProduceOptimalPaths(t *testing.T) {
 	}
 
 	for start := 0; start < 5; start++ {
-		paths := g.Vertices[start].PathToAll()
+		paths := g.GetVertices()[start].GetPaths()
 		for end := 0; end < 5; end++ {
-			edge, okay := paths[g.Vertices[end]].(*graph.GraphEdge)
-			assert.True(okay)
+			edge := paths[g.GetVertices()[end]]
 			assert.NotNil(edge)
-			assert.Equal(g.Vertices[start], edge.GetStart())
-			assert.Equal(g.Vertices[end], edge.GetEnd())
+			assert.Equal(g.GetVertices()[start], edge.GetStart())
+			assert.Equal(g.GetVertices()[end], edge.GetEnd())
 			assert.Equal(expectedDistances[start][end], edge.GetLength())
 			assert.Len(edge.GetPath(), expectedLengths[start][end])
 			edge.Delete()
@@ -156,8 +156,8 @@ func TestPathToAll_ShouldProduceOptimalPaths(t *testing.T) {
 }
 
 func createTestGraphSymmetric() *graph.Graph {
-	api := &graph.GraphApi{
-		Vertices: []*graph.GraphVertexApi{
+	api := &modelapi.GraphApi{
+		Vertices: []*modelapi.GraphVertexApi{
 			{
 				Id:               "a",
 				AdjacentVertices: make(map[string]float64),

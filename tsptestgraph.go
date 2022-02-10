@@ -50,18 +50,20 @@ func ComparePerformanceGraph() {
 			for i, vertex := range cv {
 				v[i] = vertex.(*graph.GraphVertex)
 			}
-			g := &graph.Graph{
-				Vertices: v,
-			}
-			c := graph.NewGraphCircuit(g)
-			defer c.Delete()
+			g := *graph.NewGraph(v)
 
+			c := circuit.NewConvexConcave(graph.ToCircuitVertexArray(g.GetVertices()), graph.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 
-			return &circuit.CompletedCircuit{
+			completed := &circuit.CompletedCircuit{
 				Circuit: c.GetAttachedVertices(),
 				Length:  c.GetLength(),
 			}
+
+			for _, v := range g.GetVertices() {
+				v.DeletePaths()
+			}
+			return completed
 		},
 	})
 
@@ -74,8 +76,8 @@ func ComparePerformanceGraph() {
 
 		g := gen.Create()
 
-		cv := make([]model.CircuitVertex, len(g.Vertices))
-		for i, vertex := range g.Vertices {
+		cv := make([]model.CircuitVertex, len(g.GetVertices()))
+		for i, vertex := range g.GetVertices() {
 			cv[i] = vertex
 		}
 		return cv

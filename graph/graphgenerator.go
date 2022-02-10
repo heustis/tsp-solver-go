@@ -57,36 +57,34 @@ func (gen *GraphGenerator) Create() *Graph {
 		random = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 
-	graph := &Graph{
-		Vertices: []*GraphVertex{},
-	}
+	vertices := []*GraphVertex{}
 
 	// Set up a basic graph where the is at least a unidirectional circuit in the graph.
 	nextVertex := generateVertex(availableNames, random)
 	for availableNames.Len() > 0 {
 		current := nextVertex
-		graph.Vertices = append(graph.Vertices, current)
+		vertices = append(vertices, current)
 		nextVertex = generateVertex(availableNames, random)
 		gen.linkVertices(current, nextVertex, random)
 	}
 	// Append the final vertex to the graph
-	graph.Vertices = append(graph.Vertices, nextVertex)
+	vertices = append(vertices, nextVertex)
 
 	// Update each node in the graph to have a random number of edges between MinEdges and MaxEdges
 	// Note: this may produce Vertices with more edges than MaxEdges, but that doesn't cause any issues so I am not fixing it (at this time).
 	numEdgesRange := gen.MaxEdges - gen.MinEdges
-	for _, v := range graph.Vertices {
+	for _, v := range vertices {
 		numEdges := gen.MinEdges
 		if numEdgesRange > 0 {
 			numEdges += uint8(random.Int31n(int32(numEdgesRange)))
 		}
 		for len(v.adjacentVertices) < int(numEdges) {
 			destinationIndex := random.Intn(int(gen.NumVertices))
-			gen.linkVertices(v, graph.Vertices[destinationIndex], random)
+			gen.linkVertices(v, vertices[destinationIndex], random)
 		}
 	}
 
-	return graph
+	return NewGraph(vertices)
 }
 
 func buildVertexName(index int) string {
@@ -110,10 +108,7 @@ func generateVertex(availableNames *list.List, random *rand.Rand) *GraphVertex {
 	for i := 0; i < nameIndex; i, current = i+1, current.Next() {
 	}
 	name := availableNames.Remove(current)
-	return &GraphVertex{
-		id:               name.(string),
-		adjacentVertices: make(map[*GraphVertex]float64),
-	}
+	return NewGraphVertex(name.(string))
 }
 
 func (gen *GraphGenerator) linkVertices(a *GraphVertex, b *GraphVertex, random *rand.Rand) {

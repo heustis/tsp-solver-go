@@ -1,10 +1,11 @@
-package graph_test
+package modelapi_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/fealos/lee-tsp-go/graph"
+	"github.com/fealos/lee-tsp-go/modelapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,18 +22,18 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 	assert.NotNil(g)
 	defer g.Delete()
 
-	api := g.ToApi()
+	api := modelapi.ToApiGraph(g)
 	assert.NotNil(api)
 
 	g2 := api.ToGraph()
 	assert.NotNil(g2)
 	defer g2.Delete()
 
-	assert.Len(api.Vertices, len(g.Vertices))
-	assert.Len(g2.Vertices, len(g.Vertices))
+	assert.Len(api.Vertices, len(g.GetVertices()))
+	assert.Len(g2.GetVertices(), len(g.GetVertices()))
 
-	for _, v := range g.Vertices {
-		var match *graph.GraphVertexApi
+	for _, v := range g.GetVertices() {
+		var match *modelapi.GraphVertexApi
 		for _, other := range api.Vertices {
 			if strings.Compare(v.GetId(), other.Id) == 0 {
 				match = other
@@ -43,7 +44,7 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 		assert.Len(match.AdjacentVertices, len(v.GetAdjacentVertices()))
 
 		var g2Match *graph.GraphVertex
-		for _, other := range g2.Vertices {
+		for _, other := range g2.GetVertices() {
 			if strings.Compare(v.GetId(), other.GetId()) == 0 {
 				g2Match = other
 				break
@@ -67,6 +68,43 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 				}
 			}
 			assert.True(okay)
+		}
+	}
+}
+
+func TestToApiGraph_ShouldPreserveGraphData(t *testing.T) {
+	assert := assert.New(t)
+
+	gen := &graph.GraphGenerator{
+		MaxEdges:    5,
+		MinEdges:    3,
+		NumVertices: uint32(15),
+	}
+
+	g := gen.Create()
+	assert.NotNil(g)
+	defer g.Delete()
+
+	api := modelapi.ToApiGraph(g)
+	assert.NotNil(api)
+
+	assert.Len(api.Vertices, len(g.GetVertices()))
+
+	for _, v := range g.GetVertices() {
+		var match *modelapi.GraphVertexApi
+		for _, other := range api.Vertices {
+			if strings.Compare(v.GetId(), other.Id) == 0 {
+				match = other
+				break
+			}
+		}
+		assert.NotNil(match)
+		assert.Len(match.AdjacentVertices, len(v.GetAdjacentVertices()))
+
+		for dest, dist := range v.GetAdjacentVertices() {
+			matchDist, okay := match.AdjacentVertices[dest.GetId()]
+			assert.True(okay)
+			assert.Equal(dist, matchDist)
 		}
 	}
 }
