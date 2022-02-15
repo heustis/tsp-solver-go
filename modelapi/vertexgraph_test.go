@@ -22,26 +22,28 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 	assert.NotNil(g)
 	defer g.Delete()
 
-	api := modelapi.ToApiGraph(g)
+	api := modelapi.ToApiFromGraph(g)
 	assert.NotNil(api)
 
 	g2 := api.ToGraph()
 	assert.NotNil(g2)
 	defer g2.Delete()
 
-	assert.Len(api.Vertices, len(g.GetVertices()))
+	assert.Len(api.PointsGraph, len(g.GetVertices()))
 	assert.Len(g2.GetVertices(), len(g.GetVertices()))
+	assert.Len(api.Points2D, 0)
+	assert.Len(api.Points3D, 0)
 
 	for _, v := range g.GetVertices() {
-		var match *modelapi.GraphVertexApi
-		for _, other := range api.Vertices {
+		var match *modelapi.VertexGraph
+		for _, other := range api.PointsGraph {
 			if strings.Compare(v.GetId(), other.Id) == 0 {
 				match = other
 				break
 			}
 		}
 		assert.NotNil(match)
-		assert.Len(match.AdjacentVertices, len(v.GetAdjacentVertices()))
+		assert.Len(match.Neighbors, len(v.GetAdjacentVertices()))
 
 		var g2Match *graph.GraphVertex
 		for _, other := range g2.GetVertices() {
@@ -54,11 +56,16 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 		assert.Len(g2Match.GetAdjacentVertices(), len(v.GetAdjacentVertices()))
 
 		for dest, dist := range v.GetAdjacentVertices() {
-			matchDist, okay := match.AdjacentVertices[dest.GetId()]
-			assert.True(okay)
-			assert.Equal(dist, matchDist)
+			numMatch := 0
+			for _, n := range match.Neighbors {
+				if strings.Compare(dest.GetId(), n.Id) == 0 {
+					numMatch++
+					assert.Equal(dist, n.Distance)
+				}
+			}
+			assert.Equal(1, numMatch)
 
-			_, okay = g2Match.GetAdjacentVertices()[dest]
+			_, okay := g2Match.GetAdjacentVertices()[dest]
 			assert.False(okay)
 
 			for g2Dest, g2Dist := range g2Match.GetAdjacentVertices() {
@@ -85,26 +92,33 @@ func TestToApiGraph_ShouldPreserveGraphData(t *testing.T) {
 	assert.NotNil(g)
 	defer g.Delete()
 
-	api := modelapi.ToApiGraph(g)
+	api := modelapi.ToApiFromGraph(g)
 	assert.NotNil(api)
 
-	assert.Len(api.Vertices, len(g.GetVertices()))
+	assert.Len(api.PointsGraph, len(g.GetVertices()))
+	assert.Len(api.Points2D, 0)
+	assert.Len(api.Points3D, 0)
 
 	for _, v := range g.GetVertices() {
-		var match *modelapi.GraphVertexApi
-		for _, other := range api.Vertices {
+		var match *modelapi.VertexGraph
+		for _, other := range api.PointsGraph {
 			if strings.Compare(v.GetId(), other.Id) == 0 {
 				match = other
 				break
 			}
 		}
 		assert.NotNil(match)
-		assert.Len(match.AdjacentVertices, len(v.GetAdjacentVertices()))
+		assert.Len(match.Neighbors, len(v.GetAdjacentVertices()))
 
 		for dest, dist := range v.GetAdjacentVertices() {
-			matchDist, okay := match.AdjacentVertices[dest.GetId()]
-			assert.True(okay)
-			assert.Equal(dist, matchDist)
+			numMatch := 0
+			for _, n := range match.Neighbors {
+				if strings.Compare(dest.GetId(), n.Id) == 0 {
+					numMatch++
+					assert.Equal(dist, n.Distance)
+				}
+			}
+			assert.Equal(1, numMatch)
 		}
 	}
 }

@@ -95,7 +95,7 @@ func TestEquals_ShouldCompareIds(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		current := g.GetVertices()[i]
 
-		g2 := modelapi.ToApiGraph(g).ToGraph()
+		g2 := modelapi.ToApiFromGraph(g).ToGraph()
 		assert.True(current.Equals(g2.GetVertices()[i]))
 		g2.Delete()
 
@@ -156,50 +156,51 @@ func TestPathToAll_ShouldProduceOptimalPaths(t *testing.T) {
 }
 
 func createTestGraphSymmetric() *graph.Graph {
-	api := &modelapi.GraphApi{
-		Vertices: []*modelapi.GraphVertexApi{
+	api := &modelapi.TspRequest{
+		PointsGraph: []*modelapi.VertexGraph{
 			{
-				Id:               "a",
-				AdjacentVertices: make(map[string]float64),
+				Id: "a",
+				Neighbors: []modelapi.VertexNeighbor{
+					{Id: "b", Distance: 10},
+					{Id: "c", Distance: 100},
+					{Id: "d", Distance: 1000},
+				},
 			},
 			{
-				Id:               "b",
-				AdjacentVertices: make(map[string]float64),
+				Id: "b",
+				Neighbors: []modelapi.VertexNeighbor{
+					{Id: "a", Distance: 10},
+					{Id: "c", Distance: 50},
+					{Id: "e", Distance: 1000},
+				},
 			},
 			{
-				Id:               "c",
-				AdjacentVertices: make(map[string]float64),
+				Id: "c",
+				Neighbors: []modelapi.VertexNeighbor{
+					{Id: "a", Distance: 100},
+					{Id: "b", Distance: 50},
+					{Id: "d", Distance: 500},
+					{Id: "e", Distance: 10},
+				},
 			},
 			{
-				Id:               "d",
-				AdjacentVertices: make(map[string]float64),
+				Id: "d",
+				Neighbors: []modelapi.VertexNeighbor{
+					{Id: "a", Distance: 1000},
+					{Id: "c", Distance: 500},
+					{Id: "e", Distance: 100},
+				},
 			},
 			{
-				Id:               "e",
-				AdjacentVertices: make(map[string]float64),
+				Id: "e",
+				Neighbors: []modelapi.VertexNeighbor{
+					{Id: "b", Distance: 1000},
+					{Id: "c", Distance: 10},
+					{Id: "d", Distance: 100},
+				},
 			},
 		},
 	}
-	api.Vertices[0].AdjacentVertices["b"] = 10
-	api.Vertices[0].AdjacentVertices["c"] = 100
-	api.Vertices[0].AdjacentVertices["d"] = 1000
-
-	api.Vertices[1].AdjacentVertices["a"] = 10
-	api.Vertices[1].AdjacentVertices["c"] = 50
-	api.Vertices[1].AdjacentVertices["e"] = 1000
-
-	api.Vertices[2].AdjacentVertices["a"] = 100
-	api.Vertices[2].AdjacentVertices["b"] = 50
-	api.Vertices[2].AdjacentVertices["d"] = 500
-	api.Vertices[2].AdjacentVertices["e"] = 10
-
-	api.Vertices[3].AdjacentVertices["a"] = 1000
-	api.Vertices[3].AdjacentVertices["c"] = 500
-	api.Vertices[3].AdjacentVertices["e"] = 100
-
-	api.Vertices[4].AdjacentVertices["b"] = 1000
-	api.Vertices[4].AdjacentVertices["c"] = 10
-	api.Vertices[4].AdjacentVertices["d"] = 100
 
 	return api.ToGraph()
 }
