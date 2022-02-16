@@ -2,19 +2,19 @@ package modelapi
 
 import "github.com/fealos/lee-tsp-go/graph"
 
-// VertexGraph is the API representation of a single point in a graph.
+// PointGraph is the API representation of a single point in a graph.
 // It references its neighbors by name, in an array, to avoid circular references and have consistent field names in its JSON representation.
-type VertexGraph struct {
+type PointGraph struct {
 	Id string `json:"id" validate:"required,min=1"`
 	// Validator/v10 does not support `unique` with nil values in the array, see validate_test.go, so the array does not use pointers.
-	// Once that is supported Neighbors can be converted to []*VertexNeighbor.
-	Neighbors []VertexNeighbor `json:"neighbors" validate:"required,min=1,unique=Id,dive,required"`
+	// Once that is supported Neighbors can be converted to []*PointGraphNeighbor.
+	Neighbors []PointGraphNeighbor `json:"neighbors" validate:"required,min=1,unique=Id,dive,required"`
 }
 
-// VertexNeighbor is a neighboring point to a VertexGraph point.
-// Its id must correspond to the id of a point in the request's array of VertexGraphs.
-// The distance is the distance from the VertexGraph point to the point with the id, this may be asymmetrical.
-type VertexNeighbor struct {
+// PointGraphNeighbor is a neighboring point to a PointGraph point.
+// Its id must correspond to the id of a point in the request's array of PointGraphs.
+// The distance is the distance from the PointGraph point to the point with the id, this may be asymmetrical.
+type PointGraphNeighbor struct {
 	Id       string  `json:"id" validate:"required,min=1"`
 	Distance float64 `json:"distance" validate:"required,min=0"`
 }
@@ -60,17 +60,17 @@ func (api *TspRequest) ToGraph() *graph.Graph {
 // ToApiFromGraph converts a graph into an API response.
 func ToApiFromGraph(g *graph.Graph) *TspRequest {
 	api := &TspRequest{
-		PointsGraph: []*VertexGraph{},
+		PointsGraph: []*PointGraph{},
 	}
 
 	for _, v := range g.GetVertices() {
-		vApi := &VertexGraph{
+		vApi := &PointGraph{
 			Id:        v.GetId(),
-			Neighbors: make([]VertexNeighbor, 0, len(v.GetAdjacentVertices())),
+			Neighbors: make([]PointGraphNeighbor, 0, len(v.GetAdjacentVertices())),
 		}
 
 		for adj, distance := range v.GetAdjacentVertices() {
-			vApi.Neighbors = append(vApi.Neighbors, VertexNeighbor{
+			vApi.Neighbors = append(vApi.Neighbors, PointGraphNeighbor{
 				Id:       adj.GetId(),
 				Distance: distance,
 			})

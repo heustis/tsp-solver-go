@@ -12,7 +12,7 @@ type ConvexConcaveByEdge struct {
 	enableInteriorUpdates bool
 }
 
-func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ConvexConcaveByEdge {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	closestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)

@@ -157,10 +157,10 @@ func TestPathToAll_ShouldProduceOptimalPaths(t *testing.T) {
 
 func createTestGraphSymmetric() *graph.Graph {
 	api := &modelapi.TspRequest{
-		PointsGraph: []*modelapi.VertexGraph{
+		PointsGraph: []*modelapi.PointGraph{
 			{
 				Id: "a",
-				Neighbors: []modelapi.VertexNeighbor{
+				Neighbors: []modelapi.PointGraphNeighbor{
 					{Id: "b", Distance: 10},
 					{Id: "c", Distance: 100},
 					{Id: "d", Distance: 1000},
@@ -168,7 +168,7 @@ func createTestGraphSymmetric() *graph.Graph {
 			},
 			{
 				Id: "b",
-				Neighbors: []modelapi.VertexNeighbor{
+				Neighbors: []modelapi.PointGraphNeighbor{
 					{Id: "a", Distance: 10},
 					{Id: "c", Distance: 50},
 					{Id: "e", Distance: 1000},
@@ -176,7 +176,7 @@ func createTestGraphSymmetric() *graph.Graph {
 			},
 			{
 				Id: "c",
-				Neighbors: []modelapi.VertexNeighbor{
+				Neighbors: []modelapi.PointGraphNeighbor{
 					{Id: "a", Distance: 100},
 					{Id: "b", Distance: 50},
 					{Id: "d", Distance: 500},
@@ -185,7 +185,7 @@ func createTestGraphSymmetric() *graph.Graph {
 			},
 			{
 				Id: "d",
-				Neighbors: []modelapi.VertexNeighbor{
+				Neighbors: []modelapi.PointGraphNeighbor{
 					{Id: "a", Distance: 1000},
 					{Id: "c", Distance: 500},
 					{Id: "e", Distance: 100},
@@ -193,7 +193,7 @@ func createTestGraphSymmetric() *graph.Graph {
 			},
 			{
 				Id: "e",
-				Neighbors: []modelapi.VertexNeighbor{
+				Neighbors: []modelapi.PointGraphNeighbor{
 					{Id: "b", Distance: 1000},
 					{Id: "c", Distance: 10},
 					{Id: "d", Distance: 100},

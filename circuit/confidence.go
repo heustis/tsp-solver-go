@@ -32,7 +32,7 @@ type ConvexConcaveConfidence struct {
 	circuits         []*confidenceCircuit
 }
 
-func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *ConvexConcaveConfidence {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	initCircuit := &confidenceCircuit{

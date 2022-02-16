@@ -40,7 +40,7 @@ func (g *geneticCircuit) setLength() {
 	g.length = model.Length(g.circuit)
 }
 
-func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, numParents int, numChildren int, maxIterations int) model.Circuit {
+func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, numParents int, numChildren int, maxIterations int) *GeneticAlgorithm {
 	circuitLen := len(initCircuit)
 	initGeneration := make([]*geneticCircuit, numParents)
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -74,7 +74,7 @@ func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, numParents int, numC
 	return g
 }
 
-func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, numParents int, numChildren int, maxIterations int) model.Circuit {
+func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, numParents int, numChildren int, maxIterations int) *GeneticAlgorithm {
 	initEdges, interiorVertices := perimeterBuilder(initCircuit)
 	circuitLen := len(interiorVertices)
 	initGeneration := make([]*geneticCircuit, numParents)

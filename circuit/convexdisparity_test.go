@@ -24,7 +24,7 @@ func TestNewConvexConcaveDisparity(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveDisparity)
+	)
 
 	assert.Len(c.Vertices, 8)
 
@@ -65,7 +65,7 @@ func TestUpdate_ConvexConcaveDisparity(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveDisparity)
+	)
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -154,7 +154,7 @@ func TestUpdate_ConvexConcaveDisparityRelative(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		true,
-	).(*circuit.ConvexConcaveDisparity)
+	)
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -240,7 +240,7 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveDisparity)
+	)
 
 	c.Update(c.FindNextVertexAndEdge())
 	assert.Len(c.GetAttachedVertices(), 4)
@@ -294,7 +294,7 @@ func TestUpdate_ConvexConcaveDisparity_ShouldPanicIfEdgeIsNotInCircuit(t *testin
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveDisparity)
+	)
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)

@@ -24,7 +24,7 @@ func TestNewConvexConcaveByEdge(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveByEdge)
+	)
 
 	assert.Len(circuit.Vertices, 8)
 
@@ -58,7 +58,7 @@ func TestUpdate_ConvexConcaveByEdge(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		false,
-	).(*circuit.ConvexConcaveByEdge)
+	)
 
 	attached := circuit.GetAttachedVertices()
 	assert.Len(circuit.Vertices, 8)
@@ -127,7 +127,7 @@ func TestNewConvexConcaveByEdge_WithUpdates(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		true,
-	).(*circuit.ConvexConcaveByEdge)
+	)
 
 	assert.Len(circuit.Vertices, 8)
 
@@ -161,7 +161,7 @@ func TestUpdate_ConvexConcaveByEdge_WithUpdates(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 		true,
-	).(*circuit.ConvexConcaveByEdge)
+	)
 
 	attached := circuit.GetAttachedVertices()
 	assert.Len(circuit.Vertices, 8)

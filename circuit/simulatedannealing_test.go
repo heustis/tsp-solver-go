@@ -87,7 +87,7 @@ func TestUpdate_SimulatedAnnealing(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewSimulatedAnnealing(initVertices, 100, false).(*circuit.SimulatedAnnealing)
+	c := circuit.NewSimulatedAnnealing(initVertices, 100, false)
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -159,7 +159,7 @@ func TestUpdate_SimulatedAnnealing(t *testing.T) {
 		model2d.NewVertex2D(3, 0),
 	}, c.GetAttachedVertices())
 
-	c = circuit.NewSimulatedAnnealing(initVertices, 1000, false).(*circuit.SimulatedAnnealing)
+	c = circuit.NewSimulatedAnnealing(initVertices, 1000, false)
 	c.SetSeed(1)
 	for i := 0; i < 1000; i++ {
 		c.Update(c.FindNextVertexAndEdge())
@@ -191,7 +191,7 @@ func TestUpdate_SimulatedAnnealing_PreferCloseNeighbors(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	}
 
-	c := circuit.NewSimulatedAnnealing(initVertices, 100, true).(*circuit.SimulatedAnnealing)
+	c := circuit.NewSimulatedAnnealing(initVertices, 100, true)
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -274,7 +274,7 @@ func TestUpdate_SimulatedAnnealingFromCircuit(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -369,7 +369,7 @@ func TestUpdate_SimulatedAnnealingFromCircuit_GeometricTemperature(t *testing.T)
 		model2d.NewVertex2D(-7, 6),
 	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false).(*circuit.SimulatedAnnealing)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
 	c.SetSeed(1)
 	c.SetTemperatureFunction(circuit.CalculateTemperatureGeometric)
 

@@ -35,7 +35,7 @@ func TestToGraph_ShouldPreserveGraphData(t *testing.T) {
 	assert.Len(api.Points3D, 0)
 
 	for _, v := range g.GetVertices() {
-		var match *modelapi.VertexGraph
+		var match *modelapi.PointGraph
 		for _, other := range api.PointsGraph {
 			if strings.Compare(v.GetId(), other.Id) == 0 {
 				match = other
@@ -100,7 +100,7 @@ func TestToApiGraph_ShouldPreserveGraphData(t *testing.T) {
 	assert.Len(api.Points3D, 0)
 
 	for _, v := range g.GetVertices() {
-		var match *modelapi.VertexGraph
+		var match *modelapi.PointGraph
 		for _, other := range api.PointsGraph {
 			if strings.Compare(v.GetId(), other.Id) == 0 {
 				match = other

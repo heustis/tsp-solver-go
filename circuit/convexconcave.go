@@ -18,7 +18,7 @@ type ConvexConcave struct {
 	unattachedVertices    map[model.CircuitVertex]bool
 }
 
-func NewConvexConcave(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
+func NewConvexConcave(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ConvexConcave {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.

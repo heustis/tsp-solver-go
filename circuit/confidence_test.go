@@ -23,7 +23,7 @@ func TestNewConvexConcaveConfidence(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	}),
 		model2d.BuildPerimiter,
-	).(*circuit.ConvexConcaveConfidence)
+	)
 
 	assert.Len(c.Vertices, 8)
 
@@ -66,7 +66,7 @@ func TestUpdate_ConvexConcaveConfidence(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	}),
 		model2d.BuildPerimiter,
-	).(*circuit.ConvexConcaveConfidence)
+	)
 
 	assert.Len(c.Vertices, 8)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -154,7 +154,7 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 		model2d.NewVertex2D(10, 0),
 	}),
 		model2d.BuildPerimiter,
-	).(*circuit.ConvexConcaveConfidence)
+	)
 
 	c.Update(c.FindNextVertexAndEdge())
 	vertices := c.GetAttachedVertices()
@@ -211,7 +211,7 @@ func TestString_ConvexConcaveConfidence(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),    // Index 1 after sorting
 	}),
 		model2d.BuildPerimiter,
-	).(*circuit.ConvexConcaveConfidence)
+	)
 
 	assert.Equal("{\r\n\t\"vertices\":[{\"x\":-15,\"y\":-15},{\"x\":0,\"y\":0},{\"x\":15,\"y\":-15},{\"x\":3,\"y\":0},{\"x\":3,\"y\":13},{\"x\":8,\"y\":5},{\"x\":9,\"y\":6},{\"x\":-7,\"y\":6}],\r\n\t\"edges\":[],\r\n\t\"edgeDistances\":[]}", c.String())
 

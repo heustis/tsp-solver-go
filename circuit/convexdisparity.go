@@ -15,7 +15,7 @@ type ConvexConcaveDisparity struct {
 	length        float64
 }
 
-func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) model.Circuit {
+func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) *ConvexConcaveDisparity {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	edgeDistances := make(map[model.CircuitVertex]*vertexDisparity)

@@ -41,7 +41,7 @@ type ClonableCircuitSolver struct {
 	numIterations int
 }
 
-func NewClonableCircuitSolver(initialCircuit ClonableCircuit) model.Circuit {
+func NewClonableCircuitSolver(initialCircuit ClonableCircuit) *ClonableCircuitSolver {
 	solver := &ClonableCircuitSolver{
 		circuits:      model.NewHeap(getClonableLength),
 		numClones:     0,

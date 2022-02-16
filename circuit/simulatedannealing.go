@@ -19,7 +19,7 @@ type SimulatedAnnealing struct {
 	temperatureFunction  func(currentIteration float64, maxIterations float64) float64
 }
 
-func NewSimulatedAnnealing(circuit []model.CircuitVertex, maxIterations int, preferCloseNeighbors bool) model.Circuit {
+func NewSimulatedAnnealing(circuit []model.CircuitVertex, maxIterations int, preferCloseNeighbors bool) *SimulatedAnnealing {
 	return &SimulatedAnnealing{
 		circuit:              circuit,
 		farthestDistance:     computeFarthestDistance(circuit),
@@ -31,7 +31,7 @@ func NewSimulatedAnnealing(circuit []model.CircuitVertex, maxIterations int, pre
 	}
 }
 
-func NewSimulatedAnnealingFromCircuit(circuit model.Circuit, maxIterations int, preferCloseNeighbors bool) model.Circuit {
+func NewSimulatedAnnealingFromCircuit(circuit model.Circuit, maxIterations int, preferCloseNeighbors bool) *SimulatedAnnealing {
 	for nextVertex, nextEdge := circuit.FindNextVertexAndEdge(); nextVertex != nil; nextVertex, nextEdge = circuit.FindNextVertexAndEdge() {
 		circuit.Update(nextVertex, nextEdge)
 	}
