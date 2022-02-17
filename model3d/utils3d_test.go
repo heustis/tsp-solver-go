@@ -3,7 +3,7 @@ package model3d_test
 import (
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/model3d"
+	"github.com/heustis/lee-tsp-go/model3d"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,9 +3,9 @@ package stats_test
 import (
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/stats"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/stats"
 	"github.com/stretchr/testify/assert"
 )
 

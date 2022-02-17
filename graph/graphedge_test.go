@@ -3,8 +3,8 @@ package graph_test
 import (
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/graph"
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/graph"
+	"github.com/heustis/lee-tsp-go/model"
 	"github.com/stretchr/testify/assert"
 )
 

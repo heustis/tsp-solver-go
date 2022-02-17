@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/solver"
-	"github.com/fealos/lee-tsp-go/tsplib"
+	"github.com/heustis/lee-tsp-go/circuit"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/solver"
+	"github.com/heustis/lee-tsp-go/tsplib"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -165,7 +165,7 @@ func TestSolveAndCompareConfidence(t *testing.T) {
 	} {
 		err = data.SolveAndCompare(fmt.Sprintf("confidence_%g_", zscore), func(cv []model.CircuitVertex) model.Circuit {
 			c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter)
-			c.(*circuit.ConvexConcaveConfidence).Significance = zscore
+			c.Significance = zscore
 			solver.FindShortestPathCircuit(c)
 			return c
 		})

@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // SimulatedAnnealing - TODO

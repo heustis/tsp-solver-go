@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model3d"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model3d"
 	"github.com/stretchr/testify/assert"
 )
 

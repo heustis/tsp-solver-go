@@ -3,8 +3,8 @@ package modelapi_test
 import (
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/model3d"
-	"github.com/fealos/lee-tsp-go/modelapi"
+	"github.com/heustis/lee-tsp-go/model3d"
+	"github.com/heustis/lee-tsp-go/modelapi"
 	"github.com/stretchr/testify/assert"
 )
 

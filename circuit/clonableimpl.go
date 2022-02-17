@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 type ClonableCircuitImpl struct {

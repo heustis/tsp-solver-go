@@ -1,4 +1,4 @@
-module github.com/fealos/lee-tsp-go
+module github.com/heustis/lee-tsp-go
 
 go 1.17
 

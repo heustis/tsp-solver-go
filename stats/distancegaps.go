@@ -5,7 +5,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // DistanceGaps tracks the distance between one vertex and each edge in the current circuit.

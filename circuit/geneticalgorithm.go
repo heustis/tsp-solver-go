@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // GeneticAlgorithm - TODO - add comments

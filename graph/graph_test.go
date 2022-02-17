@@ -3,7 +3,7 @@ package graph_test
 import (
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/graph"
+	"github.com/heustis/lee-tsp-go/graph"
 	"github.com/stretchr/testify/assert"
 )
 

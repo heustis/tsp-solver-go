@@ -1,8 +1,8 @@
 package modelapi
 
 import (
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
 )
 
 // Point2D is the API representation a 2-dimensional point.

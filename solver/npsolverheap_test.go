@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/solver"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/solver"
 	"github.com/stretchr/testify/assert"
 )
 

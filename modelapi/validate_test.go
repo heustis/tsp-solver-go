@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/modelapi"
 	"github.com/go-playground/validator/v10"
+	"github.com/heustis/lee-tsp-go/modelapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,6 +50,13 @@ func TestValidateTspRequest(t *testing.T) {
 		{Id: "b", Neighbors: []modelapi.PointGraphNeighbor{{Id: "c", Distance: *float64Pointer(2)}}},
 		{Id: "c", Neighbors: []modelapi.PointGraphNeighbor{}},
 	}}), `Key: 'TspRequest.PointsGraph[2].Neighbors' Error:Field validation for 'Neighbors' failed on the 'min' tag`)
+
+	// Object in algorithms cannot be nil
+	assert.EqualError(validate.Struct(modelapi.TspRequest{Algorithms: []*modelapi.Algorithm{nil, {AlgorithmType: "CLONABLE"}}, Points2D: []*modelapi.Point2D{{X: float64Pointer(1), Y: float64Pointer(2)}, {X: float64Pointer(3), Y: float64Pointer(4)}, {X: float64Pointer(5), Y: float64Pointer(6)}}}),
+		`Key: 'TspRequest.Algorithms[0]' Error:Field validation for 'Algorithms[0]' failed on the 'required' tag`)
+	// Data in algorithms must be valid.
+	assert.EqualError(validate.Struct(modelapi.TspRequest{Algorithms: []*modelapi.Algorithm{{AlgorithmType: "Other"}}, Points2D: []*modelapi.Point2D{{X: float64Pointer(1), Y: float64Pointer(2)}, {X: float64Pointer(3), Y: float64Pointer(4)}, {X: float64Pointer(5), Y: float64Pointer(6)}}}),
+		`Key: 'TspRequest.Algorithms[0].AlgorithmType' Error:Field validation for 'AlgorithmType' failed on the 'oneof' tag`)
 
 	// Only one of the ararys should be populated (cannot mix and match point types).
 	assert.EqualError(validate.Struct(modelapi.TspRequest{

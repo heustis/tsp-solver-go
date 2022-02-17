@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // GenerateVertices creates a new array of 3-dimensional vertices, containing the specified number of vertices.

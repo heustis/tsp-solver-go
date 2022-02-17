@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fealos/lee-tsp-go/circuit"
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/solver"
+	"github.com/heustis/lee-tsp-go/circuit"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/solver"
 )
 
 func BenchmarkFindShortestPathCircuit(b *testing.B) {

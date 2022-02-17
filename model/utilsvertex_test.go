@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/model2d"
-	"github.com/fealos/lee-tsp-go/model3d"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/lee-tsp-go/model3d"
 	"github.com/stretchr/testify/assert"
 )
 

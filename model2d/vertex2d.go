@@ -5,7 +5,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // Vertex2D represents a 2-dimensional point

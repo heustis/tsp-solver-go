@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 func ComparePerformance(fileName string, verticesConfig *NumVertices, circuits []*NamedCircuit, verticesFunc func(size int) []model.CircuitVertex) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fealos/lee-tsp-go/model3d"
+	"github.com/heustis/lee-tsp-go/model3d"
 	"github.com/stretchr/testify/assert"
 )
 

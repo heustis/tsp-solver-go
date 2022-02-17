@@ -1,6 +1,6 @@
 package circuit
 
-import "github.com/fealos/lee-tsp-go/model"
+import "github.com/heustis/lee-tsp-go/model"
 
 // ClonableCircuit is a Circuit variant where the circuit may be cloned with each update, depending on the implementation,
 // so that each clone represents a different branch of solving the circuit.

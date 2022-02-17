@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/fealos/lee-tsp-go/model"
-	"github.com/fealos/lee-tsp-go/stats"
+	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/stats"
 )
 
 type confidenceCircuit struct {

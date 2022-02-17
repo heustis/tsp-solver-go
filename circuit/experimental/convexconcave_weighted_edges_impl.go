@@ -6,7 +6,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/fealos/lee-tsp-go/model"
+	"github.com/heustis/lee-tsp-go/model"
 )
 
 // ConvexConcaveWeightedEdges is significantly worse than the other greedy algorithms, see `results_2d_comp_greedy_3.tsv`.
@@ -18,16 +18,37 @@ type ConvexConcaveWeightedEdges struct {
 	closestVertices    map[model.CircuitEdge]*weightedEdge
 	unattachedVertices map[model.CircuitVertex]bool
 	length             float64
+	weights            []float64
 }
 
 func NewConvexConcaveWeightedEdges(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+	return NewConvexConcaveWeightedEdgesWithNumWeights(vertices, perimeterBuilder, 8)
+}
+
+func NewConvexConcaveWeightedEdgesWithNumWeights(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, numWeights int) model.Circuit {
+	if numWeights <= 0 {
+		numWeights = 1
+	}
+	weights := make([]float64, numWeights)
+	for i, denominator := 0, 2.0; i < numWeights; i, denominator = i+1, denominator*2.0 {
+		weights[i] = 1.0 / denominator
+	}
+
+	return NewConvexConcaveWeightedEdgesWithWeights(vertices, perimeterBuilder, weights)
+}
+
+func NewConvexConcaveWeightedEdgesWithWeights(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, weights []float64) model.Circuit {
+	if len(weights) <= 1 {
+		weights = []float64{1.0}
+	}
+
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	length := 0.0
 	closestVertices := make(map[model.CircuitEdge]*weightedEdge)
 	for _, edge := range circuitEdges {
-		closestVertices[edge] = newWeightedEdge(edge, unattachedVertices)
+		closestVertices[edge] = newWeightedEdge(edge, unattachedVertices, weights)
 		length += edge.GetLength()
 	}
 
@@ -37,6 +58,7 @@ func NewConvexConcaveWeightedEdges(vertices []model.CircuitVertex, perimeterBuil
 		closestVertices:    closestVertices,
 		unattachedVertices: unattachedVertices,
 		length:             length,
+		weights:            weights,
 	}
 }
 
@@ -96,20 +118,15 @@ func (c *ConvexConcaveWeightedEdges) Update(vertexToAdd model.CircuitVertex, edg
 		delete(c.closestVertices, edgeToSplit)
 
 		for e, w := range c.closestVertices {
-			w.removeVertex(vertexToAdd, e, c.unattachedVertices)
+			w.removeVertex(vertexToAdd, e, c.unattachedVertices, c.weights)
 		}
 		edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1]
-		c.closestVertices[edgeA] = newWeightedEdge(edgeA, c.unattachedVertices)
-		c.closestVertices[edgeB] = newWeightedEdge(edgeB, c.unattachedVertices)
+		c.closestVertices[edgeA] = newWeightedEdge(edgeA, c.unattachedVertices, c.weights)
+		c.closestVertices[edgeB] = newWeightedEdge(edgeB, c.unattachedVertices, c.weights)
 
 		c.length += edgeA.GetLength() + edgeB.GetLength() - edgeToSplit.GetLength()
 	}
 }
-
-var weights = [8]float64{0.5, 0.25, 0.125, 1.0 / 16.0, 1.0 / 32.0, 1.0 / 64.0, 1.0 / 128.0, 1.0 / 256.0}
-
-// var weights = [4]float64{0.9, 0.09, 0.009, .0009}
-// var weights = [1]float64{1.0}
 
 type weightedVertex struct {
 	distance float64
@@ -129,7 +146,7 @@ func (w *weightedEdge) GetDistance() float64 {
 	return w.weightedDistance
 }
 
-func newWeightedEdge(edge model.CircuitEdge, unattachedVertices map[model.CircuitVertex]bool) *weightedEdge {
+func newWeightedEdge(edge model.CircuitEdge, unattachedVertices map[model.CircuitVertex]bool, weights []float64) *weightedEdge {
 	lenClosest := int(math.Min(float64(len(weights)), float64(len(unattachedVertices))))
 	lastIndex := lenClosest - 1
 	w := &weightedEdge{
@@ -166,11 +183,11 @@ func newWeightedEdge(edge model.CircuitEdge, unattachedVertices map[model.Circui
 			}
 		}
 	}
-	w.updateDistance()
+	w.updateDistance(weights)
 	return w
 }
 
-func (w *weightedEdge) removeVertex(vertex model.CircuitVertex, edge model.CircuitEdge, unattachedVertices map[model.CircuitVertex]bool) {
+func (w *weightedEdge) removeVertex(vertex model.CircuitVertex, edge model.CircuitEdge, unattachedVertices map[model.CircuitVertex]bool, weights []float64) {
 	numVertices := len(w.closestVertices)
 	vertexIndex := numVertices - 1
 	for ; vertexIndex >= 0 && w.closestVertices[vertexIndex].vertex != vertex; vertexIndex-- {
@@ -205,10 +222,10 @@ func (w *weightedEdge) removeVertex(vertex model.CircuitVertex, edge model.Circu
 	} else {
 		w.closestVertices = append(w.closestVertices[:vertexIndex], w.closestVertices[vertexIndex+1:]...)
 	}
-	w.updateDistance()
+	w.updateDistance(weights)
 }
 
-func (w *weightedEdge) updateDistance() {
+func (w *weightedEdge) updateDistance(weights []float64) {
 	w.weightedDistance = 0.0
 	for i, v := range w.closestVertices {
 		w.weightedDistance += v.distance * weights[i]
