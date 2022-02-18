@@ -28,23 +28,23 @@ func TestValidateAlgorithm(t *testing.T) {
 	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, TemperatureFunction: "LINEAR"}))
 	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, TemperatureFunction: "GEOMETRIC"}))
 
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE, MaxClones: intPointer(15)}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE, CloneOnFirstAttach: boolPointer(false)}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE, MaxClones: intPointer(-1), CloneOnFirstAttach: boolPointer(false)}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE, MaxClones: intPointer(45), CloneOnFirstAttach: boolPointer(true)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE, MaxClones: intPointer(15)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE, CloneOnFirstAttach: boolPointer(false)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE, MaxClones: intPointer(-1), CloneOnFirstAttach: boolPointer(false)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE, MaxClones: intPointer(45), CloneOnFirstAttach: boolPointer(true)}))
 
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONCAVE_CONVEX}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONCAVE_CONVEX, CloneByInitEdges: boolPointer(false)}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONCAVE_CONVEX, CloneByInitEdges: boolPointer(true)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_GREEDY}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_GREEDY, CloneByInitEdges: boolPointer(false)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_GREEDY, CloneByInitEdges: boolPointer(true)}))
 
-	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONFIDENCE, MinSignificance: float64Pointer(-.5)}), "Key: 'Algorithm.MinSignificance' Error:Field validation for 'MinSignificance' failed on the 'min' tag")
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONFIDENCE}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONFIDENCE, MinSignificance: float64Pointer(.25)}))
+	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE, MinSignificance: float64Pointer(-.5)}), "Key: 'Algorithm.MinSignificance' Error:Field validation for 'MinSignificance' failed on the 'min' tag")
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE, MinSignificance: float64Pointer(.25)}))
 
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY, UseRelativeDisparity: boolPointer(false)}))
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY, UseRelativeDisparity: boolPointer(true)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_GREEDY}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_GREEDY, UseRelativeDisparity: boolPointer(false)}))
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_GREEDY, UseRelativeDisparity: boolPointer(true)}))
 
 	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_GENETIC}),
 		"Key: 'Algorithm.MaxIterations' Error:Field validation for 'MaxIterations' failed on the 'required_if' tag\n"+
@@ -79,82 +79,82 @@ func TestGetProcessFunction(t *testing.T) {
 	alg.AlgorithmType = modelapi.ALG_ANNEALING
 	assert.True(reflect.ValueOf(alg.CreateSimulatedAnnealing).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 
-	alg.AlgorithmType = modelapi.ALG_CLONABLE
-	assert.True(reflect.ValueOf(alg.CreateClonable).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
+	alg.AlgorithmType = modelapi.ALG_CLOSEST_CLONE
+	assert.True(reflect.ValueOf(alg.CreateClosestClone).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 
-	alg.AlgorithmType = modelapi.ALG_CONCAVE_CONVEX
-	assert.True(reflect.ValueOf(alg.CreateConcaveConvex).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
+	alg.AlgorithmType = modelapi.ALG_CLOSEST_GREEDY
+	assert.True(reflect.ValueOf(alg.CreateClosestGreedy).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 
-	alg.AlgorithmType = modelapi.ALG_CONFIDENCE
-	assert.True(reflect.ValueOf(alg.CreateConfidence).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
+	alg.AlgorithmType = modelapi.ALG_DISPARITY_CLONE
+	assert.True(reflect.ValueOf(alg.CreateDisparityClone).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 
-	alg.AlgorithmType = modelapi.ALG_DISPARITY
-	assert.True(reflect.ValueOf(alg.CreateDisparity).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
+	alg.AlgorithmType = modelapi.ALG_DISPARITY_GREEDY
+	assert.True(reflect.ValueOf(alg.CreateDisparityGreedy).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 
 	alg.AlgorithmType = modelapi.ALG_GENETIC
 	assert.True(reflect.ValueOf(alg.CreateGenetic).Pointer() == reflect.ValueOf(alg.GetCircuitFunction()).Pointer())
 }
 
-func TestCreateClonable(t *testing.T) {
+func TestCreateClosestClone(t *testing.T) {
 	assert := assert.New(t)
 
 	vertices := model2d.GenerateVertices(10)
 
-	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLONABLE}
-	c := alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE}
+	c := alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(5)
-	c = alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(5, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = nil
 	alg.CloneOnFirstAttach = boolPointer(false)
-	c = alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(10)
-	c = alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(10, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = nil
 	alg.CloneOnFirstAttach = boolPointer(true)
-	c = alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(15)
-	c = alg.CreateClonable(vertices, model2d.BuildPerimiter)
+	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
 	assert.Equal(15, c.(*circuit.ClonableCircuitSolver).MaxClones)
 }
 
-func TestCreateConcaveConvex(t *testing.T) {
+func TestCreateClosestGreedy(t *testing.T) {
 	assert := assert.New(t)
 
 	vertices := model2d.GenerateVertices(10)
 
-	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONCAVE_CONVEX}
-	assert.IsType(&circuit.ConvexConcave{}, alg.CreateConcaveConvex(vertices, model2d.BuildPerimiter))
+	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_GREEDY}
+	assert.IsType(&circuit.ConvexConcave{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 
 	alg.CloneByInitEdges = boolPointer(false)
-	assert.IsType(&circuit.ConvexConcave{}, alg.CreateConcaveConvex(vertices, model2d.BuildPerimiter))
+	assert.IsType(&circuit.ConvexConcave{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 
 	alg.CloneByInitEdges = boolPointer(true)
-	assert.IsType(&circuit.ConvexConcaveByEdge{}, alg.CreateConcaveConvex(vertices, model2d.BuildPerimiter))
+	assert.IsType(&circuit.ConvexConcaveByEdge{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 }
 
-func TestCreateConfidence(t *testing.T) {
+func TestCreateDisparityClone(t *testing.T) {
 	assert := assert.New(t)
 
 	vertices := model2d.GenerateVertices(10)
 
-	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CONFIDENCE}
-	c := alg.CreateConfidence(vertices, model2d.BuildPerimiter)
+	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE}
+	c := alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
 	assert.Equal(uint16(1000), c.(*circuit.ConvexConcaveConfidence).MaxClones)
 	assert.Equal(1.0, c.(*circuit.ConvexConcaveConfidence).Significance)
@@ -162,7 +162,7 @@ func TestCreateConfidence(t *testing.T) {
 
 	for _, numClones := range []int64{10, 3, 21, 4400, math.MaxUint16, 15} {
 		alg.MaxClones = intPointer(numClones)
-		c = alg.CreateConfidence(vertices, model2d.BuildPerimiter)
+		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
 		assert.Equal(uint16(numClones), c.(*circuit.ConvexConcaveConfidence).MaxClones)
 		assert.Equal(1.0, c.(*circuit.ConvexConcaveConfidence).Significance)
@@ -171,7 +171,7 @@ func TestCreateConfidence(t *testing.T) {
 
 	for _, significance := range []float64{-1, 0.0, 12345.6789, 2.5} {
 		alg.MinSignificance = float64Pointer(significance)
-		c = alg.CreateConfidence(vertices, model2d.BuildPerimiter)
+		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
 		assert.Equal(uint16(15), c.(*circuit.ConvexConcaveConfidence).MaxClones)
 		assert.Equal(significance, c.(*circuit.ConvexConcaveConfidence).Significance)
@@ -180,7 +180,7 @@ func TestCreateConfidence(t *testing.T) {
 
 	for _, numClones := range []int64{1234567890, 0, -1, math.MinInt64, math.MaxInt64} {
 		alg.MaxClones = intPointer(numClones)
-		c = alg.CreateConfidence(vertices, model2d.BuildPerimiter)
+		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
 		assert.Equal(uint16(math.MaxUint16), c.(*circuit.ConvexConcaveConfidence).MaxClones)
 		assert.Equal(2.5, c.(*circuit.ConvexConcaveConfidence).Significance)
@@ -188,21 +188,21 @@ func TestCreateConfidence(t *testing.T) {
 	}
 }
 
-func TestCreateDisparity(t *testing.T) {
+func TestCreateDisparityGreedy(t *testing.T) {
 	assert := assert.New(t)
 
 	vertices := model2d.GenerateVertices(100)
 
-	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY}
-	c := alg.CreateDisparity(vertices, model2d.BuildPerimiter)
+	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_GREEDY}
+	c := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ConvexConcaveDisparity{}, c)
 
 	alg.UseRelativeDisparity = boolPointer(false)
-	c1 := alg.CreateDisparity(vertices, model2d.BuildPerimiter)
+	c1 := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ConvexConcaveDisparity{}, c1)
 
 	alg.UseRelativeDisparity = boolPointer(true)
-	c2 := alg.CreateDisparity(vertices, model2d.BuildPerimiter)
+	c2 := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ConvexConcaveDisparity{}, c2)
 
 	solver.FindShortestPathCircuit(c)
@@ -264,13 +264,13 @@ func TestCreateSimulatedAnnealing(t *testing.T) {
 	assert.IsType(&circuit.SimulatedAnnealing{}, c)
 
 	alg.PrecursorAlgorithm = &modelapi.Algorithm{
-		AlgorithmType: modelapi.ALG_CONCAVE_CONVEX,
+		AlgorithmType: modelapi.ALG_CLOSEST_GREEDY,
 	}
 	c = alg.CreateSimulatedAnnealing(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.SimulatedAnnealing{}, c)
 
 	alg.PrecursorAlgorithm = &modelapi.Algorithm{
-		AlgorithmType: modelapi.ALG_DISPARITY,
+		AlgorithmType: modelapi.ALG_DISPARITY_GREEDY,
 	}
 	c = alg.CreateSimulatedAnnealing(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.SimulatedAnnealing{}, c)

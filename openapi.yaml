@@ -1,0 +1,412 @@
+openapi: "3.0.3"
+info:
+  description: > 
+    This API provides users with a variety of algorithms of approximating the optimum route through a set of points (in 2-D, 3-D, or a graph).
+    The request from the user provides the points and the algorithms they want to use, along with any algorithm-specific configuration information.
+    The response contains an ordered array of points according to the best approximation produced in accordance with the request's parameters.
+  version: "0.0.1"
+  title: "Open TSP"
+  contact:
+    name: Lee Heustis
+    url: https://www.linkedin.com/in/lee-heustis-08b61929/
+  license:
+    name: "MIT"
+    url: "https://opensource.org/licenses/MIT"
+externalDocs:
+  description: "Open TSP library source code"
+  url: "http://swagger.io" #TODO
+servers:
+- url: https://replace.me
+  description: > 
+    TODO - anyone deploying this API in their own environment should replace this server with the appropriate information.
+    If you have multiple environments, create one entry in this servers list for each environment (or use OpenAPI variables).
+paths:
+  /tsp/solve/v1:
+    post:
+      summary: "Find the approximate best circuit through a set of points."
+      description: > 
+        The request provides the points (in 2-D, 3-D, or a graph) and the algorithms that should be used to approximate the best circuit, along with any algorithm-specific configuration information.
+        The response contains the supplied points in an ordered array, so that travelling from index-0 to index-1, to index-2, ..., and finally from index-n to index-0 produces the shortest length circuit (based on the request's parameters).
+      operationId: "solveTsp"
+      requestBody:
+        required: true
+        description: "The points (in 2-D, 3-D, or a graph) and the algorithms that should be used to approximate the best circuit, along with any algorithm-specific configuration information."
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/TspRequest"
+      responses:
+        "200":
+          description: "Success"
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/TspResponse"
+        "400":
+          description: "Bad Request"
+      security:
+      - tsp_auth:
+        - "write:tsp"
+components:
+  securitySchemes:
+    tsp_auth:
+      type: "oauth2"
+      description: "TODO - deploying this API in their own environment should replace this security scheme with the appropriate information"
+      flows: 
+        implicit:
+          authorizationUrl: "https://oauth2.replace.me/"
+          scopes:
+            write:tsp: "modify pets in your account"
+  schemas:
+    TspRequest:
+      type: object
+      description: "A request to the /tsp/solve/v1 endpoint contains the set of unordered points that define where the circuit must pass through, along with the algorithm that should be used to approximate the circuit."
+      allOf:
+        - type: object
+          description: "Wrapper for the algorithms array in requests to the /tsp/solve/v1 endpoint."
+          properties:
+            algorithms:
+              type: array
+              description: "The algorithms that will be used to approximate the optimum circuit. If no algorithms are supplied, AlgorithmClosestGreedy will be used. If multiple algorithms are supplied, each will be computed independently, and only the best result will be returned."
+              items:
+                $ref: "#/components/schemas/Algorithm"
+        - oneOf:
+          - $ref: "#/components/schemas/Points2DArray"
+          - $ref: "#/components/schemas/Points3DArray"
+          - $ref: "#/components/schemas/PointsGraphArray"
+          discriminator:
+            propertyName: pointType
+    TspResponse:
+      type: object
+      description: "The best computed approximation of the optimum route through a set of points, as returned by the /tsp/solve/v1 endpoint. The points in the response array are ordered according to when they should be visited in that approximation. The starting point may not be at index 0."
+      oneOf:
+      - $ref: "#/components/schemas/Points2DArray"
+      - $ref: "#/components/schemas/Points3DArray"
+      - $ref: "#/components/schemas/PointsGraphArray"
+    Algorithm:
+      type: object
+      description: |
+        The types of algorithms used to approximate the optimum circuit through a set of points.  
+        See each algorithm's description for an overview of how they work, as well as this project's README for an analysis of performance and accuracy of each algorithm.
+      oneOf:
+      - $ref: "#/components/schemas/AlgorithmClosestClone"
+      - $ref: "#/components/schemas/AlgorithmClosestGreedy"
+      - $ref: "#/components/schemas/AlgorithmDisparityClone"
+      - $ref: "#/components/schemas/AlgorithmDisparityGreedy"
+      - $ref: "#/components/schemas/AlgorithmGenetic"
+      - $ref: "#/components/schemas/AlgorithmSimulatedAnnealing"
+      discriminator:
+        propertyName: algorithmType
+        mapping:
+          ANNEALING: "#/components/schemas/AlgorithmSimulatedAnnealing"
+          CLOSEST_CLONE: "#/components/schemas/AlgorithmClosestClone"
+          CLOSEST_GREEDY: "#/components/schemas/AlgorithmClosestGreedy"
+          DISPARITY_CLONE: "#/components/schemas/AlgorithmDisparityClone"
+          DISPARITY_GREEDY: "#/components/schemas/AlgorithmDisparityGreedy"
+          GENETIC: "#/components/schemas/AlgorithmGenetic"
+    AlgorithmClosestClone:
+      type: object
+      description: |
+        This behaves similarly to AlgorithmClosestGreedy, in that it first builds a convex hull _(optimum for 2D, an approximation for 3D and graphs)_, then selects interior points to attach to the hull based on whichever point has the minimum distance increase. 
+        
+        The difference is that, unlike AlgorithmClosestGreedy, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. This allows this algorithm to explore possibilities that would be missed by the greedy algorithm. 
+        
+        To enable this behavior, this algorithm tracks each point and its distances to each edge in the circuit, exluding edges that the point has already been attached to. When comparing the the effect of attaching a point to the circuit, on the length of the circuit, both the distance increase of the new location and the distance decrease of removing the existing location are taken into account.
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "CLOSEST_CLONE"
+          example: "CLOSEST_CLONE"
+          description: "Specifies the type of algorithm to be used."
+        cloneOnFirstAttach:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True indicates that each time a point is attached to the circuit, a new clone should be created.
+            
+            False, or missing, indicates that a clone should only be created if the point being attached to the circuit was already attached earlier.
+        maxClones:
+          type: integer
+          format: int64
+          default: -1
+          example: 10000
+          description: |
+            The maximum number of clones that should be created during this algorithm.
+            When choosing which clones to retain, this will prefer circuits that are closer to completion as well as shorter circuits.
+            
+            - If this value is missing or less than 1, the number of clones will not be limited.  
+            - If the number of clones is too high, there is a risk of running out of memory on the server/lambda/etc.   
+            _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), and maximum number of clones._  
+            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed).
+      required:
+      - algorithmType
+    AlgorithmClosestGreedy:
+      type: object
+      description: |
+        This algorithm:  
+        1. builds a convex hull surrounding the points _(optimum for 2D, an approximation for 3D and graphs)_,  
+            a. Compute the midpoint of the the points.  
+            b. Finds the point farthest from the midpoint.  
+            c. Finds the point farthest from the point in 1a.  
+            d. Creates initial edges 1b->1c and 1c->1b _(note: all other points are exterior at this time)_  
+            e. Finds the exterior point farthest from its closest edge and attach it to the circuit by splitting its closest edge.  
+            f. Find any points that were external to the circuit and are now internal to the circuit, and stop considering them for future iterations.  
+            g. Repeat 1e and 1f until all points are attached to the circuit or internal to the circuit.
+        2. tracks each unattached point and its the closest edge,  
+        3. selects the point that increases the length of the circuit the least, when attached to its closest edge,  
+        4. attaches the point from step 3 to the circuit,  
+        5. updates the closest edge for all remaining unattached points, to account for splitting an existing edge into two new edges,  
+        6. repeats steps 3-5 until all points are attached to the circuit.
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "CLOSEST_GREEDY"
+          example: "CLOSEST_GREEDY"
+          description: "Specifies the type of algorithm to be used."
+        cloneByInitEdges:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True will cause the algorithm to perform 'E' parallel computations of the greedy algorithm, where 'E' is the number of edges in the convex hull. It does this by cloning the circuit once per convex hull edge, and attaching that edge to its closest interior point. This allows the greedy algorithm to detect edge cases it may otherwise miss.
+            
+            False, or missing, indicates that this additional computation should not occur.
+        updateInteriorPoints:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True will cause the algorithm, in step 5, to also check all attached interior points, to see if either of the newly created edges is closer to the attached point than the edge it was initially attached to. If one of the new edges is closer to the point than its current location, it will be detached from the circuit, so that it can be reattached at a more optimal location (either the new edge, or another closer edge that is created between this iteration and when the detached point is next processed).
+            
+            False, or missing, indicates that this additional computation should not occur.
+      required:
+      - algorithmType
+    AlgorithmDisparityClone:
+      description: |
+         This behaves similarly to AlgorithmDisparityGreedy in that it first builds a convex hull and then it prioritizes points based on the disparity in distance increases from those points to the edges. However, unlike the greedy algorithm, this will clone the circuit if a point is close to multiple edges, and attach it to each of those edges.
+         
+         To determine whether a gap is significant, this computes the following statistics for each point (in each clone):  
+         * the average gap in distance increases
+         * and standard deviation of the gaps
+         
+         When selecting which point to attach next, this first finds the earliest significant gap. If multiple points have significant gaps at the same position, the most significant gap of those is chosen. For example:
+         * Point A has distance increases of 2, 3, 10, 12, ... (gaps 1, 7, 2, ...)
+         * Point B has distance increases of 1, 7, 8, 10, ... (gaps 6, 1, 2, ...)
+         * Point C has distance increases of 1, 2, 6, 7, ... (gaps 1, 4, 1, ...)
+         * Point B will be chosen first since its significant gap is at the 0th index
+         * Point A will be chosen second since it and C have significant gaps at the 1st index, but A's is more significant.  
+         * Since point A's gap is after two edges, the current circuit will be cloned into two circuits (incliding the current circuit), each with point A attaching a different one of those edges.  
+         * If point A were after three edges, three circuits would be created/updated (including the initial circuit).
+         
+         Note: unlike AlgorithmClosestClone once a point is attached to a circuit, that point is not allowed to move.
+      type: object
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "DISPARITY_CLONE"
+          example: "DISPARITY_CLONE"
+          description: "Specifies the type of algorithm to be used."
+        maxClones:
+          type: integer
+          format: uint16
+          default: 65535
+          example: 10000
+          description: |
+            The maximum number of clones that should be created during this algorithm.
+            When choosing which clones to retain, this will prefer circuits that are closer to completion as well as shorter circuits.
+            
+            - If this value is missing, less than 1, or more than 65535, the number of clones will be limited to 65535.  
+            - If the number of clones is too high, there is a risk of running out of memory on the server/lambda/etc.   
+            _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), and maximum number of clones._  
+            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed).
+        minSignificance:
+          type: number
+          format: double
+          default: 1.0
+          example: 1.5
+          description: |
+            The Z-score _(number of standard deviations from the mean)_ that a gap has to have, relative to other gaps for that point, to be considered significant. This must be greater than 0, since we are only considering larger than average gaps.  
+            Note: This is effectively a one-sided/one-tailed test, since we are only looking for significantly large gaps.
+      required:
+      - algorithmType
+    AlgorithmDisparityGreedy:
+      type: object
+      description: |
+        This behaves similarly to AlgorithmClosestGreedy, except this algorithm selects points based on the gap in distance increase between a point's two closest edges, rather than minimizing the circuit length increase. This changes the information tracked in steps 2 and 5, as well as the selection process in step 3.
+        
+        For example:  
+        * point A has distance increases of 5 and 10 to its closest edges,  
+        * point B has distance increases of 4 and 6 to its closest edges,  
+        * this algorithm will select point A before B, since A's gap in distance increases if 5, whereas B's is 2
+        
+        To understand why this works, consider the locations where an unattached point can be within a circuit: 
+        1. near a single edge,
+            * This will have a significant disparity between the distance increase of its closest edge, and the distance increase of all other edges.
+        2. near a corner of two edges,
+            * This will have an insignificant disparity between the distance increase of the two corner edges, and but a significant disparity between those two edges and the distance increase of all other edges.
+        3. in the middle of several edges,
+            * The number of edges with an insignificant disparity is typically greater than two, but is more variable than the other locations.
+        
+        This algorithm prioritizes category 1 points, since their closest edge is likely to be their optimum location, and defers processing category 2 points, which are harder to predict the optimum location.
+        
+        As points are attached to the circuit, points in category 3 will move into categories 1 and 2 due to concave edges becoming closer to them than the initial convex edges were. Some points may become external points, since this doesn't prioritize the closest points, but that is okay as the closest edge to any of those points will be one of the new edges (so it won't create intersecting edges).
+        
+        Eventually category 2 points need to be selected, but the earlier selections should improve the accuracy of these selections and reduce the impact of incorrect selections on the length of the circuit.
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "DISPARITY_GREEDY"
+          example: "DISPARITY_GREEDY"
+          description: "Specifies the type of algorithm to be used."
+        useRelativeDisparity:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True will cause this algorithm to compute disparity by dividing the larger distance increase by the smaller distance increase.  
+            False, or missing, indicates that the disparity should be computed by subtracting the smaller distance increase from the larger distance increase.
+      required:
+      - algorithmType
+    AlgorithmGenetic:
+      type: object
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "GENETIC"
+          example: "GENETIC"
+          description: "Specifies the type of algorithm to be used."
+      required:
+      - algorithmType
+    AlgorithmSimulatedAnnealing:
+      type: object
+      properties:
+        algorithmType:
+          type: string
+          enum:
+            - "ANNEALING"
+          example: "ANNEALING"
+          description: "Specifies the type of algorithm to be used."
+      required:
+      - algorithmType
+    Point2D:
+      type: object
+      description: "A point in 2-dimensional space"
+      properties:
+        x:
+          type: number
+          format: double
+          example: 1.2
+        y:
+          type: number
+          format: double
+          example: 3.456789
+      required:
+      - x
+      - y
+    Points2DArray:
+      type: object
+      description: >
+        An array of 2-dimensional points that should be included in the circuit.
+        In the request, the points can be in any order.
+        In the response the points are ordered to produce the shortest computed circuit.
+      properties:
+        points2d:
+          type: array
+          items:
+            $ref: "#/components/schemas/Point2D"
+      required:
+      - points2d
+    Point3D:
+      type: object
+      description: "A point in 3-dimensional space"
+      properties:
+        x:
+          type: number
+          format: double
+          example: 1.23
+        y:
+          type: number
+          format: double
+          example: 4.56000001
+        z:
+          type: number
+          format: double
+          example: 7.89
+      required:
+      - x
+      - y
+      - z
+    Points3DArray:
+      type: object
+      description: >
+        An array of 3-dimensional points that should be included in the circuit.
+        In the request, the points can be in any order.
+        In the response the points are ordered to produce the shortest computed circuit.
+      properties:
+        points3d:
+          type: array
+          items:
+            $ref: "#/components/schemas/Point3D"
+      required:
+      - points3d
+    PointGraph:
+      type: object
+      description: > 
+        A point in a graph of points, with distances to its neighbors.
+        There must be a path through the graph from each point to each other point in order for the circuit to be solveable. This requires that each point has at least one neighbor.
+        If a distance is supplied to one of its neighbors, that distance should be the optimum distance from this point to that neighbor point.
+        The neighbor distances are treated as asymmetric, so two neighbors can have different distances to each other. Similarly, if point A has a neighbor point B, but B doesn't have a distance to A, the path from B to A will be found by traversing the graph.
+      properties:
+        name:
+          type: string
+          description: > 
+            The way to uniquely identify a point in the graph.
+            No two points should have the same name, unless it is okay to de-duplicate them during processing.
+          example: "123 Test St. Example City, AK 12345"
+        neighbors:
+          type: array
+          description: >
+            The optimum distance from this point to one or more other points in the graph.
+            There must be at least 1 element in this array, and it does not need to contain all other points in the graph, only the immediate neighbors of the point.
+          items: 
+            $ref: '#/components/schemas/PointGraphNeighbor'
+      required:
+      - name
+      - neighbors
+    PointGraphNeighbor:
+      type: object
+      description: > 
+        The optimum distance between one point in a graph and a neighboring point in the graph.
+        The first point is known via its PointGraph object, so it is not included in this definition.
+      properties:
+        name:
+          type: string
+          description: > 
+            The way to uniquely identify the neighboring point in the graph. 
+            No two points should have the same name, unless it is okay to de-duplicate them during processing. 
+            The name must not be empty.
+          example: "125 Test St. Example City, AK 12345"
+        distance:
+          type: number
+          format: double
+          description: "The distance from the current point to the named, neighboring point. This must be greater than 0."
+          example: 1234.56789000123
+    PointsGraphArray:
+      type: object
+      description: >
+        An array of points in a graph that should be included in the circuit.
+        In the request, the points can be in any order.
+        In the response the points are ordered to produce the shortest computed circuit.
+      properties:
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/PointGraph"
+      required:
+      - pointsGraph

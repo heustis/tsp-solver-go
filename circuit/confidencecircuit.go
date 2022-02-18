@@ -45,6 +45,10 @@ func (c *confidenceCircuit) clone() *confidenceCircuit {
 	return clone
 }
 
+func (c *confidenceCircuit) getLengthPerVertex() float64 {
+	return c.length / float64(len(c.edges))
+}
+
 func (c *confidenceCircuit) findNext(significance float64) []*model.DistanceToEdge {
 	// If there is only one vertex left to attach, attach it to its closest edge.
 	if len(c.distances) == 1 {
@@ -107,7 +111,8 @@ func (c *confidenceCircuit) update(significance float64) (clones []*confidenceCi
 		clones = nil
 	}
 
-	// In either case update this circuit with the first entry - this must happen after cloning,
+	// Regardless of whether clones are created, update this circuit with the first entry.
+	// This must happen after cloning, to avoid impacting the circuits in the clones.
 	c.attachVertex(next[0])
 
 	return clones

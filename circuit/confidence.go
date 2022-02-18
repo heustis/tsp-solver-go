@@ -19,11 +19,11 @@ const maxClones uint16 = 1000
 //    2b. A point that is close to a corner of two edges will have a significant disparity between the distance increase of those two corner edges, and the distance increase of all other edges.
 //    2c. A point that is near the middle of a group of edges may or may not have a significant disparity between its distance increase
 // 3. As interior points are connected to the circuit, other points will move from '2c' to '2a' or '2b' (or become exterior points).
-//    2a. This is because the new concave edges will be closer to the other interior points than the previous convex edges were.
-//    2b. If a point becomes exterior, ignore edges that would intersect a closer edge if the point attached to the farther edge.
+//    3a. This is because the new concave edges will be closer to the other interior points than the previous convex edges were.
+//    3b. If a point becomes exterior, ignore edges that would intersect a closer edge if the point attached to the farther edge.
 //        In other words, if the exterior point is close to a concave corner, it could attach to either edge without intersecting the other.
 //        However, if it is near a convex corner, the farther edge would have to cross the closer edge to attach to the point.
-//    2c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
+//    3c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
 type ConvexConcaveConfidence struct {
 	Vertices         []model.CircuitVertex
 	Significance     float64
@@ -129,9 +129,9 @@ func (c *ConvexConcaveConfidence) Update(ignoredVertex model.CircuitVertex, igno
 	if useUpdated {
 		c.circuits = updatedCircuits
 	}
-	// Sort the updated slice from smallest to largest.
+	// Sort the updated slice from smallest to largest, preferring circuits that are close to completion.
 	sort.Slice(c.circuits, func(i, j int) bool {
-		return c.circuits[i].length < c.circuits[j].length
+		return c.circuits[i].getLengthPerVertex() < c.circuits[j].getLengthPerVertex()
 	})
 
 	if len(c.circuits) > int(c.MaxClones) {

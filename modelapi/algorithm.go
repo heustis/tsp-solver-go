@@ -10,12 +10,12 @@ import (
 type AlgorithmType string
 
 const (
-	ALG_ANNEALING      AlgorithmType = "ANNEALING"
-	ALG_CLONABLE       AlgorithmType = "CLONABLE"
-	ALG_CONCAVE_CONVEX AlgorithmType = "CONCAVE_CONVEX"
-	ALG_CONFIDENCE     AlgorithmType = "CONFIDENCE"
-	ALG_DISPARITY      AlgorithmType = "DISPARITY"
-	ALG_GENETIC        AlgorithmType = "GENETIC"
+	ALG_ANNEALING        AlgorithmType = "ANNEALING"
+	ALG_CLOSEST_CLONE    AlgorithmType = "CLOSEST_CLONE"
+	ALG_CLOSEST_GREEDY   AlgorithmType = "CLOSEST_GREEDY"
+	ALG_DISPARITY_CLONE  AlgorithmType = "DISPARITY_CLONE"
+	ALG_DISPARITY_GREEDY AlgorithmType = "DISPARITY_GREEDY"
+	ALG_GENETIC          AlgorithmType = "GENETIC"
 )
 
 type TemperatureFunctionType string
@@ -28,7 +28,7 @@ const (
 
 // Algorithm represents a union of the possible configuration data used by different types of circuits, so that the API can appear to be polymorphic.
 type Algorithm struct {
-	AlgorithmType         AlgorithmType           `json:"algorithmType" validate:"required,oneof=ANNEALING CLONABLE CONCAVE_CONVEX CONFIDENCE DISPARITY GENETIC"`
+	AlgorithmType         AlgorithmType           `json:"algorithmType" validate:"required,oneof=ANNEALING CLOSEST_CLONE CLOSEST_GREEDY DISPARITY_CLONE DISPARITY_GREEDY GENETIC"`
 	CloneByInitEdges      *bool                   `json:"cloneByInitEdges,omitempty"`
 	CloneOnFirstAttach    *bool                   `json:"cloneOnFirstAttach,omitempty"`
 	MaxClones             *int64                  `json:"maxClones,omitempty"`
@@ -50,24 +50,22 @@ func (alg *Algorithm) GetCircuitFunction() func(vertices []model.CircuitVertex, 
 	switch alg.AlgorithmType {
 	case ALG_ANNEALING:
 		return alg.CreateSimulatedAnnealing
-	case ALG_CLONABLE:
-		return alg.CreateClonable
-	case ALG_CONFIDENCE:
-		return alg.CreateConfidence
-	case ALG_DISPARITY:
-		return alg.CreateDisparity
+	case ALG_CLOSEST_CLONE:
+		return alg.CreateClosestClone
+	case ALG_DISPARITY_CLONE:
+		return alg.CreateDisparityClone
+	case ALG_DISPARITY_GREEDY:
+		return alg.CreateDisparityGreedy
 	case ALG_GENETIC:
 		return alg.CreateGenetic
 	default:
-		return alg.CreateConcaveConvex
+		return alg.CreateClosestGreedy
 	}
 }
 
-func (alg *Algorithm) CreateClonable(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	c := circuit.NewClonableCircuitImpl(vertices, perimeterBuilder)
-	if alg.CloneOnFirstAttach != nil {
-		c.CloneOnFirstAttach = *alg.CloneOnFirstAttach
-	}
+	c.CloneOnFirstAttach = getBool(alg.CloneOnFirstAttach)
 	solver := circuit.NewClonableCircuitSolver(c)
 	if alg.MaxClones != nil {
 		solver.MaxClones = int(*alg.MaxClones)
@@ -75,7 +73,7 @@ func (alg *Algorithm) CreateClonable(vertices []model.CircuitVertex, perimeterBu
 	return solver
 }
 
-func (alg *Algorithm) CreateConcaveConvex(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func (alg *Algorithm) CreateClosestGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	if getBool(alg.CloneByInitEdges) {
 		return circuit.NewConvexConcaveByEdge(vertices, perimeterBuilder, getBool(alg.UpdateInteriorPoints))
 	} else {
@@ -83,7 +81,7 @@ func (alg *Algorithm) CreateConcaveConvex(vertices []model.CircuitVertex, perime
 	}
 }
 
-func (alg *Algorithm) CreateConfidence(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func (alg *Algorithm) CreateDisparityClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	c := circuit.NewConvexConcaveConfidence(vertices, perimeterBuilder)
 	if alg.MaxClones != nil {
 		if *alg.MaxClones < 1 || *alg.MaxClones > math.MaxInt16 {
@@ -98,7 +96,7 @@ func (alg *Algorithm) CreateConfidence(vertices []model.CircuitVertex, perimeter
 	return c
 }
 
-func (alg *Algorithm) CreateDisparity(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
+func (alg *Algorithm) CreateDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	return circuit.NewConvexConcaveDisparity(vertices, perimeterBuilder, getBool(alg.UseRelativeDisparity))
 }
 
