@@ -32,12 +32,13 @@ type Algorithm struct {
 	CloneByInitEdges      *bool                   `json:"cloneByInitEdges,omitempty"`
 	CloneOnFirstAttach    *bool                   `json:"cloneOnFirstAttach,omitempty"`
 	MaxClones             *int64                  `json:"maxClones,omitempty"`
+	MaxCrossovers         int                     `json:"maxCrossovers,omitempty" validate:"isdefault|min=1"`
 	MaxIterations         int                     `json:"maxIterations,omitempty" validate:"isdefault|min=1,required_if=AlgorithmType GENETIC,required_if=AlgorithmType ANNEALING"`
 	MinSignificance       *float64                `json:"minSignificance,omitempty" validate:"omitempty,min=0"`
 	MutationRate          *float64                `json:"mutationRate,omitempty" validate:"omitempty,min=0,max=1"`
 	NumChildren           int                     `json:"numChildren,omitempty" validate:"isdefault|min=1,required_if=AlgorithmType GENETIC"`
 	NumParents            int                     `json:"numParents,omitempty" validate:"isdefault|min=1,required_if=AlgorithmType GENETIC"`
-	PrecursorAlgorithm    *Algorithm              `json:"PrecursorAlgorithm,omitempty" validate:"omitempty,dive"`
+	PrecursorAlgorithm    *Algorithm              `json:"precursorAlgorithm,omitempty" validate:"omitempty,dive"`
 	PreferCloseNeighbors  *bool                   `json:"preferCloseNeighbors,omitempty"`
 	Seed                  *int64                  `json:"seed,omitempty"`
 	ShouldBuildConvexHull *bool                   `json:"shouldBuildConvexHull,omitempty"`
@@ -65,7 +66,7 @@ func (alg *Algorithm) GetCircuitFunction() func(vertices []model.CircuitVertex, 
 
 func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	c := circuit.NewClonableCircuitImpl(vertices, perimeterBuilder)
-	c.CloneOnFirstAttach = getBool(alg.CloneOnFirstAttach)
+	c.CloneOnFirstAttach = isTrue(alg.CloneOnFirstAttach)
 	solver := circuit.NewClonableCircuitSolver(c)
 	if alg.MaxClones != nil {
 		solver.MaxClones = int(*alg.MaxClones)
@@ -74,10 +75,10 @@ func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimet
 }
 
 func (alg *Algorithm) CreateClosestGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	if getBool(alg.CloneByInitEdges) {
-		return circuit.NewConvexConcaveByEdge(vertices, perimeterBuilder, getBool(alg.UpdateInteriorPoints))
+	if isTrue(alg.CloneByInitEdges) {
+		return circuit.NewConvexConcaveByEdge(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
 	} else {
-		return circuit.NewConvexConcave(vertices, perimeterBuilder, getBool(alg.UpdateInteriorPoints))
+		return circuit.NewConvexConcave(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
 	}
 }
 
@@ -97,18 +98,24 @@ func (alg *Algorithm) CreateDisparityClone(vertices []model.CircuitVertex, perim
 }
 
 func (alg *Algorithm) CreateDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	return circuit.NewConvexConcaveDisparity(vertices, perimeterBuilder, getBool(alg.UseRelativeDisparity))
+	return circuit.NewConvexConcaveDisparity(vertices, perimeterBuilder, isTrue(alg.UseRelativeDisparity))
 }
 
 func (alg *Algorithm) CreateGenetic(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	var c *circuit.GeneticAlgorithm
-	if getBool(alg.ShouldBuildConvexHull) {
+	if isTrue(alg.ShouldBuildConvexHull) {
 		c = circuit.NewGeneticAlgorithmWithPerimeterBuilder(vertices, perimeterBuilder, alg.NumParents, alg.NumChildren, alg.MaxIterations)
 	} else {
 		c = circuit.NewGeneticAlgorithm(vertices, alg.NumParents, alg.NumChildren, alg.MaxIterations)
 	}
+	if alg.MaxCrossovers > 0 {
+		c.SetMaxCrossovers(alg.MaxCrossovers)
+	}
 	if alg.MutationRate != nil {
 		c.SetMutationRate(*alg.MutationRate)
+	}
+	if alg.Seed != nil {
+		c.SetSeed(*alg.Seed)
 	}
 	return c
 }
@@ -117,9 +124,9 @@ func (alg *Algorithm) CreateSimulatedAnnealing(vertices []model.CircuitVertex, p
 	var c *circuit.SimulatedAnnealing
 	if alg.PrecursorAlgorithm != nil {
 		precursorCircuit := alg.PrecursorAlgorithm.GetCircuitFunction()(vertices, perimeterBuilder)
-		c = circuit.NewSimulatedAnnealingFromCircuit(precursorCircuit, alg.MaxIterations, getBool(alg.PreferCloseNeighbors))
+		c = circuit.NewSimulatedAnnealingFromCircuit(precursorCircuit, alg.MaxIterations, isTrue(alg.PreferCloseNeighbors))
 	} else {
-		c = circuit.NewSimulatedAnnealing(vertices, alg.MaxIterations, getBool(alg.PreferCloseNeighbors))
+		c = circuit.NewSimulatedAnnealing(vertices, alg.MaxIterations, isTrue(alg.PreferCloseNeighbors))
 	}
 	if alg.Seed != nil {
 		c.SetSeed(*alg.Seed)
@@ -131,6 +138,6 @@ func (alg *Algorithm) CreateSimulatedAnnealing(vertices []model.CircuitVertex, p
 	return c
 }
 
-func getBool(b *bool) bool {
+func isTrue(b *bool) bool {
 	return b != nil && *b
 }

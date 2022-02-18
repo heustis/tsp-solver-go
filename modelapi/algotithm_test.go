@@ -69,7 +69,10 @@ func TestValidateAlgorithm(t *testing.T) {
 	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_GENETIC, MaxIterations: 10, NumChildren: 5, NumParents: 15, MutationRate: float64Pointer(5)}),
 		"Key: 'Algorithm.MutationRate' Error:Field validation for 'MutationRate' failed on the 'max' tag")
 
-	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_GENETIC, MaxIterations: 10, NumChildren: 5, NumParents: 15}))
+	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_GENETIC, MaxIterations: 10, NumChildren: 5, NumParents: 15, MaxCrossovers: -3}),
+		`Key: 'Algorithm.MaxCrossovers' Error:Field validation for 'MaxCrossovers' failed on the 'isdefault|min=1' tag`)
+
+	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_GENETIC, MaxIterations: 10, NumChildren: 5, NumParents: 15, Seed: intPointer(12345), MaxCrossovers: 6}))
 }
 
 func TestGetProcessFunction(t *testing.T) {
@@ -230,6 +233,18 @@ func TestCreateGenetic(t *testing.T) {
 	assert.IsType(&circuit.GeneticAlgorithm{}, c)
 
 	alg.MutationRate = float64Pointer(0.1234)
+	c = alg.CreateGenetic(vertices, model2d.BuildPerimiter)
+	assert.IsType(&circuit.GeneticAlgorithm{}, c)
+
+	alg.Seed = intPointer(7890)
+	c = alg.CreateGenetic(vertices, model2d.BuildPerimiter)
+	assert.IsType(&circuit.GeneticAlgorithm{}, c)
+
+	alg.MaxCrossovers = 5
+	c = alg.CreateGenetic(vertices, model2d.BuildPerimiter)
+	assert.IsType(&circuit.GeneticAlgorithm{}, c)
+
+	alg.MaxCrossovers = 50
 	c = alg.CreateGenetic(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.GeneticAlgorithm{}, c)
 }

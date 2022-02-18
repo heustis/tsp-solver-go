@@ -8,9 +8,25 @@ import (
 	"github.com/heustis/lee-tsp-go/model"
 )
 
-// GeneticAlgorithm - TODO - add comments
+// GeneticAlgorithm  implements a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) to stochastically approximate the optimum circuit through a set of points.
+// Unlike the convex-concave algorithms this does not start from a convex hull and work towards a completed circuit.
+// Rather this starts with a randomly generated set of circuits, mutates them to create new circuits, and repeats this process a number of times.
+// Returning the best circuit found during this process.
+//
+// The detailed breakdown of how this works is:
+// 1. Initialization - a random set of parent circuits are created. By default these are random circuits, but users can optionally have the circuits based on the optimum convex hull.
+// 2. Child circuits are created by:
+//     a. Randomly selecting two parent circuits.
+//     b. Using crossover to blend the parent circuits into a new circuit.
+//     c. Mutating the circuit:
+//          i.   each point in the circuit has a "mutationRate" percent chance of being mutated,
+//          ii.  a random number (0.0 to 1.0) is generated for each point,
+//          iii. any point with a random number less than the mutation rate will swap with a random point on the circuit (regardless of the other point's random number)
+// 3. Selection - this uses an elitist slection algorithm, to ensure that the best solutions are not lost from one generation to the next. To do this the new children are combined with the previous generation of parents, and the top "numParents" (based on shortest circuit length) are retained for the next iteration.
+// 4. Termination - this repeats steps 2 and 3 "maxIterations" times, then returns the best circuit found by this process.
 type GeneticAlgorithm struct {
 	currentGeneration []*geneticCircuit
+	maxCrossovers     int
 	maxIterations     int
 	mutationRate      float64
 	numParents        int
@@ -63,6 +79,7 @@ func NewGeneticAlgorithm(initCircuit []model.CircuitVertex, numParents int, numC
 
 	g := &GeneticAlgorithm{
 		currentGeneration: initGeneration,
+		maxCrossovers:     circuitLen - 2,
 		maxIterations:     maxIterations,
 		mutationRate:      0.1,
 		numParents:        numParents,
@@ -101,6 +118,7 @@ func NewGeneticAlgorithmWithPerimeterBuilder(initCircuit []model.CircuitVertex, 
 
 	g := &GeneticAlgorithm{
 		currentGeneration: initGeneration,
+		maxCrossovers:     circuitLen - 2,
 		maxIterations:     maxIterations,
 		mutationRate:      0.1,
 		numParents:        numParents,
@@ -133,12 +151,25 @@ func (g *GeneticAlgorithm) GetUnattachedVertices() map[model.CircuitVertex]bool 
 	return make(map[model.CircuitVertex]bool)
 }
 
+// SetMaxCrossovers sets an upper limit on the number of crossovers that should occur in
+func (g *GeneticAlgorithm) SetMaxCrossovers(maxCrossovers int) {
+	if maxCrossovers < len(g.GetAttachedVertices()) {
+		g.maxCrossovers = maxCrossovers
+	}
+}
+
 // SetMutationRate updates the GeneticAlgorithm's mutation rate, which determines how frequently child circuits will be mutated (after cross-over).
 // The mutation rate should be between 0.0 (0% chance of mutation) and 1.0 (100% chance of mutation).
 // Numbers greater than 1.0 will behave as though they were 1.0, and numbers less than 0.0 will behave as though they were 0.0.
 // If unspecified, the mutation rate defaults to 0.1 (10%)
 func (g *GeneticAlgorithm) SetMutationRate(mutationRate float64) {
 	g.mutationRate = mutationRate
+}
+
+// SetSeed sets the seed used by the GeneticAlgorithm for random number generation.
+// This is to facilitate consistent unit tests.
+func (s *GeneticAlgorithm) SetSeed(seed int64) {
+	s.random = rand.New(rand.NewSource(seed))
 }
 
 func (g *GeneticAlgorithm) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
@@ -175,7 +206,7 @@ func (g *GeneticAlgorithm) Update(vertexToAdd model.CircuitVertex, edgeToSplit m
 
 		// Generate at least one crossover point at random, and create the child from the parents.
 		crossoverIndices := []int{}
-		for numCrossovers := 1 + g.random.Intn(len(parentA.circuit)-2); numCrossovers > 0; numCrossovers-- {
+		for numCrossovers := 1 + g.random.Intn(g.maxCrossovers); numCrossovers > 0; numCrossovers-- {
 			crossoverIndices = append(crossoverIndices, 1+g.random.Intn(len(parentA.circuit)-2))
 		}
 		sort.Ints(crossoverIndices)

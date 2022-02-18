@@ -8,7 +8,18 @@ import (
 	"github.com/heustis/lee-tsp-go/model"
 )
 
-// SimulatedAnnealing - TODO
+// SimulatedAnnealing implements [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to stochastically approximate the optimum circuit through a set of points.
+// Unlike the convex-concave algorithms (both closest and disparity variants) this does not start from a convex hull and work towards a completed circuit.
+// Rather this treats the supplied set of points as the initial circuit, or uses another algorithm to create an initial circuit, and mutates its to try to find a better sequencing of points for the circuit.
+// During each iteration (up to "maxIterations" times) this:
+// 1. Randomly selects 2 points.
+//     * If enabled, when selecting a second point it will prefer points that are close to the first selected point.
+// 2. Determine how swapping the 2 points impacts the circuit length.
+//     * i.e. how much does swapping the points lengthen or shorten the circuit?
+// 3. Scale this value based on the size of the coordinate space being used, so that it is meaningful regardless of if the coordinates are from -100 to +100 or -100000 to +100000
+// 4. Use the configured temperature function to determine the acceptance value (based on the number of iterations, max iterations, and impact of the swap)
+// 5. Generate a random number in [0.0, 1.0)
+// 6. Swap the points the random number it is less than the acceptance value, or if the swap would shorten the circuit.
 type SimulatedAnnealing struct {
 	circuit              []model.CircuitVertex
 	farthestDistance     float64

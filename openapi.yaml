@@ -4,8 +4,8 @@ info:
     This API provides users with a variety of algorithms of approximating the optimum route through a set of points (in 2-D, 3-D, or a graph).
     The request from the user provides the points and the algorithms they want to use, along with any algorithm-specific configuration information.
     The response contains an ordered array of points according to the best approximation produced in accordance with the request's parameters.
-  version: "0.0.1"
-  title: "Open TSP"
+  version: "0.1.0"
+  title: "TSP Solver"
   contact:
     name: Lee Heustis
     url: https://www.linkedin.com/in/lee-heustis-08b61929/
@@ -13,8 +13,8 @@ info:
     name: "MIT"
     url: "https://opensource.org/licenses/MIT"
 externalDocs:
-  description: "Open TSP library source code"
-  url: "http://swagger.io" #TODO
+  description: "TSP Solver library source code"
+  url: "https://github.com/heustis/tsp-solver-go"
 servers:
 - url: https://replace.me
   description: > 
@@ -139,7 +139,7 @@ components:
             - If this value is missing or less than 1, the number of clones will not be limited.  
             - If the number of clones is too high, there is a risk of running out of memory on the server/lambda/etc.   
             _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), and maximum number of clones._  
-            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed).
+            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed, but improving performance).
       required:
       - algorithmType
     AlgorithmClosestGreedy:
@@ -222,7 +222,7 @@ components:
             - If this value is missing, less than 1, or more than 65535, the number of clones will be limited to 65535.  
             - If the number of clones is too high, there is a risk of running out of memory on the server/lambda/etc.   
             _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), and maximum number of clones._  
-            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed).
+            - As the number of clones is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed, but improving performance).
         minSignificance:
           type: number
           format: double
@@ -274,6 +274,20 @@ components:
       - algorithmType
     AlgorithmGenetic:
       type: object
+      description: |
+        This implements a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) to stochastically approximate the optimum circuit through a set of points. 
+        
+        Unlike the convex-concave algorithms (both closest and disparity variants) this does not start from a convex hull and work towards a completed circuit. Rather this starts with a randomly generated set of circuits, mutates them to create new circuits, and repeats this process a number of times. Returning the best circuit found during this process.
+        
+        The detailed breakdown of how this works is:
+        1. Initialization - a random set of parent circuits are created. By default these are random circuits, but users can optionally have the circuits based on the optimum convex hull.
+        2. Child circuits are created by:
+              1. Randomly selecting two parent circuits.
+              2. Using crossover to blend the parent circuits into a new circuit.
+              3. Fixing any duplicate or missing points that result from the crossover.
+              4. Mutating the circuit (as described in "mutationRate")
+        3. Selection - this uses an elitist slection algorithm, to ensure that the best solutions are not lost from one generation to the next. To do this the new children are combined with the previous generation of parents, and the top "numParents" (based on shortest circuit length) are retained for the next iteration.
+        4. Termination - this repeats steps 2 and 3 "maxIterations" times, then returns the best circuit found by this process.
       properties:
         algorithmType:
           type: string
@@ -281,10 +295,93 @@ components:
             - "GENETIC"
           example: "GENETIC"
           description: "Specifies the type of algorithm to be used."
+        maxCrossovers:
+          type: integer
+          format: int64
+          example: 10
+          description: |
+            The maximum number of times that a crossover should occur when creating a child circuit. The number of crossovers for any child will be random [1, maxCrossovers) (unless this is 1, since there will always be at least 1 crossover).  
+            If not present, this defaults to one less than the number of points in the circuit.  
+            Minimum (inclusive): 1  
+            Maximum (exclusive): number of points in the circuit
+        maxIterations:
+          type: integer
+          format: int64
+          example: 100
+          description: |
+            The number of time to repeat the process of creating/mutating children, and selecting the next generation of parents.
+        mutationRate:
+          type: number
+          format: double
+          default: 0.1
+          example: 0.75
+          description: |
+            The mutation rate is the percentage chance that any given index in the circuit will be mutated when creating a child circuit. To clarify:
+            * after completing the crossover phase of the genetic algorithm,
+            * each point in the circuit will be given a "mutationRate" percent chance of being mutated,
+            * a random number (0.0 to 1.0) will be generated for each point,
+            * any point with a random number less than the mutation rate will swap with a random point on the circuit (regardless of the other point's random number)
+            
+            This must be between 0.0 (0% chance of mutation) and 1.0 (100% chance of mutation).  
+        numChildren:
+          type: integer
+          format: int64
+          example: 1000
+          description: |
+            The number of children (new circuits) to create each iteration.
+            Minimum (inclusive)=1
+            
+            - If the number of children is too high, there is a risk of running out of memory on the server/lambda/etc.   
+            _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), number of parents, and number of children._  
+            - As the number of children is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed, but improving performance).
+        numParents:
+          type: integer
+          format: int64
+          example: 500
+          description: |
+            The number of circuits to retain during the [selection](https://en.wikipedia.org/wiki/Selection_\(genetic_algorithm\)) phase of each iteration.
+            Prior to the first iteration, this many random circuits will be generated to act as initial parents for the first circuit.
+            Minimum (inclusive)=1
+            
+            - If the number of parents is too high, there is a risk of running out of memory on the server/lambda/etc.   
+            _Note: the amount of memory used is a function of the number of points, type of points (2D, 3D, graph), number of parents, and number of children._  
+            - As the number of parents is lowered, the number of explored solutions is also lowered (increasing the risk that an optimum will be missed, but improving performance).
+        seed:
+          type: integer
+          format: int64
+          example: 1234
+          description: |
+            The seed used by the genetic algorithm to randomize selection of parents, crossover points, and mutations. This should be used during integration tests where the result of this algorithm must be consistent.
+        shouldBuildConvexHull:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True indicates that the initial set of parents will first have a convex hull built, then have unattached points randomly distributed along the hull. This can produce a more accurate set of initial parents than randomly creating circuits through the points.
+
+            False indicates that the initial set of parents will be random circuits through the points.
       required:
       - algorithmType
+      - maxIterations
+      - numChildren
+      - numParents
     AlgorithmSimulatedAnnealing:
       type: object
+      description: |
+        This implements [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to stochastically approximate the optimum circuit through a set of points. 
+        
+        Unlike the convex-concave algorithms (both closest and disparity variants) this does not start from a convex hull and work towards a completed circuit. Rather this treats the supplied set of points as the initial circuit, or uses another algorithm to create an initial circuit, and mutates its to try to find a better sequencing of points for the circuit.
+        
+        During each iteration (up to "maxIterations" times) this:
+        1. Randomly selects 2 points.
+            * If enabled, when selecting a second point it will prefer points that are close to the first selected point.
+        2. Determine how swapping the 2 points impacts the circuit length.
+            * i.e. how much does swapping the points lengthen or shorten the circuit?
+        3. Scale this value based on the size of the coordinate space being used, so that it is meaningful regardless of if the coordinates are from -100 to +100 or -100000 to +100000
+        4. Use the configured temperature function to determine the acceptance value (based on the number of iterations, max iterations, and impact of the swap).
+            * The temperature function is designed to reduce the probability of accepting a "bad" swap as the number of iterations approaches the maximum iterations. This allows early swaps to avoid local maxima, but later swaps focus on refining the current circuit towards its local maximum.
+        5. Generate a random number between [0.0, 1.0) as a test value.
+        6. Swap the points the test value it is less than the acceptance value, or if the swap would shorten the circuit.
       properties:
         algorithmType:
           type: string
@@ -292,6 +389,48 @@ components:
             - "ANNEALING"
           example: "ANNEALING"
           description: "Specifies the type of algorithm to be used."
+        maxIterations:
+          type: integer
+          format: int64
+          example: 100
+          description: |
+            The number of time to repeat the process of mutating the circuit.
+        precursorAlgorithm:
+          type: object
+          allOf:
+          - $ref: "#/components/schemas/Algorithm"
+          description: |
+            The algorithm that should be used to generate the inital circuit for simulated annealing.
+            If this is not specified, the points will be treated as an ordered circuit.
+          example:
+            algorithmType: "CLOSEST_GREEDY"
+        preferCloseNeighbors:
+          type: boolean
+          default: false
+          example: true
+          description: |
+            True indicates that when selecting a second point, points that are close to the first point should be prefered to points farther from the first point.
+
+            False indicates that all points should have an equal chance of being selected as the second point regardless of proximity to the first point.
+        seed:
+          type: integer
+          format: int64
+          example: 1234
+          description: |
+            The seed used by the simulated annealing to randomize selection of points and generation the test value. This should be used during integration tests where the result of this algorithm must be consistent.
+        temperatureFunction:
+          type: string
+          enum:
+            - "LINEAR"
+            - "GEOMETRIC"
+          default: "LINEAR"
+          example: "GEOMETRIC"
+          description: |
+            Specifies how the temperature function should account for the percent of iterations that have been completed. 
+            
+            The supported functions are _(t' is the next temperature, t is the current temperature, X is 1/maxIterations)_:
+            * LINEAR - t'=t-X
+            * GEOMETRIC -  t'=t*X
       required:
       - algorithmType
     Point2D:
@@ -320,6 +459,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Point2D"
+          example:
+          - x: 1.23
+            y: 2.34
+          - x: 3.45
+            y: 4.56
+          - x: -1.23
+            y: 2.34
+          - x: 15.0
+            y: 0.00123
       required:
       - points2d
     Point3D:
@@ -353,6 +501,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Point3D"
+          example:
+          - x: 1.23
+            y: 2.34
+            z: 0.34
+          - x: 3.45
+            y: 4.56
+            z: -5.67
+          - x: -1.23
+            y: 2.34
+            z: 12.34
+          - x: 15.0
+            y: 0.00123
+            z: 0.0
       required:
       - points3d
     PointGraph:
@@ -408,5 +569,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PointGraph"
+          example:
+          - name: "a"
+            neighbors:
+            - name: "b"
+              distance: 5.1
+            - name: "d"
+              distance: 0.25
+          - name: "b"
+            neighbors:
+            - name: "a"
+              distance: 3.999
+            - name: "c"
+              distance: 1.1
+          - name: "c"
+            neighbors:
+            - name: "b"
+              distance: 1.1
+            - name: "d"
+              distance: 10
+          - name: "d"
+            neighbors:
+            - name: "a"
+              distance: 2.2
       required:
       - pointsGraph
