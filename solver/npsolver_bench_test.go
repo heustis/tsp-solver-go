@@ -3,9 +3,9 @@ package solver_test
 import (
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
-	"github.com/heustis/lee-tsp-go/solver"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
+	"github.com/heustis/tsp-solver-go/solver"
 )
 
 func BenchmarkFindShortestPathNPWithChecks(b *testing.B) {

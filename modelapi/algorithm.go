@@ -3,8 +3,8 @@ package modelapi
 import (
 	"math"
 
-	"github.com/heustis/lee-tsp-go/circuit"
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/circuit"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 type AlgorithmType string

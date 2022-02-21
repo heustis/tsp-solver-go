@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/heustis/lee-tsp-go/circuit"
-	"github.com/heustis/lee-tsp-go/model2d"
-	"github.com/heustis/lee-tsp-go/modelapi"
-	"github.com/heustis/lee-tsp-go/solver"
+	"github.com/heustis/tsp-solver-go/circuit"
+	"github.com/heustis/tsp-solver-go/model2d"
+	"github.com/heustis/tsp-solver-go/modelapi"
+	"github.com/heustis/tsp-solver-go/solver"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/heustis/lee-tsp-go/modelapi"
+	"github.com/heustis/tsp-solver-go/modelapi"
 	"github.com/stretchr/testify/assert"
 )
 

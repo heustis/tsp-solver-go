@@ -1,6 +1,6 @@
 package circuit
 
-import "github.com/heustis/lee-tsp-go/model"
+import "github.com/heustis/tsp-solver-go/model"
 
 // CompletedCircuit provides a no-op represenatation of a circuit, for use once an algorithm completes its computation.
 // This allows for circuits with large memory requirements or circular references to be deleted without deleting the best computed circuit.

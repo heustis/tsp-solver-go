@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/heustis/lee-tsp-go/circuit"
-	"github.com/heustis/lee-tsp-go/graph"
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/solver"
+	"github.com/heustis/tsp-solver-go/circuit"
+	"github.com/heustis/tsp-solver-go/graph"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/solver"
 )
 
 func ComparePerformanceGraph() {

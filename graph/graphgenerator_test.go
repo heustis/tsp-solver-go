@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/graph"
+	"github.com/heustis/tsp-solver-go/graph"
 	"github.com/stretchr/testify/assert"
 )
 

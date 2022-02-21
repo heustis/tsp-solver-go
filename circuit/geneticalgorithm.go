@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // GeneticAlgorithm  implements a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) to stochastically approximate the optimum circuit through a set of points.

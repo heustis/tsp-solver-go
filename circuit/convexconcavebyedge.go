@@ -3,7 +3,7 @@ package circuit
 import (
 	"math"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 type ConvexConcaveByEdge struct {

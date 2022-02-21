@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 

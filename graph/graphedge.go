@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 type GraphEdge struct {

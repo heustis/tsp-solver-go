@@ -3,9 +3,9 @@ package experimental_test
 import (
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/circuit/experimental"
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/tsp-solver-go/circuit/experimental"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,11 +38,11 @@ func TestNewConvexConcaveWeightedEdges(t *testing.T) {
 
 	edges := circuit.GetAttachedEdges()
 	assert.Len(edges, 5)
-	assert.Equal(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]), edges[0])
-	assert.Equal(circuit.Vertices[7].EdgeTo(circuit.Vertices[6]), edges[1])
-	assert.Equal(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]), edges[2])
-	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), edges[3])
-	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), edges[4])
+	assert.True(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]).Equals(edges[0]))
+	assert.True(circuit.Vertices[7].EdgeTo(circuit.Vertices[6]).Equals(edges[1]))
+	assert.True(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]).Equals(edges[2]))
+	assert.True(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]).Equals(edges[3]))
+	assert.True(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]).Equals(edges[4]))
 
 	assert.Len(circuit.GetUnattachedVertices(), 3)
 	assert.True(circuit.GetUnattachedVertices()[circuit.Vertices[2]])
@@ -108,12 +108,12 @@ func TestUpdate_ConvexConcaveWeightedEdges(t *testing.T) {
 		assert.Len(c.GetClosestVertices(), 2, e)
 	}
 
-	assert.Equal(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]), circuit.GetAttachedEdges()[0])
-	assert.Equal(circuit.Vertices[7].EdgeTo(circuit.Vertices[5]), circuit.GetAttachedEdges()[1])
-	assert.Equal(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]), circuit.GetAttachedEdges()[2])
-	assert.Equal(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]), circuit.GetAttachedEdges()[3])
-	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[4])
-	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[5])
+	assert.True(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]).Equals(circuit.GetAttachedEdges()[0]))
+	assert.True(circuit.Vertices[7].EdgeTo(circuit.Vertices[5]).Equals(circuit.GetAttachedEdges()[1]))
+	assert.True(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]).Equals(circuit.GetAttachedEdges()[2]))
+	assert.True(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]).Equals(circuit.GetAttachedEdges()[3]))
+	assert.True(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]).Equals(circuit.GetAttachedEdges()[4]))
+	assert.True(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]).Equals(circuit.GetAttachedEdges()[5]))
 
 	assert.Equal(model2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[2])
 	assert.Equal(model2d.NewVertex2D(9, 6), circuit.GetAttachedVertices()[3])
@@ -129,13 +129,13 @@ func TestUpdate_ConvexConcaveWeightedEdges(t *testing.T) {
 		assert.Len(c.GetClosestVertices(), 1, e)
 	}
 
-	assert.Equal(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]), circuit.GetAttachedEdges()[0])
-	assert.Equal(circuit.Vertices[7].EdgeTo(circuit.Vertices[3]), circuit.GetAttachedEdges()[1])
-	assert.Equal(circuit.Vertices[3].EdgeTo(circuit.Vertices[5]), circuit.GetAttachedEdges()[2])
-	assert.Equal(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]), circuit.GetAttachedEdges()[3])
-	assert.Equal(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]), circuit.GetAttachedEdges()[4])
-	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[5])
-	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[6])
+	assert.True(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]).Equals(circuit.GetAttachedEdges()[0]))
+	assert.True(circuit.Vertices[7].EdgeTo(circuit.Vertices[3]).Equals(circuit.GetAttachedEdges()[1]))
+	assert.True(circuit.Vertices[3].EdgeTo(circuit.Vertices[5]).Equals(circuit.GetAttachedEdges()[2]))
+	assert.True(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]).Equals(circuit.GetAttachedEdges()[3]))
+	assert.True(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]).Equals(circuit.GetAttachedEdges()[4]))
+	assert.True(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]).Equals(circuit.GetAttachedEdges()[5]))
+	assert.True(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]).Equals(circuit.GetAttachedEdges()[6]))
 
 	assert.Equal(model2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[2])
 	assert.Equal(model2d.NewVertex2D(8, 5), circuit.GetAttachedVertices()[3])
@@ -152,14 +152,14 @@ func TestUpdate_ConvexConcaveWeightedEdges(t *testing.T) {
 		assert.Len(c.GetClosestVertices(), 0, e)
 	}
 
-	assert.Equal(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]), circuit.GetAttachedEdges()[0])
-	assert.Equal(circuit.Vertices[7].EdgeTo(circuit.Vertices[2]), circuit.GetAttachedEdges()[1])
-	assert.Equal(circuit.Vertices[2].EdgeTo(circuit.Vertices[3]), circuit.GetAttachedEdges()[2])
-	assert.Equal(circuit.Vertices[3].EdgeTo(circuit.Vertices[5]), circuit.GetAttachedEdges()[3])
-	assert.Equal(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]), circuit.GetAttachedEdges()[4])
-	assert.Equal(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]), circuit.GetAttachedEdges()[5])
-	assert.Equal(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]), circuit.GetAttachedEdges()[6])
-	assert.Equal(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]), circuit.GetAttachedEdges()[7])
+	assert.True(circuit.Vertices[0].EdgeTo(circuit.Vertices[7]).Equals(circuit.GetAttachedEdges()[0]))
+	assert.True(circuit.Vertices[7].EdgeTo(circuit.Vertices[2]).Equals(circuit.GetAttachedEdges()[1]))
+	assert.True(circuit.Vertices[2].EdgeTo(circuit.Vertices[3]).Equals(circuit.GetAttachedEdges()[2]))
+	assert.True(circuit.Vertices[3].EdgeTo(circuit.Vertices[5]).Equals(circuit.GetAttachedEdges()[3]))
+	assert.True(circuit.Vertices[5].EdgeTo(circuit.Vertices[6]).Equals(circuit.GetAttachedEdges()[4]))
+	assert.True(circuit.Vertices[6].EdgeTo(circuit.Vertices[4]).Equals(circuit.GetAttachedEdges()[5]))
+	assert.True(circuit.Vertices[4].EdgeTo(circuit.Vertices[1]).Equals(circuit.GetAttachedEdges()[6]))
+	assert.True(circuit.Vertices[1].EdgeTo(circuit.Vertices[0]).Equals(circuit.GetAttachedEdges()[7]))
 
 	assert.Equal(model2d.NewVertex2D(0, 0), circuit.GetAttachedVertices()[2])
 	assert.Equal(model2d.NewVertex2D(3, 0), circuit.GetAttachedVertices()[3])

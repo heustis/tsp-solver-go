@@ -1,8 +1,8 @@
 package modelapi
 
 import (
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model3d"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model3d"
 )
 
 // Point3D is the API representation a 3-dimensional point.

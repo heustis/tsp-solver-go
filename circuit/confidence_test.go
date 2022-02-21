@@ -3,9 +3,9 @@ package circuit_test
 import (
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/circuit"
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/tsp-solver-go/circuit"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -212,8 +212,6 @@ func TestString_ConvexConcaveConfidence(t *testing.T) {
 	}),
 		model2d.BuildPerimiter,
 	)
-
-	assert.Equal("{\r\n\t\"vertices\":[{\"x\":-15,\"y\":-15},{\"x\":0,\"y\":0},{\"x\":15,\"y\":-15},{\"x\":3,\"y\":0},{\"x\":3,\"y\":13},{\"x\":8,\"y\":5},{\"x\":9,\"y\":6},{\"x\":-7,\"y\":6}],\r\n\t\"edges\":[],\r\n\t\"edgeDistances\":[]}", c.String())
 
 	s := c.String()
 	assert.Contains(s, "{\r\n\t\"vertices\":[{\"x\":-15,\"y\":-15},{\"x\":-7,\"y\":6},{\"x\":0,\"y\":0},{\"x\":3,\"y\":0},{\"x\":3,\"y\":13},{\"x\":8,\"y\":5},{\"x\":9,\"y\":6},{\"x\":15,\"y\":-15}],")

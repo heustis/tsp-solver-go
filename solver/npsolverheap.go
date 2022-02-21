@@ -1,6 +1,6 @@
 package solver
 
-import "github.com/heustis/lee-tsp-go/model"
+import "github.com/heustis/tsp-solver-go/model"
 
 // FindShortestPathNPHeap finds the shortest path by using a heap to grow the shortest circuit until in includes all the vertices.
 // It accepts an unordered set of vertices, and returns the ordered list of vertices.

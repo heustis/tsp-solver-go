@@ -3,8 +3,8 @@ package solver
 import (
 	"math"
 
-	"github.com/heustis/lee-tsp-go/graph"
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/graph"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // FindShortestPathNPNoChecks checks all possible combinations of paths to find the shortest path.

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/circuit"
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
-	"github.com/heustis/lee-tsp-go/solver"
-	"github.com/heustis/lee-tsp-go/tsplib"
+	"github.com/heustis/tsp-solver-go/circuit"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
+	"github.com/heustis/tsp-solver-go/solver"
+	"github.com/heustis/tsp-solver-go/tsplib"
 	"github.com/stretchr/testify/assert"
 )
 

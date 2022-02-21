@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/model2d"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/model2d"
 )
 
 // TspLibData represents data used in "Symmetric traveling salesman problem" files from http://elib.zib.de/pub/mp-testdata/tsp/tsplib/tsplib.html.

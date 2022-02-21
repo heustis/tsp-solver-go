@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // SimulatedAnnealing implements [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to stochastically approximate the optimum circuit through a set of points.

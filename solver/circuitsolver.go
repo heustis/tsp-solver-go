@@ -1,6 +1,6 @@
 package solver
 
-import "github.com/heustis/lee-tsp-go/model"
+import "github.com/heustis/tsp-solver-go/model"
 
 // FindShortestPathCircuit use a model.Circuit to approximate or solve the shortest path through a series of points.
 // The complexity of this depends on the complexity of the algorithm used by the model.Circuit.

@@ -1,6 +1,6 @@
 package graph
 
-import "github.com/heustis/lee-tsp-go/model"
+import "github.com/heustis/tsp-solver-go/model"
 
 func ToCircuitVertexArray(g []*GraphVertex) []model.CircuitVertex {
 	vertices := make([]model.CircuitVertex, len(g))

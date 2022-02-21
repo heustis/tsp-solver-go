@@ -6,7 +6,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // ConvexConcaveWeightedEdges is significantly worse than the other greedy algorithms, see `results_2d_comp_greedy_3.tsv`.

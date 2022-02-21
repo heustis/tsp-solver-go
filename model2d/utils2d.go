@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // DeduplicateVertices returns a copy of the supplied array (or slice) with duplicates removed.

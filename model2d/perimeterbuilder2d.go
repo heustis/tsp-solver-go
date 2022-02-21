@@ -1,6 +1,6 @@
 package model2d
 
-import "github.com/heustis/lee-tsp-go/model"
+import "github.com/heustis/tsp-solver-go/model"
 
 // BuildPerimiter produces the smallest convex perimeter that can encompass all the vertices in the supplied array.
 // This returns both the edges comprising the convex perimeter and the set of unattached (interior) vertices.

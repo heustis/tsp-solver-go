@@ -3,7 +3,7 @@ package graph
 import (
 	"math"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // BuildPerimiter produces the smallest convex perimeter that can encompass all the vertices in the supplied array.

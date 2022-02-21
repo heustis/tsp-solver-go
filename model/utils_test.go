@@ -3,7 +3,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 	"github.com/stretchr/testify/assert"
 )
 

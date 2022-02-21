@@ -1,6 +1,6 @@
 package modelapi
 
-import "github.com/heustis/lee-tsp-go/graph"
+import "github.com/heustis/tsp-solver-go/graph"
 
 // PointGraph is the API representation of a single point in a graph.
 // It references its neighbors by name, in an array, to avoid circular references and have consistent field names in its JSON representation.

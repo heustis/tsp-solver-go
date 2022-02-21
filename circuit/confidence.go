@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/heustis/lee-tsp-go/model"
-	"github.com/heustis/lee-tsp-go/stats"
+	"github.com/heustis/tsp-solver-go/model"
+	"github.com/heustis/tsp-solver-go/stats"
 )
 
 const minimumSignificance = 1.0

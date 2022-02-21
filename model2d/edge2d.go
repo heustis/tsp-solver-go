@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/heustis/lee-tsp-go/model"
+	"github.com/heustis/tsp-solver-go/model"
 )
 
 // Edge2D represents the line segment between two points.
