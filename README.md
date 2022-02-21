@@ -1,4 +1,6 @@
-# TSP Solver - GO
+# TSP Solver - GO Package
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/heustis/tsp-solver-go)](https://goreportcard.com/report/github.com/heustis/tsp-solver-go)
 
 ## Table of Contents
 1. [How To Use](#how-to-use)
