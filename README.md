@@ -187,11 +187,41 @@ defer g.Delete()
 
 ## Algorithms
 
+This sections defines the various apporoaches for approximating or solving the TSP that are supported by this package.
+
 Most algorithms in tsp-solver-go are located in the `circuit` sub-package, including all algorithms supported by the HTTP API.
 These algorithms all implement the `model.Circuit` interface.
+
 There are a couple of NP-complete algorithms in the `solver` package, which do not implement this interface, but those are for testing purposes.
 
-### Concave Convex Variants
+### Convex Concave Variants
+
+These set of algorithms first build the minimum convex hull around the set of points, so that all points are either vertices on the hull or interior to the hull.
+Once the convex hull has been created, the algorithms take different approaches for determining the 
+
+The reasong to create the convex hull first, is that points in the convex hull must be traversed in that order regardless of where the internal points attach to that hull. If any of the points in the hull were to be visted in a different order, it would result in the circuit self-intersecting which is less efficient than a non-self-intersecting circuit.
+
+The algorithm this package uses to compute the convex hull is:
+1. Compute the midpoint of the points. 
+    * This may be an existing point (e.g. in a graph) or a new temporary point which is discarded after the hull is created (e.g. in 2D and 3D).
+2. Find the point farthest from the midpoint.  
+    * This constrains the possible locations of the remaining points to a circle or sphere with a radius equal to the distance of this point from the midpoint.
+3. Find the point farthest from the point in 2.  
+    * This further constrains all points, by intersecting the previous circle/sphere with a circle/sphere centered around the point from 2, with a radius to the point in 3.
+4. Creates initial edges 1b->1c and 1c->1b _(note: all other points are exterior at this time)_  
+5. Finds the exterior point farthest from its closest edge and attach it to the circuit by splitting its closest edge.  
+    * For computing this distance, in 2D and 3D this package uses the perpendicular distance of the point to the edge, in graphs it uses the distance increase that results from attaching the point to the edge.
+    * By selecting the farthest point by perpendicular distance, the angle through this point is guaranteed to not exceed 180 degrees (i.e. it must be convex). Having equally far points to either side of this point would produce a straight line through this point, and no point can be farther off or it would have been selected.
+6. Find any points that were external to the circuit and are now internal to the circuit, and stop considering them for future iterations.  
+7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
+
+#### Smallest Increase
+
+#### Smallest Increase With Cloning
+
+#### Disparity
+
+#### Disparity With Cloning
 
 ### Simulated Annealing
 
