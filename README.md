@@ -197,7 +197,7 @@ There are a couple of NP-complete algorithms in the `solver` package, which do n
 ### Convex Concave Variants
 
 These set of algorithms first build the minimum convex hull around the set of points, so that all points are either vertices on the hull or interior to the hull.
-Once the convex hull has been created, the algorithms take different approaches for determining the 
+Once the convex hull has been created, these algorithms take different approaches for attaching the interior points to the hull.
 
 The reasong to create the convex hull first, is that points in the convex hull must be traversed in that order regardless of where the internal points attach to that hull. If any of the points in the hull were to be visted in a different order, it would result in the circuit self-intersecting which is less efficient than a non-self-intersecting circuit.
 
@@ -216,8 +216,34 @@ The algorithm this package uses to compute the convex hull is:
 7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
 
 #### Smallest Increase
+This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
+
+This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edge (so that subsequent updates are correct).
+
+This has two options that can be enabled when it runs:
+1. cloneByInitEdges - This causes the convex hull to be cloned once for each edge in the hull, prior to atttaching any points. Then for each edge, it updates the corresponding clone by attaching the point closest to that edge to it. From there, it processes each clone simultaneously, using the greedy algorithm described above. This allows for the greedy algorithm to find circuits it otherwise would miss, at the cost of increasing the processing complexity by a factor of H (where H is the number of edges in the convex hull).
+2. updateInteriorPoints - This causes the algorithm to check if the edges created from attaching an interior point are closer to any already attached interior points. If they are, it detaches those points, so that they can be re-attached to the new closer edge.
+
+```json
+{
+  "algorithmType":"CLOSEST_GREEDY"
+}
+```
 
 #### Smallest Increase With Cloning
+This algorithm, similar to Smallest Increase, selects interior points to attach to the hull by determining which point has the minimum distance increase. However, unlike Smallest Increase, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. 
+
+To enable this behavior, this algorithm tracks each interior point and the distance increase that would result from attaching the point to each edge in the circuit, exluding edges that the point has already been attached to. When comparing the the effect of attaching a point to the circuit, on the length of the circuit, both the distance increase of the new location and the distance decrease of removing the existing location are taken into account.
+
+This algorithm is N(O!), unless maxClones is used to limit the search space.
+
+
+
+```json
+{
+  "algorithmType":"CLOSEST_CLONE"
+}
+```
 
 #### Disparity
 
