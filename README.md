@@ -1,6 +1,8 @@
 # TSP Solver - GO Package
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/heustis/tsp-solver-go)](https://goreportcard.com/report/github.com/heustis/tsp-solver-go)
+[![GoDoc](https://pkg.go.dev/badge/github.com/heustis/heustis/tsp-solver-go)](https://pkg.go.dev/github.com/heustis/tsp-solver-go)
+[![License](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/heustis/tsp-solver-go/blob/master/LICENSE)
 
 ## Table of Contents
 1. [How To Use](#how-to-use)
@@ -32,7 +34,7 @@ func convert(myData []MyModel) []model.CircuitVertex {
 
 func ProcessMyData(myData []MyModel) []model.CircuitVertex {
   tspModel := convert(myData)
-  c := circuit.NewConvexConcave(tspModel, model2d.BuildPerimiter, false)
+  c := circuit.NewClosestGreedy(tspModel, model2d.BuildPerimiter, false)
   solver.FindShortestPathCircuit(c)
   return c.GetAttachedVertices()
 }
@@ -215,39 +217,47 @@ The algorithm this package uses to compute the convex hull is:
 6. Find any points that were external to the circuit and are now internal to the circuit, and stop considering them for future iterations.  
 7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
 
-#### Smallest Increase
+### Convex Concave - Closest Greedy
+This algorithm performs the following steps after generating the convex hull:
+1. If `cloneByInitEdges` is set to true: 
+    1. The convex hull is cloned once per edge in the convex hull.
+    2. For each edge, it updates the corresponding clone by attaching the point closest to that edge to it.
+    3. Each of these clones is processed according to the remaining steps simultaneously (as in, all clones will be updated by their N-th point prior any clone having their N+1-th point attached).
+2. Determines, and tracks, the closest edge to each point based on the distance increase that results from inserting the point along that edge
+    * the distance increase can be calculated as:
+      ```go
+      start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
+      ```
+    * Internally, this uses a heap to store the points + closest edges to avoid reevaluating all edges each iteration. Selecting the next point just involves popping the next item off the heap.
+3. Selects the next point to attach to the circuit by finding the point with the closest edge.
+4. Attaches the point to its closest edge.
+5. Updates the closest edge of remaining unattached points, by comparing their previous closest edges to the newly created edges (after the split)
+    1. If `updateInteriorPoints` is set to true, this will also check each attached interior point (other than the one that was just attached) to see if either newly created edge is closer to that point than the edge it was originally attached to. 
+    2. If one of the new edges is closer, it will be detached and added to the heap of points + closest edges.
+    3. Once all attached interior points have been checked, and detached if appropriate, the closest edges for all unattached interior points are updated.
+6. Repeats 3-5 until all points are attached to the circuit.
 This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
 
-This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edge (so that subsequent updates are correct).
+Complexity:
+* This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edge (so that subsequent updates are correct).
+* If `updateInteriorPoints` is enabled, this becomes O(n^3) due to the check for closest edges that occurs whenever a point is detached.
+* If `cloneByInitEdges` is enabled, this becomes O(n^3) due to updating each clone in each iteration.
+* If both `updateInteriorPoints` and `cloneByInitEdges` are enabled this becomes O(n^4).
 
-This has two options that can be enabled when it runs:
-1. cloneByInitEdges - This causes the convex hull to be cloned once for each edge in the hull, prior to atttaching any points. Then for each edge, it updates the corresponding clone by attaching the point closest to that edge to it. From there, it processes each clone simultaneously, using the greedy algorithm described above. This allows for the greedy algorithm to find circuits it otherwise would miss, at the cost of increasing the processing complexity by a factor of H (where H is the number of edges in the convex hull).
-2. updateInteriorPoints - This causes the algorithm to check if the edges created from attaching an interior point are closer to any already attached interior points. If they are, it detaches those points, so that they can be re-attached to the new closer edge.
-
-```json
-{
-  "algorithmType":"CLOSEST_GREEDY"
-}
-```
-
-#### Smallest Increase With Cloning
+### Convex Concave - Closest with Cloning
+This algorithm performs the following steps after generating the convex hull:
+1. TODO
 This algorithm, similar to Smallest Increase, selects interior points to attach to the hull by determining which point has the minimum distance increase. However, unlike Smallest Increase, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. 
 
 To enable this behavior, this algorithm tracks each interior point and the distance increase that would result from attaching the point to each edge in the circuit, exluding edges that the point has already been attached to. When comparing the the effect of attaching a point to the circuit, on the length of the circuit, both the distance increase of the new location and the distance decrease of removing the existing location are taken into account.
 
-This algorithm is N(O!), unless maxClones is used to limit the search space.
+Complexity:
+* This algorithm is O(N!).
+* If `maxClones` is enabled 
 
+### Convex Concave - Disparity Greedy
 
-
-```json
-{
-  "algorithmType":"CLOSEST_CLONE"
-}
-```
-
-#### Disparity
-
-#### Disparity With Cloning
+### Convex Concave - Disparity With Cloning
 
 ### Simulated Annealing
 
