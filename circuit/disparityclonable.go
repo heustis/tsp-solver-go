@@ -11,7 +11,7 @@ import (
 const minimumSignificance = 1.0
 const maxClones uint16 = 1000
 
-// ConvexConcaveConfidence relies on the following priniciples to approximate the smallest concave circuit:
+// DisparityClonable relies on the following priniciples to approximate the smallest concave circuit:
 // 1. That the minimum convex hull of a 2D circuit must be traversed in that order to be optimal (i.e. swapping the order of any 2 vertices in the hull will result in edges intersecting.)
 //    1a. This means that each convex hull vertex may have any number of interior points between and the next convex hull vertex, but that adding the interior vertices to the circuit cannot reorder these vertices.
 // 2. Interior points are either near an edge, near a corner, or near the middle of a set of edges (i.e. similarly close to several edges, possibly all edges).
@@ -24,23 +24,23 @@ const maxClones uint16 = 1000
 //        In other words, if the exterior point is close to a concave corner, it could attach to either edge without intersecting the other.
 //        However, if it is near a convex corner, the farther edge would have to cross the closer edge to attach to the point.
 //    3c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
-type ConvexConcaveConfidence struct {
+type DisparityClonable struct {
 	Vertices         []model.CircuitVertex
 	Significance     float64
 	MaxClones        uint16
 	perimeterBuilder model.PerimeterBuilder
-	circuits         []*confidenceCircuit
+	circuits         []*disparityClonableCircuit
 }
 
-func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *ConvexConcaveConfidence {
+func NewDisparityClonable(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *DisparityClonable {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
-	initCircuit := &confidenceCircuit{
+	initCircuit := &disparityClonableCircuit{
 		edges:     circuitEdges,
 		distances: make(map[model.CircuitVertex]*stats.DistanceGaps),
 		length:    0.0,
 	}
-	circuits := []*confidenceCircuit{initCircuit}
+	circuits := []*disparityClonableCircuit{initCircuit}
 
 	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
 	for vertex := range unattachedVertices {
@@ -51,7 +51,7 @@ func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder
 		initCircuit.length += edge.GetLength()
 	}
 
-	return &ConvexConcaveConfidence{
+	return &DisparityClonable{
 		Vertices:         vertices,
 		Significance:     minimumSignificance,
 		MaxClones:        maxClones,
@@ -60,7 +60,7 @@ func NewConvexConcaveConfidence(vertices []model.CircuitVertex, perimeterBuilder
 	}
 }
 
-func (c *ConvexConcaveConfidence) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *DisparityClonable) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	// Since updating may need to clone the circuits, and each circuit may need to updated with a different vertex, we just need to return any unattached point and edge.
 	if len(c.circuits) > 0 {
 		for k, v := range c.circuits[0].distances {
@@ -70,14 +70,14 @@ func (c *ConvexConcaveConfidence) FindNextVertexAndEdge() (model.CircuitVertex, 
 	return nil, nil
 }
 
-func (c *ConvexConcaveConfidence) GetAttachedEdges() []model.CircuitEdge {
+func (c *DisparityClonable) GetAttachedEdges() []model.CircuitEdge {
 	if len(c.circuits) > 0 {
 		return c.circuits[0].edges
 	}
 	return []model.CircuitEdge{}
 }
 
-func (c *ConvexConcaveConfidence) GetAttachedVertices() []model.CircuitVertex {
+func (c *DisparityClonable) GetAttachedVertices() []model.CircuitVertex {
 	if len(c.circuits) > 0 && len(c.circuits[0].edges) > 0 {
 		vertices := make([]model.CircuitVertex, len(c.circuits[0].edges))
 		for i, edge := range c.circuits[0].edges {
@@ -88,14 +88,14 @@ func (c *ConvexConcaveConfidence) GetAttachedVertices() []model.CircuitVertex {
 	return []model.CircuitVertex{}
 }
 
-func (c *ConvexConcaveConfidence) GetLength() float64 {
+func (c *DisparityClonable) GetLength() float64 {
 	if len(c.circuits) > 0 {
 		return c.circuits[0].length
 	}
 	return 0.0
 }
 
-func (c *ConvexConcaveConfidence) GetUnattachedVertices() map[model.CircuitVertex]bool {
+func (c *DisparityClonable) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	unattachedVertices := make(map[model.CircuitVertex]bool)
 	if len(c.circuits) > 0 {
 		for k := range c.circuits[0].distances {
@@ -105,20 +105,20 @@ func (c *ConvexConcaveConfidence) GetUnattachedVertices() map[model.CircuitVerte
 	return unattachedVertices
 }
 
-func (c *ConvexConcaveConfidence) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
+func (c *DisparityClonable) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
 	// Don't update if the perimeter has not been built, nor if the shortest circuit is completed.
 	if len(c.circuits) == 0 || len(c.circuits[0].distances) == 0 {
 		return
 	}
 	// Note: track updated and cloned circuits in a separate array once we need to clone at least one circuit.
 	// Do not mutate the 'circuits' array while we are iterating over it, replace it with the updated/cloned array afterward (if appropriate).
-	var updatedCircuits []*confidenceCircuit
+	var updatedCircuits []*disparityClonableCircuit
 	useUpdated := false
 	for i, circuit := range c.circuits {
 		if clones := circuit.update(c.Significance); len(clones) > 0 || useUpdated {
 			// Add all previously processed circuits the first time the clone array is constructed.
 			if !useUpdated {
-				updatedCircuits = make([]*confidenceCircuit, 0, len(c.circuits)+len(clones))
+				updatedCircuits = make([]*disparityClonableCircuit, 0, len(c.circuits)+len(clones))
 				updatedCircuits = append(updatedCircuits, c.circuits[0:i]...)
 				useUpdated = true
 			}
@@ -139,7 +139,7 @@ func (c *ConvexConcaveConfidence) Update(ignoredVertex model.CircuitVertex, igno
 	}
 }
 
-func (c *ConvexConcaveConfidence) String() string {
+func (c *DisparityClonable) String() string {
 	s := "{\r\n\t\"vertices\":["
 
 	vertexIndexLookup := make(map[model.CircuitVertex]int)
@@ -185,4 +185,4 @@ func (c *ConvexConcaveConfidence) String() string {
 	return s
 }
 
-var _ model.Circuit = (*ConvexConcaveConfidence)(nil)
+var _ model.Circuit = (*DisparityClonable)(nil)

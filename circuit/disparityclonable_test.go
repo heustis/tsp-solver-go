@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewConvexConcaveConfidence(t *testing.T) {
+func TestNewDisparityClonable(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewDisparityClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -52,9 +52,9 @@ func TestNewConvexConcaveConfidence(t *testing.T) {
 	assert.True(unattached[c.Vertices[5]])
 }
 
-func TestUpdate_ConvexConcaveConfidence(t *testing.T) {
+func TestUpdate_DisparityClonable(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewDisparityClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -143,9 +143,9 @@ func TestUpdate_ConvexConcaveConfidence(t *testing.T) {
 	assert.Len(c.GetUnattachedVertices(), 0)
 }
 
-func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserThanPreviousEdge_ConvexConcaveConfidence(t *testing.T) {
+func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsCloserThanPreviousEdge_DisparityClonable(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewDisparityClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		model2d.NewVertex2D(0, 0),
 		model2d.NewVertex2D(4.7, 2.0),
 		model2d.NewVertex2D(5.0, 2.25),
@@ -197,9 +197,9 @@ func TestUpdate_ShouldNotRemoveAttachedInteriorPointFromPerimeterIfNewEdgeIsClos
 	assert.Nil(v)
 }
 
-func TestString_ConvexConcaveConfidence(t *testing.T) {
+func TestString_DisparityClonable(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewDisparityClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting

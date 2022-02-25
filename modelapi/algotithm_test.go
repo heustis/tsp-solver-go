@@ -142,13 +142,13 @@ func TestCreateClosestGreedy(t *testing.T) {
 	vertices := model2d.GenerateVertices(10)
 
 	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_GREEDY}
-	assert.IsType(&circuit.ConvexConcave{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
+	assert.IsType(&circuit.ClosestGreedy{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 
 	alg.CloneByInitEdges = boolPointer(false)
-	assert.IsType(&circuit.ConvexConcave{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
+	assert.IsType(&circuit.ClosestGreedy{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 
 	alg.CloneByInitEdges = boolPointer(true)
-	assert.IsType(&circuit.ConvexConcaveByEdge{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
+	assert.IsType(&circuit.ClosestGreedyByEdge{}, alg.CreateClosestGreedy(vertices, model2d.BuildPerimiter))
 }
 
 func TestCreateDisparityClone(t *testing.T) {
@@ -158,36 +158,36 @@ func TestCreateDisparityClone(t *testing.T) {
 
 	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE}
 	c := alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
-	assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
-	assert.Equal(uint16(1000), c.(*circuit.ConvexConcaveConfidence).MaxClones)
-	assert.Equal(1.0, c.(*circuit.ConvexConcaveConfidence).Significance)
-	assert.Equal(vertices, c.(*circuit.ConvexConcaveConfidence).Vertices)
+	assert.IsType(&circuit.DisparityClonable{}, c)
+	assert.Equal(uint16(1000), c.(*circuit.DisparityClonable).MaxClones)
+	assert.Equal(1.0, c.(*circuit.DisparityClonable).Significance)
+	assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 
 	for _, numClones := range []int64{10, 3, 21, 4400, math.MaxUint16, 15} {
 		alg.MaxClones = intPointer(numClones)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
-		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
-		assert.Equal(uint16(numClones), c.(*circuit.ConvexConcaveConfidence).MaxClones)
-		assert.Equal(1.0, c.(*circuit.ConvexConcaveConfidence).Significance)
-		assert.Equal(vertices, c.(*circuit.ConvexConcaveConfidence).Vertices)
+		assert.IsType(&circuit.DisparityClonable{}, c)
+		assert.Equal(uint16(numClones), c.(*circuit.DisparityClonable).MaxClones)
+		assert.Equal(1.0, c.(*circuit.DisparityClonable).Significance)
+		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 
 	for _, significance := range []float64{-1, 0.0, 12345.6789, 2.5} {
 		alg.MinSignificance = float64Pointer(significance)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
-		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
-		assert.Equal(uint16(15), c.(*circuit.ConvexConcaveConfidence).MaxClones)
-		assert.Equal(significance, c.(*circuit.ConvexConcaveConfidence).Significance)
-		assert.Equal(vertices, c.(*circuit.ConvexConcaveConfidence).Vertices)
+		assert.IsType(&circuit.DisparityClonable{}, c)
+		assert.Equal(uint16(15), c.(*circuit.DisparityClonable).MaxClones)
+		assert.Equal(significance, c.(*circuit.DisparityClonable).Significance)
+		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 
 	for _, numClones := range []int64{1234567890, 0, -1, math.MinInt64, math.MaxInt64} {
 		alg.MaxClones = intPointer(numClones)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
-		assert.IsType(&circuit.ConvexConcaveConfidence{}, c)
-		assert.Equal(uint16(math.MaxUint16), c.(*circuit.ConvexConcaveConfidence).MaxClones)
-		assert.Equal(2.5, c.(*circuit.ConvexConcaveConfidence).Significance)
-		assert.Equal(vertices, c.(*circuit.ConvexConcaveConfidence).Vertices)
+		assert.IsType(&circuit.DisparityClonable{}, c)
+		assert.Equal(uint16(math.MaxUint16), c.(*circuit.DisparityClonable).MaxClones)
+		assert.Equal(2.5, c.(*circuit.DisparityClonable).Significance)
+		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 }
 
@@ -198,15 +198,15 @@ func TestCreateDisparityGreedy(t *testing.T) {
 
 	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_GREEDY}
 	c := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
-	assert.IsType(&circuit.ConvexConcaveDisparity{}, c)
+	assert.IsType(&circuit.DisparityGreedy{}, c)
 
 	alg.UseRelativeDisparity = boolPointer(false)
 	c1 := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
-	assert.IsType(&circuit.ConvexConcaveDisparity{}, c1)
+	assert.IsType(&circuit.DisparityGreedy{}, c1)
 
 	alg.UseRelativeDisparity = boolPointer(true)
 	c2 := alg.CreateDisparityGreedy(vertices, model2d.BuildPerimiter)
-	assert.IsType(&circuit.ConvexConcaveDisparity{}, c2)
+	assert.IsType(&circuit.DisparityGreedy{}, c2)
 
 	solver.FindShortestPathCircuit(c)
 	solver.FindShortestPathCircuit(c1)

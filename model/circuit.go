@@ -9,7 +9,8 @@ const Threshold = 0.0000001
 // This allows it to ignore whether the implementation is a set of N-dimentional points, a graph, or any other representation of points.
 type Circuit interface {
 	// FindNextVertexAndEdge determines the next vertex to add to the circuit, along with which edge it should be added to.
-	// For example, in the ConvexConcave algorithm this returns the vertex and edge with the minimum distance increase.
+	// For example, in the ClosestGreedy algorithm this returns the vertex and edge with the minimum distance increase.
+	// This should return (nil,nil) when the circuit is complete.
 	FindNextVertexAndEdge() (CircuitVertex, CircuitEdge)
 
 	// GetAttachedVertices returns all vertices that have been added to the circuit (either as part of BuildPerimeter or Update).

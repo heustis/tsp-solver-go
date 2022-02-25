@@ -50,7 +50,7 @@ func TestNewSimulatedAnnealingFromCircuit(t *testing.T) {
 
 	circuitVertices := make([]model.CircuitVertex, len(initVertices))
 	copy(circuitVertices, initVertices)
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewClosestGreedy(initVertices, model2d.BuildPerimiter, false), 100, false)
 
 	assert.NotNil(c)
 
@@ -274,7 +274,7 @@ func TestUpdate_SimulatedAnnealingFromCircuit(t *testing.T) {
 		model2d.NewVertex2D(-7, 6),
 	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewClosestGreedy(initVertices, model2d.BuildPerimiter, false), 100, false)
 	c.SetSeed(1)
 
 	assert.NotNil(c)
@@ -369,7 +369,7 @@ func TestUpdate_SimulatedAnnealingFromCircuit_GeometricTemperature(t *testing.T)
 		model2d.NewVertex2D(-7, 6),
 	})
 
-	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewConvexConcave(initVertices, model2d.BuildPerimiter, false), 100, false)
+	c := circuit.NewSimulatedAnnealingFromCircuit(circuit.NewClosestGreedy(initVertices, model2d.BuildPerimiter, false), 100, false)
 	c.SetSeed(1)
 	c.SetTemperatureFunction(circuit.CalculateTemperatureGeometric)
 

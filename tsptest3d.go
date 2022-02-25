@@ -45,7 +45,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			cImpl := circuit.NewClonableCircuitImpl(cv, model3d.BuildPerimiter)
+			cImpl := circuit.NewClosestClonable(cv, model3d.BuildPerimiter)
 			cImpl.CloneOnFirstAttach = true
 			c := circuit.NewClonableCircuitSolver(cImpl)
 			solver.FindShortestPathCircuit(c)
@@ -56,7 +56,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "heap_mc",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewClonableCircuitSolver(circuit.NewClonableCircuitImpl(cv, model3d.BuildPerimiter))
+			c := circuit.NewClonableCircuitSolver(circuit.NewClosestClonable(cv, model3d.BuildPerimiter))
 			solver.FindShortestPathCircuit(c)
 			return c
 		},
@@ -65,7 +65,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.BuildPerimiter, true)
+	// 		c := circuit.NewClosestGreedyByEdge(cv, model3d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -74,7 +74,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_byedge",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcaveByEdge(cv, model3d.BuildPerimiter, false)
+	// 		c := circuit.NewClosestGreedyByEdge(cv, model3d.BuildPerimiter, false)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -83,7 +83,7 @@ func ComparePerformance3d() {
 	// circuits = append(circuits, &NamedCircuit{
 	// 	name: "convex_concave_withupdates",
 	// 	circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-	// 		c := circuit.NewConvexConcave(cv, model3d.BuildPerimiter, true)
+	// 		c := circuit.NewClosestGreedy(cv, model3d.BuildPerimiter, true)
 	// 		solver.FindShortestPathCircuit(c)
 	// 		return c
 	// 	},
@@ -92,7 +92,7 @@ func ComparePerformance3d() {
 	circuits = append(circuits, &NamedCircuit{
 		name: "convex_concave",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcave(cv, model3d.BuildPerimiter, false)
+			c := circuit.NewClosestGreedy(cv, model3d.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 			return c
 		},

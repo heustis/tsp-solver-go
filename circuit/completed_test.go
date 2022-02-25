@@ -43,7 +43,7 @@ func TestCompletedCircuit(t *testing.T) {
 	assert.Equal(12345.6789, c.GetLengthWithNext())
 	assert.Len(c.GetUnattachedVertices(), 0)
 
-	assert.Equal(c, c.CloneAndUpdate())
+	assert.Nil(c.CloneAndUpdate())
 	assert.Len(c.GetUnattachedVertices(), 0)
 
 	v, e := c.FindNextVertexAndEdge()

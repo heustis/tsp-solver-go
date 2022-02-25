@@ -8,14 +8,14 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
-type ConvexConcaveDisparity struct {
+type DisparityGreedy struct {
 	Vertices      []model.CircuitVertex
 	circuitEdges  []model.CircuitEdge
 	edgeDistances map[model.CircuitVertex]*vertexDisparity
 	length        float64
 }
 
-func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) *ConvexConcaveDisparity {
+func NewDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) *DisparityGreedy {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	edgeDistances := make(map[model.CircuitVertex]*vertexDisparity)
@@ -56,7 +56,7 @@ func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder 
 		length += edge.GetLength()
 	}
 
-	return &ConvexConcaveDisparity{
+	return &DisparityGreedy{
 		Vertices:      vertices,
 		circuitEdges:  circuitEdges,
 		edgeDistances: edgeDistances,
@@ -64,7 +64,7 @@ func NewConvexConcaveDisparity(vertices []model.CircuitVertex, perimeterBuilder 
 	}
 }
 
-func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *DisparityGreedy) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	maxDisparityAmount := -1.0
 	next := &model.DistanceToEdge{
 		Distance: math.MaxFloat64,
@@ -80,11 +80,11 @@ func (c *ConvexConcaveDisparity) FindNextVertexAndEdge() (model.CircuitVertex, m
 	return next.Vertex, next.Edge
 }
 
-func (c *ConvexConcaveDisparity) GetAttachedEdges() []model.CircuitEdge {
+func (c *DisparityGreedy) GetAttachedEdges() []model.CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *ConvexConcaveDisparity) GetAttachedVertices() []model.CircuitVertex {
+func (c *DisparityGreedy) GetAttachedVertices() []model.CircuitVertex {
 	vertices := make([]model.CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
@@ -92,11 +92,11 @@ func (c *ConvexConcaveDisparity) GetAttachedVertices() []model.CircuitVertex {
 	return vertices
 }
 
-func (c *ConvexConcaveDisparity) GetLength() float64 {
+func (c *DisparityGreedy) GetLength() float64 {
 	return c.length
 }
 
-func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[model.CircuitVertex]bool {
+func (c *DisparityGreedy) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	unattachedVertices := make(map[model.CircuitVertex]bool)
 	for k := range c.edgeDistances {
 		unattachedVertices[k] = true
@@ -104,7 +104,7 @@ func (c *ConvexConcaveDisparity) GetUnattachedVertices() map[model.CircuitVertex
 	return unattachedVertices
 }
 
-func (c *ConvexConcaveDisparity) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
+func (c *DisparityGreedy) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
 	if vertexToAdd != nil {
 		var edgeIndex int
 		c.circuitEdges, edgeIndex = model.SplitEdge(c.circuitEdges, edgeToSplit, vertexToAdd)
@@ -159,4 +159,4 @@ func (disparity *vertexDisparity) remove(e model.CircuitEdge) bool {
 	return false
 }
 
-var _ model.Circuit = (*ConvexConcaveDisparity)(nil)
+var _ model.Circuit = (*DisparityGreedy)(nil)

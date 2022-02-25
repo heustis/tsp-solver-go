@@ -9,13 +9,13 @@ import (
 	"github.com/heustis/tsp-solver-go/stats"
 )
 
-type confidenceCircuit struct {
+type disparityClonableCircuit struct {
 	edges     []model.CircuitEdge
 	distances map[model.CircuitVertex]*stats.DistanceGaps
 	length    float64
 }
 
-func (c *confidenceCircuit) attachVertex(distance *model.DistanceToEdge) {
+func (c *disparityClonableCircuit) attachVertex(distance *model.DistanceToEdge) {
 	var edgeIndex int
 	c.edges, edgeIndex = model.SplitEdgeCopy(c.edges, distance.Edge, distance.Vertex)
 	if edgeIndex < 0 {
@@ -30,8 +30,8 @@ func (c *confidenceCircuit) attachVertex(distance *model.DistanceToEdge) {
 	}
 }
 
-func (c *confidenceCircuit) clone() *confidenceCircuit {
-	clone := &confidenceCircuit{
+func (c *disparityClonableCircuit) clone() *disparityClonableCircuit {
+	clone := &disparityClonableCircuit{
 		edges:     make([]model.CircuitEdge, len(c.edges)),
 		distances: make(map[model.CircuitVertex]*stats.DistanceGaps),
 		length:    c.length,
@@ -45,11 +45,11 @@ func (c *confidenceCircuit) clone() *confidenceCircuit {
 	return clone
 }
 
-func (c *confidenceCircuit) getLengthPerVertex() float64 {
+func (c *disparityClonableCircuit) getLengthPerVertex() float64 {
 	return c.length / float64(len(c.edges))
 }
 
-func (c *confidenceCircuit) findNext(significance float64) []*model.DistanceToEdge {
+func (c *disparityClonableCircuit) findNext(significance float64) []*model.DistanceToEdge {
 	// If there is only one vertex left to attach, attach it to its closest edge.
 	if len(c.distances) == 1 {
 		for _, stats := range c.distances {
@@ -94,13 +94,13 @@ func (c *confidenceCircuit) findNext(significance float64) []*model.DistanceToEd
 	return c.distances[vertexToUpdate].ClosestEdges[0 : gapIndex+1]
 }
 
-func (c *confidenceCircuit) update(significance float64) (clones []*confidenceCircuit) {
+func (c *disparityClonableCircuit) update(significance float64) (clones []*disparityClonableCircuit) {
 	next := c.findNext(significance)
 
 	delete(c.distances, next[0].Vertex)
 
 	if numClones := len(next) - 1; numClones > 0 {
-		clones = make([]*confidenceCircuit, numClones)
+		clones = make([]*disparityClonableCircuit, numClones)
 		for i, cloneDistance := range next {
 			if cloneIndex := i - 1; cloneIndex >= 0 {
 				clones[cloneIndex] = c.clone()

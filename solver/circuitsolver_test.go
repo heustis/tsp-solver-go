@@ -28,7 +28,7 @@ func TestFindShortestPathCircuit_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		cir := circuit.NewConvexConcave(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter, true)
+		cir := circuit.NewClosestGreedy(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter, true)
 		solver.FindShortestPathCircuit(cir)
 		shortest := cir.GetAttachedVertices()
 		actual := cir.GetLength()
@@ -55,7 +55,7 @@ func TestFindShortestPathCircuit_Heap_DataFromOldProject(t *testing.T) {
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter)
+		c := circuit.NewClosestClonable(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter)
 		c.CloneOnFirstAttach = true
 		cir := circuit.NewClonableCircuitSolver(c)
 		solver.FindShortestPathCircuit(cir)
@@ -83,7 +83,7 @@ func TestFindShortestPathCircuit_HeapMinClones_DataFromOldProject(t *testing.T) 
 		for i, points := range testEntry.Points {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
-		c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter)
+		c := circuit.NewClosestClonable(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter)
 		cir := circuit.NewClonableCircuitSolver(c)
 		solver.FindShortestPathCircuit(cir)
 		shortest := cir.GetAttachedVertices()

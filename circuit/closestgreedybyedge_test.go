@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewConvexConcaveByEdge(t *testing.T) {
+func TestNewClosestGreedyByEdge(t *testing.T) {
 	assert := assert.New(t)
-	circuit := circuit.NewConvexConcaveByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
+	circuit := circuit.NewClosestGreedyByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -43,9 +43,9 @@ func TestNewConvexConcaveByEdge(t *testing.T) {
 	assert.True(circuit.GetUnattachedVertices()[circuit.Vertices[3]])
 }
 
-func TestUpdate_ConvexConcaveByEdge(t *testing.T) {
+func TestUpdate_ClosestGreedyByEdge(t *testing.T) {
 	assert := assert.New(t)
-	circuit := circuit.NewConvexConcaveByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
+	circuit := circuit.NewClosestGreedyByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -112,9 +112,9 @@ func TestUpdate_ConvexConcaveByEdge(t *testing.T) {
 	assert.Len(circuit.GetUnattachedVertices(), 0)
 }
 
-func TestNewConvexConcaveByEdge_WithUpdates(t *testing.T) {
+func TestNewClosestGreedyByEdge_WithUpdates(t *testing.T) {
 	assert := assert.New(t)
-	circuit := circuit.NewConvexConcaveByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
+	circuit := circuit.NewClosestGreedyByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -146,9 +146,9 @@ func TestNewConvexConcaveByEdge_WithUpdates(t *testing.T) {
 	assert.True(circuit.GetUnattachedVertices()[circuit.Vertices[3]])
 }
 
-func TestUpdate_ConvexConcaveByEdge_WithUpdates(t *testing.T) {
+func TestUpdate_ClosestGreedyByEdge_WithUpdates(t *testing.T) {
 	assert := assert.New(t)
-	circuit := circuit.NewConvexConcaveByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
+	circuit := circuit.NewClosestGreedyByEdge(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting

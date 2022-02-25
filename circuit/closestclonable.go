@@ -7,7 +7,7 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
-type ClonableCircuitImpl struct {
+type ClosestClonable struct {
 	CloneOnFirstAttach bool
 	Vertices           []model.CircuitVertex
 	circuitEdges       []model.CircuitEdge
@@ -23,7 +23,7 @@ type vertexStatus struct {
 	distanceIncrease float64
 }
 
-func NewClonableCircuitImpl(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *ClonableCircuitImpl {
+func NewClosestClonable(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *ClosestClonable {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	// Determine the initial length of the perimeter.
@@ -59,7 +59,7 @@ func NewClonableCircuitImpl(vertices []model.CircuitVertex, perimeterBuilder mod
 	}
 	closestEdges.Heapify()
 
-	return &ClonableCircuitImpl{
+	return &ClosestClonable{
 		CloneOnFirstAttach: false,
 		Vertices:           vertices,
 		circuitEdges:       circuitEdges,
@@ -69,7 +69,7 @@ func NewClonableCircuitImpl(vertices []model.CircuitVertex, perimeterBuilder mod
 	}
 }
 
-func (c *ClonableCircuitImpl) CloneAndUpdate() ClonableCircuit {
+func (c *ClosestClonable) CloneAndUpdate() ClonableCircuit {
 	// 1. Remove 'next closest' from heap - complexity O(log n)
 	next, okay := c.closestEdges.PopHeap().(*model.DistanceToEdge)
 
@@ -90,7 +90,7 @@ func (c *ClonableCircuitImpl) CloneAndUpdate() ClonableCircuit {
 		// 2c. If the 'next closest' vertex is already attached, or if this is configured to clone on the first attachment,
 		// clone the circuit with the 'next closest' vertex attached to the 'next closest' edge.
 		// O(n) due to copying circuits and interior vertices
-		clone := &ClonableCircuitImpl{
+		clone := &ClosestClonable{
 			CloneOnFirstAttach: c.CloneOnFirstAttach,
 			Vertices:           c.Vertices,
 			circuitEdges:       make([]model.CircuitEdge, len(c.circuitEdges)),
@@ -116,7 +116,7 @@ func (c *ClonableCircuitImpl) CloneAndUpdate() ClonableCircuit {
 	}
 }
 
-func (c *ClonableCircuitImpl) Delete() {
+func (c *ClosestClonable) Delete() {
 	for k := range c.vertexMetadata {
 		delete(c.vertexMetadata, k)
 	}
@@ -128,14 +128,14 @@ func (c *ClonableCircuitImpl) Delete() {
 	c.closestEdges = nil
 }
 
-func (c *ClonableCircuitImpl) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *ClosestClonable) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	if next, okay := c.closestEdges.Peek().(*model.DistanceToEdge); okay && next != nil {
 		return next.Vertex, next.Edge
 	}
 	return nil, nil
 }
 
-func (c *ClonableCircuitImpl) GetAttachedVertices() []model.CircuitVertex {
+func (c *ClosestClonable) GetAttachedVertices() []model.CircuitVertex {
 	vertices := make([]model.CircuitVertex, len(c.circuitEdges))
 	for i, edge := range c.circuitEdges {
 		vertices[i] = edge.GetStart()
@@ -143,19 +143,19 @@ func (c *ClonableCircuitImpl) GetAttachedVertices() []model.CircuitVertex {
 	return vertices
 }
 
-func (c *ClonableCircuitImpl) GetAttachedEdges() []model.CircuitEdge {
+func (c *ClosestClonable) GetAttachedEdges() []model.CircuitEdge {
 	return c.circuitEdges
 }
 
-func (c *ClonableCircuitImpl) GetClosestEdges() *model.Heap {
+func (c *ClosestClonable) GetClosestEdges() *model.Heap {
 	return c.closestEdges
 }
 
-func (c *ClonableCircuitImpl) GetLength() float64 {
+func (c *ClosestClonable) GetLength() float64 {
 	return c.length
 }
 
-func (c *ClonableCircuitImpl) GetLengthWithNext() float64 {
+func (c *ClosestClonable) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
 		nextDistToEdge := next.(*model.DistanceToEdge)
 		if len(c.circuitEdges) == len(c.Vertices) && nextDistToEdge.Distance > 0 {
@@ -168,7 +168,7 @@ func (c *ClonableCircuitImpl) GetLengthWithNext() float64 {
 	}
 }
 
-func (c *ClonableCircuitImpl) GetUnattachedVertices() map[model.CircuitVertex]bool {
+func (c *ClosestClonable) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	unattachedVertices := make(map[model.CircuitVertex]bool)
 	for k, v := range c.vertexMetadata {
 		if v.isUnattached {
@@ -178,7 +178,7 @@ func (c *ClonableCircuitImpl) GetUnattachedVertices() map[model.CircuitVertex]bo
 	return unattachedVertices
 }
 
-func (c *ClonableCircuitImpl) AttachVertex(toAttach *model.DistanceToEdge) {
+func (c *ClosestClonable) AttachVertex(toAttach *model.DistanceToEdge) {
 	// 1. Update the circuitEdges and retrieve the newly created edges
 	var edgeIndex int
 	c.circuitEdges, edgeIndex = model.SplitEdgeCopy(c.circuitEdges, toAttach.Edge, toAttach.Vertex)
@@ -241,7 +241,7 @@ func (c *ClonableCircuitImpl) AttachVertex(toAttach *model.DistanceToEdge) {
 	})
 }
 
-func (c *ClonableCircuitImpl) MoveVertex(toMove *model.DistanceToEdge) {
+func (c *ClosestClonable) MoveVertex(toMove *model.DistanceToEdge) {
 	// 1. Remove the edge with the vertex from the circuitEdges
 	var mergedEdge, splitEdgeA, splitEdgeB model.CircuitEdge
 	c.circuitEdges, mergedEdge, splitEdgeA, splitEdgeB = model.MoveVertex(c.circuitEdges, toMove.Vertex, toMove.Edge)
@@ -324,7 +324,7 @@ func (c *ClonableCircuitImpl) MoveVertex(toMove *model.DistanceToEdge) {
 	})
 }
 
-func (c *ClonableCircuitImpl) hasOneUnattachedVertex() bool {
+func (c *ClosestClonable) hasOneUnattachedVertex() bool {
 	numUnattached := 0
 	for _, v := range c.vertexMetadata {
 		if v.isUnattached {
@@ -337,7 +337,7 @@ func (c *ClonableCircuitImpl) hasOneUnattachedVertex() bool {
 	return numUnattached == 1
 }
 
-func (c *ClonableCircuitImpl) updateDistanceIncreases(updatedVertices map[model.CircuitVertex]bool) {
+func (c *ClosestClonable) updateDistanceIncreases(updatedVertices map[model.CircuitVertex]bool) {
 	circuitLen := len(c.circuitEdges)
 	if circuitLen >= 3 {
 		prev := c.circuitEdges[circuitLen-1]
@@ -355,4 +355,4 @@ func (c *ClonableCircuitImpl) updateDistanceIncreases(updatedVertices map[model.
 	}
 }
 
-var _ ClonableCircuit = (*ClonableCircuitImpl)(nil)
+var _ ClonableCircuit = (*ClosestClonable)(nil)

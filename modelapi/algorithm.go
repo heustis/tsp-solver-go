@@ -65,7 +65,7 @@ func (alg *Algorithm) GetCircuitFunction() func(vertices []model.CircuitVertex, 
 }
 
 func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	c := circuit.NewClonableCircuitImpl(vertices, perimeterBuilder)
+	c := circuit.NewClosestClonable(vertices, perimeterBuilder)
 	c.CloneOnFirstAttach = isTrue(alg.CloneOnFirstAttach)
 	solver := circuit.NewClonableCircuitSolver(c)
 	if alg.MaxClones != nil {
@@ -76,14 +76,14 @@ func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimet
 
 func (alg *Algorithm) CreateClosestGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	if isTrue(alg.CloneByInitEdges) {
-		return circuit.NewConvexConcaveByEdge(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
+		return circuit.NewClosestGreedyByEdge(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
 	} else {
-		return circuit.NewConvexConcave(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
+		return circuit.NewClosestGreedy(vertices, perimeterBuilder, isTrue(alg.UpdateInteriorPoints))
 	}
 }
 
 func (alg *Algorithm) CreateDisparityClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	c := circuit.NewConvexConcaveConfidence(vertices, perimeterBuilder)
+	c := circuit.NewDisparityClonable(vertices, perimeterBuilder)
 	if alg.MaxClones != nil {
 		if *alg.MaxClones < 1 || *alg.MaxClones > math.MaxInt16 {
 			c.MaxClones = math.MaxUint16
@@ -98,7 +98,7 @@ func (alg *Algorithm) CreateDisparityClone(vertices []model.CircuitVertex, perim
 }
 
 func (alg *Algorithm) CreateDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
-	return circuit.NewConvexConcaveDisparity(vertices, perimeterBuilder, isTrue(alg.UseRelativeDisparity))
+	return circuit.NewDisparityGreedy(vertices, perimeterBuilder, isTrue(alg.UseRelativeDisparity))
 }
 
 func (alg *Algorithm) CreateGenetic(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {

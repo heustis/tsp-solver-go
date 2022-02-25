@@ -155,7 +155,7 @@ func TestAnyMatch(t *testing.T) {
 	}))
 
 	assert.False(h1.AnyMatch(func(x interface{}) bool {
-		_, okay := x.(*circuit.ConvexConcave)
+		_, okay := x.(*circuit.ClosestGreedy)
 		return okay
 	}))
 

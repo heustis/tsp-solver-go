@@ -13,7 +13,7 @@ import (
 
 func TestBuildPerimeter_MinClones(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -89,7 +89,7 @@ func TestBuildPerimeter_MinClones(t *testing.T) {
 func TestAttachAndMove(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
 		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
@@ -121,7 +121,7 @@ func TestAttachAndMove(t *testing.T) {
 func TestAttachAndMoveIndexZero(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
 		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
@@ -196,7 +196,7 @@ func TestAttachAndMoveIndexZero(t *testing.T) {
 func TestAttachAndMoveLastIndex(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
 		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
@@ -253,7 +253,7 @@ func TestAttachAndMoveLastIndex(t *testing.T) {
 func TestAttachShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -277,7 +277,7 @@ func TestAttachShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 func TestMoveShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -301,7 +301,7 @@ func TestMoveShouldPanicIfEdgeIsNotInCircuit(t *testing.T) {
 func TestCloneAndUpdate_MinClones(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -332,7 +332,7 @@ func TestCloneAndUpdate_MinClones(t *testing.T) {
 	}, c.GetClosestEdges().Peek())
 
 	// Index 5 should attach to edge 9,6 -> 3,13, this requires cloning since index 5 is already attached.
-	clone := c.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	clone := c.CloneAndUpdate().(*circuit.ClosestClonable)
 	assert.Len(c.GetUnattachedVertices(), 2)
 	assert.Len(clone.GetUnattachedVertices(), 2)
 	assert.False(c.GetUnattachedVertices()[c.Vertices[5]])
@@ -378,7 +378,7 @@ func TestCloneAndUpdate_MinClones(t *testing.T) {
 	// Index 2 should attach to edge 1, no cloning required
 	assert.Nil(c.CloneAndUpdate())
 	// Index 3 should move to edge 4, cloning required
-	cloneOfClone, okay := clone.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	cloneOfClone, okay := clone.CloneAndUpdate().(*circuit.ClosestClonable)
 	assert.True(okay)
 
 	assert.Len(c.GetUnattachedVertices(), 0)
@@ -413,7 +413,7 @@ func TestCloneAndUpdate_MinClones(t *testing.T) {
 func TestCloneAndUpdate_MinClones_Distances(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(0, 0),   // Index 0 after sorting
 		model2d.NewVertex2D(0, 3),   // Index 1 after sorting
@@ -446,7 +446,7 @@ func TestCloneAndUpdate_MinClones_Distances(t *testing.T) {
 	}, c.GetClosestEdges().Peek())
 
 	// Clone on second attachment - vertex {1,2.1} to edge {0,0}->{0,3}
-	clone := c.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	clone := c.CloneAndUpdate().(*circuit.ClosestClonable)
 
 	// Validate that the first c is unchanged.
 	assert.Len(c.GetUnattachedVertices(), 1)
@@ -482,7 +482,7 @@ func TestCloneAndUpdate_MinClones_Distances(t *testing.T) {
 func TestDelete_MinClones(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices() so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -495,9 +495,9 @@ func TestDelete_MinClones(t *testing.T) {
 	}), model2d.BuildPerimiter)
 
 	c.CloneAndUpdate() //No clone
-	clone := c.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	clone := c.CloneAndUpdate().(*circuit.ClosestClonable)
 	clone.CloneAndUpdate() //No clone
-	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClosestClonable)
 
 	c.Delete()
 	assert.Len(c.GetUnattachedVertices(), 0)
@@ -579,27 +579,27 @@ func TestSolve_MinClones(t *testing.T) {
 		}
 
 		assert.Nil(err, "Failed to unmarshal vertices for test=", i)
-		actual := solveWithLogging_MinClones(&circuit.ClonableCircuitImpl{
+		actual := solveWithLogging_MinClones(&circuit.ClosestClonable{
 			Vertices: vertices,
 		})
 		assert.InDelta(t.expectedLength, actual.GetLength(), model.Threshold)
 	}
 }
 
-func solveWithLogging_MinClones(c *circuit.ClonableCircuitImpl) *circuit.ClonableCircuitImpl {
+func solveWithLogging_MinClones(c *circuit.ClosestClonable) *circuit.ClosestClonable {
 	circuitHeap := model.NewHeap(func(a interface{}) float64 {
-		return a.(*circuit.ClonableCircuitImpl).GetLengthWithNext()
+		return a.(*circuit.ClosestClonable).GetLengthWithNext()
 	})
 	circuitHeap.PushHeap(c)
 
-	next := circuitHeap.PopHeap().(*circuit.ClonableCircuitImpl)
-	for i := 0; len(next.GetUnattachedVertices()) > 0 || next.GetLengthWithNext() < next.GetLength(); next = circuitHeap.PopHeap().(*circuit.ClonableCircuitImpl) {
+	next := circuitHeap.PopHeap().(*circuit.ClosestClonable)
+	for i := 0; len(next.GetUnattachedVertices()) > 0 || next.GetLengthWithNext() < next.GetLength(); next = circuitHeap.PopHeap().(*circuit.ClosestClonable) {
 		toAttach := next.GetClosestEdges().Peek()
 		clone := next.CloneAndUpdate()
 		circuitHeap.PushHeap(next)
 		if clone != nil {
-			circuitBytes, _ := json.Marshal(clone.(*circuit.ClonableCircuitImpl).GetAttachedVertices())
-			fmt.Printf("Step %d: Created clone=%p from existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, clone, next, toAttach.(*model.DistanceToEdge).String(), string(circuitBytes), clone.(*circuit.ClonableCircuitImpl).GetClosestEdges().String())
+			circuitBytes, _ := json.Marshal(clone.(*circuit.ClosestClonable).GetAttachedVertices())
+			fmt.Printf("Step %d: Created clone=%p from existing=%p with \n\ttoAttach=%s\n\tcircuit=%s\n\theap=%s\n", i, clone, next, toAttach.(*model.DistanceToEdge).String(), string(circuitBytes), clone.(*circuit.ClosestClonable).GetClosestEdges().String())
 			circuitHeap.PushHeap(clone)
 		} else {
 			circuitBytes, _ := json.Marshal(next.GetAttachedVertices())
@@ -616,7 +616,7 @@ func solveWithLogging_MinClones(c *circuit.ClonableCircuitImpl) *circuit.Clonabl
 
 func TestBuildPerimeter_CloneOnFirst(t *testing.T) {
 	assert := assert.New(t)
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -685,7 +685,7 @@ func TestBuildPerimeter_CloneOnFirst(t *testing.T) {
 func TestCloneAndUpdate_CloneOnFirst(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -698,7 +698,7 @@ func TestCloneAndUpdate_CloneOnFirst(t *testing.T) {
 	}), model2d.BuildPerimiter)
 	c.CloneOnFirstAttach = true
 
-	clone := c.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	clone := c.CloneAndUpdate().(*circuit.ClosestClonable)
 
 	assert.Len(c.GetUnattachedVertices(), 3)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -725,7 +725,7 @@ func TestCloneAndUpdate_CloneOnFirst(t *testing.T) {
 	assert.InDelta(c.GetLength()+0.763503994948632, clone.GetLength(), model.Threshold)
 
 	// Validate that cloning a clone does not affect the original c
-	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClosestClonable)
 
 	assert.Len(c.GetUnattachedVertices(), 3)
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -780,7 +780,7 @@ func TestCloneAndUpdate_CloneOnFirst(t *testing.T) {
 func TestDelete_CloneOnFirst(t *testing.T) {
 	assert := assert.New(t)
 
-	c := circuit.NewClonableCircuitImpl(model2d.DeduplicateVertices([]model.CircuitVertex{
+	c := circuit.NewClosestClonable(model2d.DeduplicateVertices([]model.CircuitVertex{
 		// Note: the circuit is sorted by DeduplicateVertices(), so the indices will change as specified below.
 		model2d.NewVertex2D(-15, -15), // Index 0 after sorting
 		model2d.NewVertex2D(0, 0),     // Index 2 after sorting
@@ -793,8 +793,8 @@ func TestDelete_CloneOnFirst(t *testing.T) {
 	}), model2d.BuildPerimiter)
 	c.CloneOnFirstAttach = true
 
-	clone := c.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
-	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClonableCircuitImpl)
+	clone := c.CloneAndUpdate().(*circuit.ClosestClonable)
+	cloneOfClone := clone.CloneAndUpdate().(*circuit.ClosestClonable)
 
 	c.Delete()
 	assert.Len(c.GetUnattachedVertices(), 0)

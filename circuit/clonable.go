@@ -12,6 +12,7 @@ type ClonableCircuit interface {
 	//  - create a copy (B) of the ClonableCircuit (A),
 	//  - update one of the versions so that the vertex closest to its nearest edge is attached to that edge,
 	//  - update the other circuit so that it cannot have that vertex attached to that edge.
+	// If the circuit is updated in place, `nil` should be returned.
 	CloneAndUpdate() ClonableCircuit
 
 	// FindNextVertexAndEdge determines the next vertex to add to the circuit, along with which edge it should be added to.
@@ -41,6 +42,7 @@ type ClonableCircuitSolver struct {
 	numIterations int
 }
 
+// NewClonableCircuitSolver creates a ClonableCircuitSolver with the supplied ClonableCircuit as its initial circuit.
 func NewClonableCircuitSolver(initialCircuit ClonableCircuit) *ClonableCircuitSolver {
 	solver := &ClonableCircuitSolver{
 		circuits:      model.NewHeap(getClonableLength),

@@ -147,7 +147,7 @@ components:
       description: |
         This algorithm:  
         1. builds a convex hull surrounding the points _(optimum for 2D, an approximation for 3D and graphs)_,  
-            a. Compute the midpoint of the the points.  
+            a. Compute the midpoint of all the points.  
             b. Finds the point farthest from the midpoint.  
             c. Finds the point farthest from the point in 1a.  
             d. Creates initial edges 1b->1c and 1c->1b _(note: all other points are exterior at this time)_  

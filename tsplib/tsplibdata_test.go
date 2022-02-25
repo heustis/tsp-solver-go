@@ -125,21 +125,21 @@ func TestSolveAndCompare(t *testing.T) {
 			assert.NotNil(data)
 
 			err = data.SolveAndCompare("concon", func(cv []model.CircuitVertex) model.Circuit {
-				c := circuit.NewConvexConcave(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, false)
+				c := circuit.NewClosestGreedy(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, false)
 				solver.FindShortestPathCircuit(c)
 				return c
 			})
 			assert.Nil(err, filename)
 
 			// err = data.SolveAndCompare("concon_by_edge", func(cv []model.CircuitVertex) model.Circuit {
-			// 	c := circuit.NewConvexConcaveByEdge(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, false)
+			// 	c := circuit.NewClosestGreedyByEdge(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, false)
 			// 	solver.FindShortestPathCircuit(c)
 			// 	return c
 			// })
 			// assert.Nil(err)
 
 			// err = data.SolveAndCompare("concon_updates", func(cv []model.CircuitVertex) model.Circuit {
-			// 	c := circuit.NewConvexConcave(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, true)
+			// 	c := circuit.NewClosestGreedy(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter, true)
 			// 	solver.FindShortestPathCircuit(c)
 			// 	return c
 			// })
@@ -164,7 +164,7 @@ func TestSolveAndCompareConfidence(t *testing.T) {
 		1.5,
 	} {
 		err = data.SolveAndCompare(fmt.Sprintf("confidence_%g_", zscore), func(cv []model.CircuitVertex) model.Circuit {
-			c := circuit.NewConvexConcaveConfidence(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter)
+			c := circuit.NewDisparityClonable(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter)
 			c.Significance = zscore
 			solver.FindShortestPathCircuit(c)
 			return c

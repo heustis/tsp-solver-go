@@ -52,7 +52,7 @@ func ComparePerformanceGraph() {
 			}
 			g := *graph.NewGraph(v)
 
-			c := circuit.NewConvexConcave(graph.ToCircuitVertexArray(g.GetVertices()), graph.BuildPerimiter, false)
+			c := circuit.NewClosestGreedy(graph.ToCircuitVertexArray(g.GetVertices()), graph.BuildPerimiter, false)
 			solver.FindShortestPathCircuit(c)
 
 			completed := &circuit.CompletedCircuit{

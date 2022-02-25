@@ -6,17 +6,17 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
-type ConvexConcaveByEdge struct {
+type ClosestGreedyByEdge struct {
 	Vertices              []model.CircuitVertex
 	circuits              []model.Circuit
 	enableInteriorUpdates bool
 }
 
-func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ConvexConcaveByEdge {
+func NewClosestGreedyByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ClosestGreedyByEdge {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	closestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)
-	toAttach := make(map[*ConvexConcave]*model.DistanceToEdge)
+	toAttach := make(map[*ClosestGreedy]*model.DistanceToEdge)
 
 	initLength := 0.0
 	for _, edge := range circuitEdges {
@@ -28,7 +28,7 @@ func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder mod
 	// This allows the greedy algorithm to detect scenarios where the points are individually closer to various edges, but are collectively closer to a different edge.
 	// This increases the complexity of this circuit implementation to O(n^3), the unsmiplified form being O(e*(n-e)*(n-e)), since the greedy implementation is O(n^2) or O((n-e)^2).
 	for i, e := range circuitEdges {
-		circuit := &ConvexConcave{
+		circuit := &ClosestGreedy{
 			circuitEdges:          make([]model.CircuitEdge, len(circuitEdges)),
 			Vertices:              vertices,
 			closestEdges:          model.NewHeap(model.GetDistanceToEdgeForHeap),
@@ -81,50 +81,50 @@ func NewConvexConcaveByEdge(vertices []model.CircuitVertex, perimeterBuilder mod
 		circuit.Update(closestToEdge.Vertex, closestToEdge.Edge)
 	}
 
-	return &ConvexConcaveByEdge{
+	return &ClosestGreedyByEdge{
 		Vertices:              vertices,
 		enableInteriorUpdates: enableInteriorUpdates,
 		circuits:              circuits,
 	}
 }
 
-func (c *ConvexConcaveByEdge) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
+func (c *ClosestGreedyByEdge) FindNextVertexAndEdge() (model.CircuitVertex, model.CircuitEdge) {
 	if shortest := c.getShortestCircuit(); shortest != nil && len(shortest.GetUnattachedVertices()) > 0 {
-		next := shortest.(*ConvexConcave).closestEdges.Peek().(*model.DistanceToEdge)
+		next := shortest.(*ClosestGreedy).closestEdges.Peek().(*model.DistanceToEdge)
 		return next.Vertex, next.Edge
 	} else {
 		return nil, nil
 	}
 }
 
-func (c *ConvexConcaveByEdge) GetAttachedVertices() []model.CircuitVertex {
+func (c *ClosestGreedyByEdge) GetAttachedVertices() []model.CircuitVertex {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetAttachedVertices()
 	}
 	return []model.CircuitVertex{}
 }
 
-func (c *ConvexConcaveByEdge) GetLength() float64 {
+func (c *ClosestGreedyByEdge) GetLength() float64 {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetLength()
 	}
 	return 0.0
 }
 
-func (c *ConvexConcaveByEdge) GetUnattachedVertices() map[model.CircuitVertex]bool {
+func (c *ClosestGreedyByEdge) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	if shortest := c.getShortestCircuit(); shortest != nil {
 		return shortest.GetUnattachedVertices()
 	}
 	return make(map[model.CircuitVertex]bool)
 }
 
-func (c *ConvexConcaveByEdge) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
+func (c *ClosestGreedyByEdge) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
 	for _, circuit := range c.circuits {
 		circuit.Update(circuit.FindNextVertexAndEdge())
 	}
 }
 
-func (c *ConvexConcaveByEdge) getShortestCircuit() model.Circuit {
+func (c *ClosestGreedyByEdge) getShortestCircuit() model.Circuit {
 	shortestLen := math.MaxFloat64
 	var shortest model.Circuit
 	for _, circuit := range c.circuits {
@@ -136,4 +136,4 @@ func (c *ConvexConcaveByEdge) getShortestCircuit() model.Circuit {
 	return shortest
 }
 
-var _ model.Circuit = (*ConvexConcaveByEdge)(nil)
+var _ model.Circuit = (*ClosestGreedyByEdge)(nil)
