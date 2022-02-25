@@ -1,4 +1,6 @@
-# TSP Solver - GO
+# TSP Solver - GO Package
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/heustis/tsp-solver-go)](https://goreportcard.com/report/github.com/heustis/tsp-solver-go)
 
 ## Table of Contents
 1. [How To Use](#how-to-use)
@@ -185,11 +187,67 @@ defer g.Delete()
 
 ## Algorithms
 
+This sections defines the various apporoaches for approximating or solving the TSP that are supported by this package.
+
 Most algorithms in tsp-solver-go are located in the `circuit` sub-package, including all algorithms supported by the HTTP API.
 These algorithms all implement the `model.Circuit` interface.
+
 There are a couple of NP-complete algorithms in the `solver` package, which do not implement this interface, but those are for testing purposes.
 
-### Concave Convex Variants
+### Convex Concave Variants
+
+These set of algorithms first build the minimum convex hull around the set of points, so that all points are either vertices on the hull or interior to the hull.
+Once the convex hull has been created, these algorithms take different approaches for attaching the interior points to the hull.
+
+The reasong to create the convex hull first, is that points in the convex hull must be traversed in that order regardless of where the internal points attach to that hull. If any of the points in the hull were to be visted in a different order, it would result in the circuit self-intersecting which is less efficient than a non-self-intersecting circuit.
+
+The algorithm this package uses to compute the convex hull is:
+1. Compute the midpoint of the points. 
+    * This may be an existing point (e.g. in a graph) or a new temporary point which is discarded after the hull is created (e.g. in 2D and 3D).
+2. Find the point farthest from the midpoint.  
+    * This constrains the possible locations of the remaining points to a circle or sphere with a radius equal to the distance of this point from the midpoint.
+3. Find the point farthest from the point in 2.  
+    * This further constrains all points, by intersecting the previous circle/sphere with a circle/sphere centered around the point from 2, with a radius to the point in 3.
+4. Creates initial edges 1b->1c and 1c->1b _(note: all other points are exterior at this time)_  
+5. Finds the exterior point farthest from its closest edge and attach it to the circuit by splitting its closest edge.  
+    * For computing this distance, in 2D and 3D this package uses the perpendicular distance of the point to the edge, in graphs it uses the distance increase that results from attaching the point to the edge.
+    * By selecting the farthest point by perpendicular distance, the angle through this point is guaranteed to not exceed 180 degrees (i.e. it must be convex). Having equally far points to either side of this point would produce a straight line through this point, and no point can be farther off or it would have been selected.
+6. Find any points that were external to the circuit and are now internal to the circuit, and stop considering them for future iterations.  
+7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
+
+#### Smallest Increase
+This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
+
+This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edge (so that subsequent updates are correct).
+
+This has two options that can be enabled when it runs:
+1. cloneByInitEdges - This causes the convex hull to be cloned once for each edge in the hull, prior to atttaching any points. Then for each edge, it updates the corresponding clone by attaching the point closest to that edge to it. From there, it processes each clone simultaneously, using the greedy algorithm described above. This allows for the greedy algorithm to find circuits it otherwise would miss, at the cost of increasing the processing complexity by a factor of H (where H is the number of edges in the convex hull).
+2. updateInteriorPoints - This causes the algorithm to check if the edges created from attaching an interior point are closer to any already attached interior points. If they are, it detaches those points, so that they can be re-attached to the new closer edge.
+
+```json
+{
+  "algorithmType":"CLOSEST_GREEDY"
+}
+```
+
+#### Smallest Increase With Cloning
+This algorithm, similar to Smallest Increase, selects interior points to attach to the hull by determining which point has the minimum distance increase. However, unlike Smallest Increase, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. 
+
+To enable this behavior, this algorithm tracks each interior point and the distance increase that would result from attaching the point to each edge in the circuit, exluding edges that the point has already been attached to. When comparing the the effect of attaching a point to the circuit, on the length of the circuit, both the distance increase of the new location and the distance decrease of removing the existing location are taken into account.
+
+This algorithm is N(O!), unless maxClones is used to limit the search space.
+
+
+
+```json
+{
+  "algorithmType":"CLOSEST_CLONE"
+}
+```
+
+#### Disparity
+
+#### Disparity With Cloning
 
 ### Simulated Annealing
 
