@@ -106,34 +106,28 @@ func TestCreateClosestClone(t *testing.T) {
 	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_CLOSEST_CLONE}
 	c := alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(5)
 	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(5, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = nil
 	alg.CloneOnFirstAttach = boolPointer(false)
 	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(10)
 	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(10, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = nil
 	alg.CloneOnFirstAttach = boolPointer(true)
 	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(-1, c.(*circuit.ClonableCircuitSolver).MaxClones)
 
 	alg.MaxClones = intPointer(15)
 	c = alg.CreateClosestClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.ClonableCircuitSolver{}, c)
-	assert.Equal(15, c.(*circuit.ClonableCircuitSolver).MaxClones)
 }
 
 func TestCreateClosestGreedy(t *testing.T) {
@@ -159,35 +153,24 @@ func TestCreateDisparityClone(t *testing.T) {
 	alg := &modelapi.Algorithm{AlgorithmType: modelapi.ALG_DISPARITY_CLONE}
 	c := alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 	assert.IsType(&circuit.DisparityClonable{}, c)
-	assert.Equal(uint16(1000), c.(*circuit.DisparityClonable).MaxClones)
-	assert.Equal(1.0, c.(*circuit.DisparityClonable).Significance)
-	assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 
 	for _, numClones := range []int64{10, 3, 21, 4400, math.MaxUint16, 15} {
 		alg.MaxClones = intPointer(numClones)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.DisparityClonable{}, c)
-		assert.Equal(uint16(numClones), c.(*circuit.DisparityClonable).MaxClones)
-		assert.Equal(1.0, c.(*circuit.DisparityClonable).Significance)
-		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 
 	for _, significance := range []float64{-1, 0.0, 12345.6789, 2.5} {
 		alg.MinSignificance = float64Pointer(significance)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.DisparityClonable{}, c)
-		assert.Equal(uint16(15), c.(*circuit.DisparityClonable).MaxClones)
-		assert.Equal(significance, c.(*circuit.DisparityClonable).Significance)
-		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 
+	// Validate that the maximum number of clones is math.MaxUint16
 	for _, numClones := range []int64{1234567890, 0, -1, math.MinInt64, math.MaxInt64} {
 		alg.MaxClones = intPointer(numClones)
 		c = alg.CreateDisparityClone(vertices, model2d.BuildPerimiter)
 		assert.IsType(&circuit.DisparityClonable{}, c)
-		assert.Equal(uint16(math.MaxUint16), c.(*circuit.DisparityClonable).MaxClones)
-		assert.Equal(2.5, c.(*circuit.DisparityClonable).Significance)
-		assert.Equal(vertices, c.(*circuit.DisparityClonable).Vertices)
 	}
 }
 

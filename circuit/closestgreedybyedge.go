@@ -6,13 +6,21 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
+// ClosestGreedyByEdge is an O(n^3) greedy algorithm that:
+// 1. creates a separate ClosestGreedy for each edge in the convex hull,
+// 2. for each edge, update the corresponding ClosestGreedy by attaching that edge to its closest point,
+// 3. updates each ClosestGreedy simulatneously, so that they all complete at the same time.
 type ClosestGreedyByEdge struct {
-	Vertices              []model.CircuitVertex
 	circuits              []model.Circuit
 	enableInteriorUpdates bool
 }
 
-func NewClosestGreedyByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ClosestGreedyByEdge {
+// NewClosestGreedyByEdge creates a new Circuit that:
+// 1. creates a separate ClosestGreedy for each edge in the convex hull,
+// 2. for each edge, update the corresponding ClosestGreedy by attaching that edge to its closest point,
+// 3. updates each ClosestGreedy simulatneously, so that they all complete at the same time.
+// Complexity: O(n^3)
+func NewClosestGreedyByEdge(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) model.Circuit {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 
 	closestEdges := make(map[model.CircuitVertex]*model.DistanceToEdge)
@@ -30,7 +38,6 @@ func NewClosestGreedyByEdge(vertices []model.CircuitVertex, perimeterBuilder mod
 	for i, e := range circuitEdges {
 		circuit := &ClosestGreedy{
 			circuitEdges:          make([]model.CircuitEdge, len(circuitEdges)),
-			Vertices:              vertices,
 			closestEdges:          model.NewHeap(model.GetDistanceToEdgeForHeap),
 			unattachedVertices:    make(map[model.CircuitVertex]bool),
 			length:                initLength,
@@ -82,7 +89,6 @@ func NewClosestGreedyByEdge(vertices []model.CircuitVertex, perimeterBuilder mod
 	}
 
 	return &ClosestGreedyByEdge{
-		Vertices:              vertices,
 		enableInteriorUpdates: enableInteriorUpdates,
 		circuits:              circuits,
 	}

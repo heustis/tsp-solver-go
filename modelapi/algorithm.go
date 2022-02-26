@@ -66,10 +66,10 @@ func (alg *Algorithm) GetCircuitFunction() func(vertices []model.CircuitVertex, 
 
 func (alg *Algorithm) CreateClosestClone(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) model.Circuit {
 	c := circuit.NewClosestClonable(vertices, perimeterBuilder)
-	c.CloneOnFirstAttach = isTrue(alg.CloneOnFirstAttach)
+	c.SetCloneOnFirstAttach(isTrue(alg.CloneOnFirstAttach))
 	solver := circuit.NewClonableCircuitSolver(c)
 	if alg.MaxClones != nil {
-		solver.MaxClones = int(*alg.MaxClones)
+		solver.SetMaxClones(int(*alg.MaxClones))
 	}
 	return solver
 }
@@ -86,13 +86,13 @@ func (alg *Algorithm) CreateDisparityClone(vertices []model.CircuitVertex, perim
 	c := circuit.NewDisparityClonable(vertices, perimeterBuilder)
 	if alg.MaxClones != nil {
 		if *alg.MaxClones < 1 || *alg.MaxClones > math.MaxInt16 {
-			c.MaxClones = math.MaxUint16
+			c.SetMaxClones(math.MaxUint16)
 		} else {
-			c.MaxClones = uint16(*alg.MaxClones)
+			c.SetMaxClones(uint16(*alg.MaxClones))
 		}
 	}
 	if alg.MinSignificance != nil {
-		c.Significance = *alg.MinSignificance
+		c.SetSignificance(*alg.MinSignificance)
 	}
 	return c
 }

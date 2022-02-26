@@ -105,7 +105,7 @@ func TestClonableCircuitSolver_CloneOnAttach(t *testing.T) {
 	}
 
 	cImpl := circuit.NewClosestClonable(model2d.DeduplicateVertices(initVertices), model2d.BuildPerimiter)
-	cImpl.CloneOnFirstAttach = true
+	cImpl.SetCloneOnFirstAttach(true)
 	c := circuit.NewClonableCircuitSolver(cImpl)
 
 	assert.Len(c.GetAttachedVertices(), 5)
@@ -160,9 +160,9 @@ func TestClonableCircuitSolver_MaxClones(t *testing.T) {
 	}
 
 	cImpl := circuit.NewClosestClonable(model2d.DeduplicateVertices(initVertices), model2d.BuildPerimiter)
-	cImpl.CloneOnFirstAttach = true
+	cImpl.SetCloneOnFirstAttach(true)
 	c := circuit.NewClonableCircuitSolver(cImpl)
-	c.MaxClones = 5
+	c.SetMaxClones(5)
 
 	assert.Len(c.GetAttachedVertices(), 5)
 

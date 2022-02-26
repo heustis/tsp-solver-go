@@ -23,7 +23,6 @@ import (
 // 5. updates the closest edge for all remaining unattached points, to account for splitting an existing edge into two new edges,
 // 6. repeats steps 3-5 until all points are attached to the circuit.
 type ClosestGreedy struct {
-	Vertices              []model.CircuitVertex
 	circuitEdges          []model.CircuitEdge
 	closestEdges          *model.Heap
 	enableInteriorUpdates bool
@@ -56,7 +55,6 @@ func NewClosestGreedy(vertices []model.CircuitVertex, perimeterBuilder model.Per
 	}
 
 	return &ClosestGreedy{
-		Vertices:              vertices,
 		circuitEdges:          circuitEdges,
 		closestEdges:          closestEdges,
 		enableInteriorUpdates: enableInteriorUpdates,
@@ -109,8 +107,7 @@ func (c *ClosestGreedy) Update(vertexToAdd model.CircuitVertex, edgeToSplit mode
 		if edgeIndex < 0 {
 			expectedEdgeJson, _ := json.Marshal(edgeToSplit)
 			actualCircuitJson, _ := json.Marshal(c.circuitEdges)
-			initialVertices, _ := json.Marshal(c.Vertices)
-			panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s \nvertices=%s", c, string(expectedEdgeJson), string(actualCircuitJson), string(initialVertices)))
+			panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s", c, string(expectedEdgeJson), string(actualCircuitJson)))
 		}
 		delete(c.unattachedVertices, vertexToAdd)
 		if c.enableInteriorUpdates {

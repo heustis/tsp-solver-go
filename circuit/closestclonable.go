@@ -8,9 +8,8 @@ import (
 )
 
 type ClosestClonable struct {
-	CloneOnFirstAttach bool
-	Vertices           []model.CircuitVertex
 	circuitEdges       []model.CircuitEdge
+	cloneOnFirstAttach bool
 	closestEdges       *model.Heap
 	length             float64
 	vertexMetadata     map[model.CircuitVertex]*vertexStatus
@@ -60,9 +59,8 @@ func NewClosestClonable(vertices []model.CircuitVertex, perimeterBuilder model.P
 	closestEdges.Heapify()
 
 	return &ClosestClonable{
-		CloneOnFirstAttach: false,
-		Vertices:           vertices,
 		circuitEdges:       circuitEdges,
+		cloneOnFirstAttach: false,
 		closestEdges:       closestEdges,
 		length:             length,
 		vertexMetadata:     vertexMetadata,
@@ -75,7 +73,7 @@ func (c *ClosestClonable) CloneAndUpdate() ClonableCircuit {
 
 	if next == nil || !okay {
 		return nil
-	} else if (!c.CloneOnFirstAttach || c.hasOneUnattachedVertex()) && c.vertexMetadata[next.Vertex].isUnattached {
+	} else if (!c.cloneOnFirstAttach || c.hasOneUnattachedVertex()) && c.vertexMetadata[next.Vertex].isUnattached {
 		// 2a. If the current vertex is unattached, attach it at the next location, provided that either:
 		//     it is the last remaining vertex, or the circuit is configured not to clone on first attachment.
 		c.AttachVertex(next)
@@ -91,9 +89,8 @@ func (c *ClosestClonable) CloneAndUpdate() ClonableCircuit {
 		// clone the circuit with the 'next closest' vertex attached to the 'next closest' edge.
 		// O(n) due to copying circuits and interior vertices
 		clone := &ClosestClonable{
-			CloneOnFirstAttach: c.CloneOnFirstAttach,
-			Vertices:           c.Vertices,
 			circuitEdges:       make([]model.CircuitEdge, len(c.circuitEdges)),
+			cloneOnFirstAttach: c.cloneOnFirstAttach,
 			closestEdges:       c.closestEdges.Clone(),
 			length:             c.length,
 			vertexMetadata:     make(map[model.CircuitVertex]*vertexStatus),
@@ -105,7 +102,7 @@ func (c *ClosestClonable) CloneAndUpdate() ClonableCircuit {
 			clone.vertexMetadata[k] = v
 		}
 
-		if c.CloneOnFirstAttach {
+		if c.cloneOnFirstAttach {
 			clone.AttachVertex(next)
 		} else {
 			// Move the vertex from the previous location to the new location in the clone, if the point was already attached.
@@ -123,7 +120,6 @@ func (c *ClosestClonable) Delete() {
 	if c.closestEdges != nil {
 		c.closestEdges.Delete()
 	}
-	c.Vertices = nil
 	c.circuitEdges = nil
 	c.closestEdges = nil
 }
@@ -158,7 +154,14 @@ func (c *ClosestClonable) GetLength() float64 {
 func (c *ClosestClonable) GetLengthWithNext() float64 {
 	if next := c.closestEdges.Peek(); next != nil {
 		nextDistToEdge := next.(*model.DistanceToEdge)
-		if len(c.circuitEdges) == len(c.Vertices) && nextDistToEdge.Distance > 0 {
+		allAttached := true
+		for _, v := range c.vertexMetadata {
+			if v.isUnattached {
+				allAttached = false
+				break
+			}
+		}
+		if allAttached && nextDistToEdge.Distance > 0 {
 			return c.length // If the circuit is complete and the next vertex to attach increases the perimeter length, the circuit is optimal.
 		} else {
 			return c.length + nextDistToEdge.Distance
@@ -178,6 +181,10 @@ func (c *ClosestClonable) GetUnattachedVertices() map[model.CircuitVertex]bool {
 	return unattachedVertices
 }
 
+func (c *ClosestClonable) SetCloneOnFirstAttach(cloneOnFirstAttach bool) {
+	c.cloneOnFirstAttach = cloneOnFirstAttach
+}
+
 func (c *ClosestClonable) AttachVertex(toAttach *model.DistanceToEdge) {
 	// 1. Update the circuitEdges and retrieve the newly created edges
 	var edgeIndex int
@@ -185,8 +192,7 @@ func (c *ClosestClonable) AttachVertex(toAttach *model.DistanceToEdge) {
 	if edgeIndex < 0 {
 		expectedEdgeJson, _ := json.Marshal(toAttach.Edge)
 		actualCircuitJson, _ := json.Marshal(c.circuitEdges)
-		initialVertices, _ := json.Marshal(c.Vertices)
-		panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s \nvertices=%s", c, string(expectedEdgeJson), string(actualCircuitJson), string(initialVertices)))
+		panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s", c, string(expectedEdgeJson), string(actualCircuitJson)))
 	}
 	edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1]
 
@@ -223,7 +229,7 @@ func (c *ClosestClonable) AttachVertex(toAttach *model.DistanceToEdge) {
 					Distance: edgeB.DistanceIncrease(current.Vertex) - existingIncrease,
 				},
 			}
-		} else if c.CloneOnFirstAttach && current.Vertex == toAttach.Vertex {
+		} else if c.cloneOnFirstAttach && current.Vertex == toAttach.Vertex {
 			// 3c. If the circuit is cloned on every attachment, remove any items in the heap with toAttach's vertex.
 			return nil
 		} else if updatedVertices[current.Vertex] {

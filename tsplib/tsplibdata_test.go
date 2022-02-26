@@ -165,7 +165,7 @@ func TestSolveAndCompareConfidence(t *testing.T) {
 	} {
 		err = data.SolveAndCompare(fmt.Sprintf("confidence_%g_", zscore), func(cv []model.CircuitVertex) model.Circuit {
 			c := circuit.NewDisparityClonable(model2d.DeduplicateVertices(data.GetVertices()), model2d.BuildPerimiter)
-			c.Significance = zscore
+			c.SetSignificance(zscore)
 			solver.FindShortestPathCircuit(c)
 			return c
 		})

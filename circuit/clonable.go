@@ -36,7 +36,7 @@ type ClonableCircuit interface {
 
 // ClonableCircuitSolver is a wrapper for a ClonableCircuit and its clones that allows them to match the Circuit interface.
 type ClonableCircuitSolver struct {
-	MaxClones     int
+	maxClones     int
 	circuits      *model.Heap
 	numClones     int
 	numIterations int
@@ -48,7 +48,7 @@ func NewClonableCircuitSolver(initialCircuit ClonableCircuit) *ClonableCircuitSo
 		circuits:      model.NewHeap(getClonableLength),
 		numClones:     0,
 		numIterations: 0,
-		MaxClones:     -1,
+		maxClones:     -1,
 	}
 	solver.circuits.PushHeap(initialCircuit)
 	return solver
@@ -82,6 +82,10 @@ func (c *ClonableCircuitSolver) GetUnattachedVertices() map[model.CircuitVertex]
 	return c.circuits.Peek().(ClonableCircuit).GetUnattachedVertices()
 }
 
+func (c *ClonableCircuitSolver) SetMaxClones(max int) {
+	c.maxClones = max
+}
+
 func (c *ClonableCircuitSolver) Update(vertexToAdd model.CircuitVertex, edgeToSplit model.CircuitEdge) {
 	if _, isCompleted := c.circuits.Peek().(*CompletedCircuit); isCompleted {
 		return
@@ -111,7 +115,7 @@ func (c *ClonableCircuitSolver) Update(vertexToAdd model.CircuitVertex, edgeToSp
 		// Create a new heap with only the completed circuit in it.
 		c.circuits = model.NewHeap(getClonableLength)
 		c.circuits.PushHeap(result)
-	} else if c.MaxClones > 0 && c.numClones > c.MaxClones {
+	} else if c.maxClones > 0 && c.numClones > c.maxClones {
 		c.trimClones()
 	}
 }
@@ -123,7 +127,7 @@ func (c *ClonableCircuitSolver) trimClones() {
 	// Prioritize preserving clones that are the closest to completion, so use the length per attached vertex rather than raw length of the circuit.
 	worstLength := worstCircuit.GetLengthWithNext() / float64(len(worstCircuit.GetAttachedVertices()))
 
-	retainedCircuits := make([]interface{}, 0, c.MaxClones)
+	retainedCircuits := make([]interface{}, 0, c.maxClones)
 
 	for current := c.circuits.PopHeap(); current != nil; current = c.circuits.PopHeap() {
 		currentCircuit := current.(ClonableCircuit)

@@ -9,7 +9,6 @@ import (
 )
 
 type DisparityGreedy struct {
-	Vertices      []model.CircuitVertex
 	circuitEdges  []model.CircuitEdge
 	edgeDistances map[model.CircuitVertex]*vertexDisparity
 	length        float64
@@ -57,7 +56,6 @@ func NewDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.P
 	}
 
 	return &DisparityGreedy{
-		Vertices:      vertices,
 		circuitEdges:  circuitEdges,
 		edgeDistances: edgeDistances,
 		length:        length,
@@ -111,8 +109,7 @@ func (c *DisparityGreedy) Update(vertexToAdd model.CircuitVertex, edgeToSplit mo
 		if edgeIndex < 0 {
 			expectedEdgeJson, _ := json.Marshal(edgeToSplit)
 			actualCircuitJson, _ := json.Marshal(c.circuitEdges)
-			initialVertices, _ := json.Marshal(c.Vertices)
-			panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s \nvertices=%s", c, string(expectedEdgeJson), string(actualCircuitJson), string(initialVertices)))
+			panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s", c, string(expectedEdgeJson), string(actualCircuitJson)))
 		}
 		delete(c.edgeDistances, vertexToAdd)
 		edgeA, edgeB := c.circuitEdges[edgeIndex], c.circuitEdges[edgeIndex+1]

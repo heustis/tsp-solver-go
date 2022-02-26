@@ -1,7 +1,6 @@
 package circuit
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/heustis/tsp-solver-go/model"
@@ -25,9 +24,8 @@ const maxClones uint16 = 1000
 //        However, if it is near a convex corner, the farther edge would have to cross the closer edge to attach to the point.
 //    3c. If all points are in 2c, clone the circuit once per edge and attach that edge to its closest edge, then solve each of those clones in parallel.
 type DisparityClonable struct {
-	Vertices         []model.CircuitVertex
-	Significance     float64
-	MaxClones        uint16
+	significance     float64
+	maxClones        uint16
 	perimeterBuilder model.PerimeterBuilder
 	circuits         []*disparityClonableCircuit
 }
@@ -52,9 +50,8 @@ func NewDisparityClonable(vertices []model.CircuitVertex, perimeterBuilder model
 	}
 
 	return &DisparityClonable{
-		Vertices:         vertices,
-		Significance:     minimumSignificance,
-		MaxClones:        maxClones,
+		significance:     minimumSignificance,
+		maxClones:        maxClones,
 		circuits:         circuits,
 		perimeterBuilder: perimeterBuilder,
 	}
@@ -105,6 +102,14 @@ func (c *DisparityClonable) GetUnattachedVertices() map[model.CircuitVertex]bool
 	return unattachedVertices
 }
 
+func (c *DisparityClonable) SetMaxClones(max uint16) {
+	c.maxClones = max
+}
+
+func (c *DisparityClonable) SetSignificance(minSignificance float64) {
+	c.significance = minSignificance
+}
+
 func (c *DisparityClonable) Update(ignoredVertex model.CircuitVertex, ignoredEdge model.CircuitEdge) {
 	// Don't update if the perimeter has not been built, nor if the shortest circuit is completed.
 	if len(c.circuits) == 0 || len(c.circuits[0].distances) == 0 {
@@ -115,7 +120,7 @@ func (c *DisparityClonable) Update(ignoredVertex model.CircuitVertex, ignoredEdg
 	var updatedCircuits []*disparityClonableCircuit
 	useUpdated := false
 	for i, circuit := range c.circuits {
-		if clones := circuit.update(c.Significance); len(clones) > 0 || useUpdated {
+		if clones := circuit.update(c.significance); len(clones) > 0 || useUpdated {
 			// Add all previously processed circuits the first time the clone array is constructed.
 			if !useUpdated {
 				updatedCircuits = make([]*disparityClonableCircuit, 0, len(c.circuits)+len(clones))
@@ -134,55 +139,9 @@ func (c *DisparityClonable) Update(ignoredVertex model.CircuitVertex, ignoredEdg
 		return c.circuits[i].getLengthPerVertex() < c.circuits[j].getLengthPerVertex()
 	})
 
-	if len(c.circuits) > int(c.MaxClones) {
-		c.circuits = c.circuits[0:c.MaxClones]
+	if len(c.circuits) > int(c.maxClones) {
+		c.circuits = c.circuits[0:c.maxClones]
 	}
-}
-
-func (c *DisparityClonable) String() string {
-	s := "{\r\n\t\"vertices\":["
-
-	vertexIndexLookup := make(map[model.CircuitVertex]int)
-	edgeIndexLookup := make(map[model.CircuitEdge]int)
-
-	lastIndex := len(c.Vertices) - 1
-	for i, v := range c.Vertices {
-		vertexIndexLookup[v] = i
-		s += v.String()
-		if i != lastIndex {
-			s += ","
-		}
-	}
-
-	if len(c.circuits) == 0 {
-		s += "],\r\n\t\"edges\":[],\r\n\t\"edgeDistances\":[]}"
-		return s
-	}
-
-	s += "],\r\n\t\"edges\":["
-	lastIndex = len(c.circuits[0].edges) - 1
-	for i, e := range c.circuits[0].edges {
-		edgeIndexLookup[e] = i
-		s += fmt.Sprintf(`{"start":%d,"end":%d,"distance":%g}`, vertexIndexLookup[e.GetStart()], vertexIndexLookup[e.GetEnd()], e.GetLength())
-		if i != lastIndex {
-			s += ","
-		}
-	}
-
-	s += "],\r\n\t\"edgeDistances\":["
-	lastIndex = len(c.circuits[0].distances) - 1
-	i := 0
-	for _, dist := range c.circuits[0].distances {
-		s += dist.String(vertexIndexLookup, edgeIndexLookup)
-		if i != lastIndex {
-			s += ","
-		}
-		i++
-	}
-
-	s += "]}"
-
-	return s
 }
 
 var _ model.Circuit = (*DisparityClonable)(nil)

@@ -56,7 +56,7 @@ func TestFindShortestPathCircuit_Heap_DataFromOldProject(t *testing.T) {
 			vertices[i] = model2d.NewVertex2D(points[0], points[1])
 		}
 		c := circuit.NewClosestClonable(model2d.DeduplicateVertices(vertices), model2d.BuildPerimiter)
-		c.CloneOnFirstAttach = true
+		c.SetCloneOnFirstAttach(true)
 		cir := circuit.NewClonableCircuitSolver(c)
 		solver.FindShortestPathCircuit(cir)
 		shortest := cir.GetAttachedVertices()

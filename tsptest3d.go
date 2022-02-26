@@ -46,7 +46,7 @@ func ComparePerformance3d() {
 		name: "heap",
 		circuitFunc: func(cv []model.CircuitVertex) model.Circuit {
 			cImpl := circuit.NewClosestClonable(cv, model3d.BuildPerimiter)
-			cImpl.CloneOnFirstAttach = true
+			cImpl.SetCloneOnFirstAttach(true)
 			c := circuit.NewClonableCircuitSolver(cImpl)
 			solver.FindShortestPathCircuit(c)
 			return c
