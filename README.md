@@ -245,9 +245,24 @@ Complexity:
 * If both `updateInteriorPoints` and `cloneByInitEdges` are enabled this becomes O(n^4).
 
 ### Convex Concave - Closest with Cloning
+This behaves similarly to Closest Greedy, in that it first builds a convex hull, then selects interior points to attach to the hull based on whichever point has the minimum distance increase. Unlike Closest Greedy, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. This allows this algorithm to explore possibilities that would be missed by the greedy algorithm. 
+
 This algorithm performs the following steps after generating the convex hull:
-1. TODO
-This algorithm, similar to Smallest Increase, selects interior points to attach to the hull by determining which point has the minimum distance increase. However, unlike Smallest Increase, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. 
+1. Initializes metadata for each point:
+    * whether the point is unattached,
+    * whether the point is part of the initial convex hull,
+    * the distance increase for the point, if it is attached and not part of the convex hull.
+2. Determines, and tracks, the closest edge to each point based on the distance increase that results from inserting the point along that edge
+    * the distance increase can be calculated as:
+      ```go
+      start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
+      ```
+    * Internally, this uses a heap to store the points + closest edges to avoid reevaluating all edges each iteration.
+3.  Initializes the set of clones with an initial clone containing the convex hull, interior points, closest edges, and metadata.
+    * Internally, this uses a heap to store the clones, sorted so that the shortest circuit is at the head of the heap.
+4. Selects the clone to update by choosing the one with the shortest circuit.
+
+
 
 To enable this behavior, this algorithm tracks each interior point and the distance increase that would result from attaching the point to each edge in the circuit, exluding edges that the point has already been attached to. When comparing the the effect of attaching a point to the circuit, on the length of the circuit, both the distance increase of the new location and the distance decrease of removing the existing location are taken into account.
 
