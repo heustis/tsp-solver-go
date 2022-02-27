@@ -75,27 +75,7 @@ func BuildPerimiter(vertices []model.CircuitVertex) (circuitEdges []model.Circui
 		// A vertex is interior if it is closer to the perimeter vertices (other than those in its closest edge) than the closest vertex on its closest edge.
 		// i.e. isExterior := dist(C, P) > dist(projection(E, C), P)
 		for extVertex, extClosest := range closestEdges {
-			isExterior := true
-
-			var closestEdgeVertex *GraphVertex = nil
-			for _, edgeVertex := range extClosest.Edge.(*GraphEdge).path {
-				if closestEdgeVertex == nil || extVertex.DistanceTo(edgeVertex) < extVertex.DistanceTo(closestEdgeVertex) {
-					closestEdgeVertex = edgeVertex
-				}
-			}
-
-			for _, edge := range circuitEdges {
-				start := edge.GetStart()
-				if start == extClosest.Edge.GetStart() || start == extClosest.Edge.GetEnd() {
-					continue
-				}
-				if extVertex.DistanceTo(start) < closestEdgeVertex.DistanceTo(start) {
-					isExterior = false
-					break
-				}
-			}
-
-			if !isExterior {
+			if isInterior(extVertex, extClosest.Edge.(*GraphEdge), circuitEdges) {
 				delete(exteriorVertices, extVertex)
 			}
 		}
@@ -150,4 +130,24 @@ func insertVertex(circuitEdges []model.CircuitEdge, v model.CircuitVertex, edgeT
 	circuitEdges[edgeIndex+1] = edgeB
 
 	return circuitEdges
+}
+
+func isInterior(vertex model.CircuitVertex, closestEdge *GraphEdge, circuitEdges []model.CircuitEdge) bool {
+	var closestEdgeVertex *GraphVertex = nil
+	for _, edgeVertex := range closestEdge.path {
+		if closestEdgeVertex == nil || vertex.DistanceTo(edgeVertex) < vertex.DistanceTo(closestEdgeVertex) {
+			closestEdgeVertex = edgeVertex
+		}
+	}
+
+	for _, edge := range circuitEdges {
+		start := edge.GetStart()
+		if start == closestEdge.GetStart() || start == closestEdge.GetEnd() {
+			continue
+		}
+		if vertex.DistanceTo(start) < closestEdgeVertex.DistanceTo(start) {
+			return true
+		}
+	}
+	return false
 }
