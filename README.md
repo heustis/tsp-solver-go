@@ -53,11 +53,15 @@ func ProcessMyData(myData []MyModel) []model.CircuitVertex {
     3. create your own models and translation layer.
 4. If using the prebuilt API, use
   ```go
-    var request *modelapi.TspRequest
-    if err := json.Unmarshal([]byte(requestJson), &request); err != nil {
-		  // Handle error
-	  }
-    response := solver.FindShortestPathApi(request)
+  var request *modelapi.TspRequest
+  if err := json.Unmarshal([]byte(requestJson), &request); err != nil {
+      // Handle error
+  }
+  validate := validator.New()
+  if err := validate.Struct(request); err != nil {
+      // Handle error
+  }
+  response := solver.FindShortestPathApi(request)
   ```
 
 ### Contributing to the package
