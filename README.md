@@ -198,12 +198,13 @@ There are a couple of NP-complete algorithms in the `solver` package, which do n
 
 ### Convex Concave Variants
 
+#### About
 These set of algorithms first build the minimum convex hull around the set of points, so that all points are either vertices on the hull or interior to the hull.
 Once the convex hull has been created, these algorithms take different approaches for attaching the interior points to the hull.
 
 The reasong to create the convex hull first, is that points in the convex hull must be traversed in that order regardless of where the internal points attach to that hull. If any of the points in the hull were to be visted in a different order, it would result in the circuit self-intersecting which is less efficient than a non-self-intersecting circuit.
 
-The algorithm this package uses to compute the convex hull is:
+#### Convex Hull Steps
 1. Compute the midpoint of the points. 
     * This may be an existing point (e.g. in a graph) or a new temporary point which is discarded after the hull is created (e.g. in 2D and 3D).
 2. Find the point farthest from the midpoint.  
@@ -218,16 +219,22 @@ The algorithm this package uses to compute the convex hull is:
 7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
 
 ### Convex Concave - Closest Greedy
+
+#### About
+This algorithm builds the convex hull, then greedily attaches points to the circuit by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
+
+* the distance increase is calculated as:
+  ```go
+  start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
+  ```
+
+#### Steps
 This algorithm performs the following steps after generating the convex hull:
 1. If `cloneByInitEdges` is set to true: 
     1. The convex hull is cloned once per edge in the convex hull.
     2. For each edge, it updates the corresponding clone by attaching the point closest to that edge to it.
     3. Each of these clones is processed according to the remaining steps simultaneously (as in, all clones will be updated by their N-th point prior any clone having their N+1-th point attached).
-2. Determines, and tracks, the closest edge to each point based on the distance increase that results from inserting the point along that edge
-    * the distance increase can be calculated as:
-      ```go
-      start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
-      ```
+2. Calculates, and stores, the closest edge to each point based on the distance increase that results from inserting the point along that edge
     * Internally, this uses a heap to store the points + closest edges to avoid reevaluating all edges each iteration. Selecting the next point just involves popping the next item off the heap.
 3. Selects the next point to attach to the circuit by finding the point with the closest edge.
 4. Attaches the point to its closest edge.
@@ -236,7 +243,6 @@ This algorithm performs the following steps after generating the convex hull:
     2. If one of the new edges is closer, it will be detached and added to the heap of points + closest edges.
     3. Once all attached interior points have been checked, and detached if appropriate, the closest edges for all unattached interior points are updated.
 6. Repeats 3-5 until all points are attached to the circuit.
-This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
 
 #### Complexity:
 * This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edge (so that subsequent updates are correct).
@@ -245,19 +251,18 @@ This algorithm greedily attaches points to the convex hull by prioritizing point
 * If both `updateInteriorPoints` and `cloneByInitEdges` are enabled this becomes O(n^4).
 
 ### Convex Concave - Closest with Cloning
+
+#### About
 This behaves similarly to Closest Greedy, in that it first builds a convex hull, then selects interior points to attach to the hull based on whichever point has the minimum distance increase. Unlike Closest Greedy, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location. This allows this algorithm to explore possibilities that would be missed by the greedy algorithm. 
 
-This algorithm performs the following steps after generating the convex hull:
-1. Initializes metadata for each point:
+#### Steps
+1. Generates the convex hull (as described above).
+2. Initializes metadata for each point:
     * whether the point is unattached,
     * whether the point is part of the initial convex hull,
     * the distance increase for the point, if it is attached and not part of the convex hull.
-2. Determines, and tracks, the distance increase for each point and each edge.
+2. Calculates, and stores, the distance increase for each point and each edge.
     * Unlike Closest Greedy this tracks all points and edge combinations, to allow for points to attach to their 2nd, 3rd, ..., Nth edges.
-    * The distance increase can be calculated as:
-      ```go
-      start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
-      ```
     * Internally, this uses a heap to store the points + edge distances to avoid reevaluating all edges each iteration.
 3.  Initializes the set of clones with an initial clone containing the convex hull, interior points, closest edges, and metadata.
     * Internally, this uses a heap to store the clones, sorted so that the shortest circuit is at the head of the heap.
@@ -291,23 +296,9 @@ This algorithm performs the following steps after generating the convex hull:
 * This algorithm is O(N!).
 
 ### Convex Concave - Disparity Greedy
-This algorithm performs the following steps after generating the convex hull:
-1. Determines, and tracks, the closest two edges to each point, based on the distance increase from inserting the point along that edge.
-2. For each point, determines the disparity between the two closest edges:
-    * If `useRelativeDisparity` is true, this calculates the disparity by dividing the larger distance increase by the smaller.
-    * If `useRelativeDisparity` is false, this calculates the disparity by subtracting the smaller distance increase from the larger.
-3. Selects the next point to attach to the circuit, by finding the point with the largest disparity between its two closest edges.
-    * If two points have the same disparity, the point that is closer to its closest edge is chosen.
-4. Attaches the selected point to its closest edge.
-5. Updates the remaining unattached points, by comparing their previous closest two edges to the newly created edges (after the split), and updating their disparity if they are updated.
-6. Repeats 3-5 until all points are attached to the circuit.
-This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
 
-#### Complexity:
-* This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edges, so that it can update their disparity and select the correct point + edge in subsequent iterations.
-
-#### Why Disparity Algorithms Work
-Consider the locations where an unattached point can be within a circuit: 
+#### About
+To understand why this algorithm works, consider the locations where an unattached point can be within a circuit: 
 1. near a single edge,
     * This will have a significant disparity between the distance increase of its closest edge, and the distance increase of all other edges.
 2. near a corner of two edges,
@@ -321,8 +312,69 @@ As points are attached to the circuit, points in category 3 will move into categ
 
 Eventually category 2 points need to be selected, but the earlier selections should improve the accuracy of these selections and reduce the impact of incorrect selections on the length of the circuit.
 
+#### Steps
+1. Generates the convex hull (as described above).
+2. Calculates, and stores, the closest two edges to each point, based on the distance increase from inserting the point along that edge.
+3. For each point, determines the disparity between the two closest edges:
+    * If `useRelativeDisparity` is true, this calculates the disparity by dividing the larger distance increase by the smaller.
+    * If `useRelativeDisparity` is false, this calculates the disparity by subtracting the smaller distance increase from the larger.
+4. Selects the next point to attach to the circuit, by finding the point with the largest disparity between its two closest edges.
+    * If two points have the same disparity, the point that is closer to its closest edge is chosen.
+5. Attaches the selected point to its closest edge.
+6. Updates the remaining unattached points, by comparing their previous closest two edges to the newly created edges (after the split), and updating their disparity if they are updated.
+7. Repeats 3-5 until all points are attached to the circuit.
+
+#### Complexity:
+* This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edges, so that it can update their disparity and select the correct point + edge in subsequent iterations.
+
 ### Convex Concave - Disparity With Cloning
 
+#### About
+This behaves similarly to AlgorithmDisparityGreedy in that it first builds a convex hull and then it prioritizes points based on the disparity in distance increases from those points to the edges. However, unlike the greedy algorithm, this will clone the circuit if a point is close to multiple edges, and attach it to each of those edges.
+
+To determine whether a gap is significant, this computes the following statistics for each point (in each clone):  
+* the average gap in distance increases
+* and standard deviation of the gaps
+
+When selecting which point to attach next, this first finds the earliest significant gap. If multiple points have significant gaps at the same position, the most significant gap of those is chosen. For example:
+* Point A has distance increases of 2, 3, 10, 12, ... (gaps 1, 7, 2, ...)
+* Point B has distance increases of 1, 7, 8, 10, ... (gaps 6, 1, 2, ...)
+* Point C has distance increases of 1, 2, 6, 7, ... (gaps 1, 4, 1, ...)
+* Point B will be chosen first since its significant gap is at the 0th index
+* Point A will be chosen second since it and C have significant gaps at the 1st index, but A's is more significant.  
+* Since point A's gap is after two edges, the current circuit will be cloned into two circuits (incliding the current circuit), each with point A attaching a different one of those edges.  
+* If point A were after three edges, three circuits would be created/updated (including the initial circuit).
+
+Note: unlike AlgorithmClosestClone once a point is attached to a circuit, that point is not allowed to move.
+
+#### Steps
+1. Generates the convex hull (as described above).
+2. Calculates, and stores, the distance increase to each edge for each point.
+3. Sorts each point's distances increases from smallest to largest.
+4. Calculates the following statistics for each point's distance increases:
+    1. The gap between each distance increase (i.e. `gap[i] = distance[i+1] - distance[i]`).
+    2. The average gap size.
+    3. The standard deviation of the gaps.
+5. Initializes the set of clones with the initial circuit data.
+6. For each clone in the set (each iteration of this algorithm updates all the clones):
+    1. Selects the point with earliest significant gap.
+        * Earliest means smallest index in the gap array.
+        * Significance defaults to 1 standard deviation, but is configurable
+        * If multiple points have a significant gap at the same index, from those, the point with the closest edge is selected.
+        * If no points have significant gaps, the point with the closest edge is selected.
+    2. A clone of the current clone is created for each edge in the range `[1:n)` where `n` is the index of the significant gap.
+    3. Each clone has the selected point attached to the corresponding edge (see the next step for what that entails).
+    4. The current clone has the selected point attached to its closest edge:
+        1. The point is inserted into the circuit by splitting the edge into two edges.
+        2. The length of the circuit is updated.
+        3. The stats of each point are updated by removing the split edge and adding the two new edges.  
+           This resorts the distance increases and recomputes the gaps, average gap, and standard deviations.
+7. Sort the clones based on circuit length per attached vertex.
+8. If there are more clones that the configured maximum clones (default: 1000), trim the set of clones to only retain the configured amount.
+9. Repeat steps 6-8 until the shortest clone is completed.
+
+#### Complexity
+* This algorithm is O(N!).
 
 ### Simulated Annealing
 
