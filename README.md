@@ -218,6 +218,15 @@ The reasong to create the convex hull first, is that points in the convex hull m
 6. Find any points that were external to the circuit and are now internal to the circuit, and stop considering them for future iterations.  
 7. Repeat 5 and 6 until all points are attached to the circuit or internal to the circuit.
 
+#### Complexity
+The complexity of creating the convex hull is O(n^2) because:
+* One point is attached during each iteration (to a max of n iterations).
+* Each iteration the exterior point farthest from its closest edge is selected in step 5, which is O(n).
+* Each iteration the closest edge for each exterior points is updated and each point is checked to see if they are now interior, which is O(n).
+    * Updating the closest edge for a single point is O(1) because only the two new edges and the previous edge are considered.
+    * Checking for interior status for a single point is O(1) because only the point, closest edge, and midpoint are used.
+* The selection and update are done independently each iteration, so the complexity of each iteration it is the maximum of their complexity, O(n).
+
 ### Convex Concave - Closest Greedy
 
 #### About
@@ -293,7 +302,7 @@ This behaves similarly to Closest Greedy, in that it first builds a convex hull,
 7. If `maxClones` is configured, and the number of clones exceeds the maximum, discard the clone with the worst length per attached point.
 
 #### Complexity:
-* This algorithm is O(N!).
+* This algorithm is O(n!).
 
 ### Convex Concave - Disparity Greedy
 
@@ -374,8 +383,58 @@ Note: unlike AlgorithmClosestClone once a point is attached to a circuit, that p
 9. Repeat steps 6-8 until the shortest clone is completed.
 
 #### Complexity
-* This algorithm is O(N!).
+* This algorithm is O(n^3 * log(maxClones * n^2) * maxClones) because each iteration:
+  * one point is attached in each clone, so the total number of iterations is the number of points,
+  * up to `maxClones` clones will have points attached,
+  * each time a point is selected for attachment it is possible to create one clone per edge, and
+  * the clones are sorted by length prior to trimming them to `maxClones`.
 
 ### Simulated Annealing
 
+#### About
+This implements [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to stochastically approximate the optimum circuit through a set of points. 
+
+Unlike the convex-concave algorithms this does not start from a convex hull and work towards a completed circuit. Rather this treats the supplied set of points as the initial circuit, or uses another algorithm to create an initial circuit, and mutates its to try to find a better sequencing of points for the circuit.
+
+#### Steps
+1. Randomly selects 2 points.
+    * If `preferCloseNeighbors` is `true`, when selecting a second point it will prefer points that are close to the first selected point.
+2. Determine how swapping the 2 points impacts the circuit length.
+    * i.e. how much does swapping the points lengthen or shorten the circuit?
+3. Scale this value based on the size of the coordinate space being used, so that it is meaningful regardless of if the coordinates are from -100 to +100 or -100000 to +100000
+4. Use the configured temperature function to determine the acceptance value (based on the number of iterations, max iterations, and impact of the swap).
+    * The temperature function is designed to reduce the probability of accepting a "bad" swap as the number of iterations approaches the maximum iterations. This allows early swaps to avoid local maxima, but later swaps focus on refining the current circuit towards its local maximum.
+5. Generate a random number between `[0.0, 1.0)` as a test value.
+6. Swap the points the test value it is less than the acceptance value, or if the swap would shorten the circuit.
+
+
+#### Complexity
+* This algorithm is O(maxIterations) because each iteration affects a maximum of 6 points (the 2 to swap and each of their adjacent points).
+* If `preferCloseNeighbors` is `true`, the complexity is `O(n * maxIterations)` as selecting a neighboring point is O(n).
+* If `precursorAlgorithm` is configured, the complexity is the maximum of O(precursorAlgorithm) and O(maxIterations).
+
 ### Genetic Algorithm
+
+#### About
+This implements a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) to stochastically approximate the optimum circuit through a set of points. 
+
+Unlike the convex-concave algorithms this does not start from a convex hull and work towards a completed circuit. Rather this starts with a randomly generated set of circuits, mutates them to create new circuits, and repeats this process a number of times. Returning the best circuit found during this process.
+
+#### Steps
+1. Initialization - a random set of parent circuits are created. By default these are random circuits, but users can optionally have the circuits based on the optimum convex hull.
+2. Child circuits are created by:
+      1. Randomly selecting two parent circuits.
+      2. Using crossover to blend the parent circuits into a new circuit.
+      3. Fixing any duplicate or missing points that result from the crossover.
+      4. Mutating the circuit (as described in "mutationRate")
+3. Selection - this uses an elitist slection algorithm, to ensure that the best solutions are not lost from one generation to the next. To do this the new children are combined with the previous generation of parents, and the top "numParents" (based on shortest circuit length) are retained for the next iteration.
+4. Termination - this repeats steps 2 and 3 "maxIterations" times, then returns the best circuit found by this process.
+
+#### Complexity
+* This algorithm is the max of `O(numIterations * numChildren * n)` and `O(numIterations * (numParents+numChildren)*log(numParents+numChildren))` because each iteration:
+  * starts with `numParents` circuits,
+  * creates `numChildren` circuits,
+  * performs up to `maxCrossovers` crossovers each time a child is created `(numChildren * n)`,
+  * performs up to `n` mutations each time a child is created `(numChildren * n)`,
+  * the parents and children are combined, selected, and trimmed to form the next generation of parents `O((numParents+numChildren)*log(numParents+numChildren))`
+* If `shouldBuildConvexHull` is `true`, the complexity of the algorithm if the max of O(n^2) and the previous maximum.
