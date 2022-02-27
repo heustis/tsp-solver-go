@@ -40,7 +40,7 @@ func NewDisparityClonable(vertices []model.CircuitVertex, perimeterBuilder model
 	}
 	circuits := []*disparityClonableCircuit{initCircuit}
 
-	// Find the closest edge for all interior points, based on distance increase; store them in a heap for retrieval from closest to farthest.
+	// Determine the distance increase from each point to each edge, and the gaps between those distance increases for each point.
 	for vertex := range unattachedVertices {
 		initCircuit.distances[vertex] = stats.NewDistanceGaps(vertex, circuitEdges)
 	}

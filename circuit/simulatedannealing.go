@@ -138,7 +138,7 @@ func (s *SimulatedAnnealing) Update(vertexToAdd model.CircuitVertex, edgeToSplit
 
 	// Scale delta so that it has a meaningful value in the acceptance function, since cooridinates from -100 to +100 will produce different deltas than coordinates from -10000 to +10000.
 	// The temperature is always between 0 and 1, decreasing from near 1 to near 0 as annealing progresses.
-	// The delta could be limited between 0 and 1 as well, so that all posibilities are feasable at a temperature of 1.
+	// The delta could be limited between 0 and 1 as well, so that all posibilities are feasible at a temperature of 1.
 	// However, we know that any intersecting edges are not optimal, so we can optimize this by allowing the delta to exceed 1 in bad use cases.
 	// The worst case delta is is if B and A are the farthest vertices from each other and both go from their closest vertices to their farthest vertices, and the best case is the reverse.
 	// This worst case is guaranteed to be less than 4*|B-A|, but we will use |B-A| since it is okay if we ignore the possibilities that are close to the worst case.

@@ -23,8 +23,8 @@ func (c *disparityClonableCircuit) attachVertex(distance *model.DistanceToEdge) 
 		actualCircuitJson, _ := json.Marshal(c.edges)
 		panic(fmt.Errorf("edge not found in circuit=%p, expected=%s, \ncircuit=%s", c, string(expectedEdgeJson), string(actualCircuitJson)))
 	}
-	c.length += distance.Distance
 	edgeA, edgeB := c.edges[edgeIndex], c.edges[edgeIndex+1]
+	c.length += edgeA.GetLength() + edgeB.GetLength() - distance.Edge.GetLength()
 	for _, stats := range c.distances {
 		stats.UpdateStats(distance.Edge, edgeA, edgeB)
 	}

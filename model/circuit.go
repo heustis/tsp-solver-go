@@ -6,7 +6,7 @@ import "fmt"
 const Threshold = 0.0000001
 
 // Circuit provides an abstract representation of a set of points (locations, vertices) for the TSP solver to interact with.
-// This allows it to ignore whether the implementation is a set of N-dimentional points, a graph, or any other representation of points.
+// This allows it to ignore whether the implementation is a set of N-dimensional points, a graph, or any other representation of points.
 type Circuit interface {
 	// FindNextVertexAndEdge determines the next vertex to add to the circuit, along with which edge it should be added to.
 	// For example, in the ClosestGreedy algorithm this returns the vertex and edge with the minimum distance increase.

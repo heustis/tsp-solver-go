@@ -31,6 +31,7 @@ type ClosestGreedy struct {
 	unattachedVertices    map[model.CircuitVertex]bool
 }
 
+// Creates a new ClosestGreedy, builds the convex hull, and prepares the closestEdges heap.
 func NewClosestGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, enableInteriorUpdates bool) *ClosestGreedy {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 

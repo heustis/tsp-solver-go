@@ -463,9 +463,9 @@ func TestIsEdgeCloser_2D(t *testing.T) {
 	v := model2d.NewVertex2D(10.0, 10.0)
 
 	testCases := []struct {
-		candiate *model2d.Edge2D
-		current  *model2d.Edge2D
-		expected bool
+		candidate *model2d.Edge2D
+		current   *model2d.Edge2D
+		expected  bool
 	}{
 		{model2d.NewEdge2D(model2d.NewVertex2D(0.0, 0.0), model2d.NewVertex2D(20.0, 0.0)), model2d.NewEdge2D(model2d.NewVertex2D(0.0, 0.0), model2d.NewVertex2D(20.0, 20.0)), false},
 		{model2d.NewEdge2D(model2d.NewVertex2D(0.0, 0.0), model2d.NewVertex2D(20.0, 20.0)), model2d.NewEdge2D(model2d.NewVertex2D(0.0, 0.0), model2d.NewVertex2D(20.0, 0.0)), true},
@@ -478,7 +478,7 @@ func TestIsEdgeCloser_2D(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		assert.Equal(tc.expected, model.IsEdgeCloser(v, tc.candiate, tc.current), i)
+		assert.Equal(tc.expected, model.IsEdgeCloser(v, tc.candidate, tc.current), i)
 	}
 }
 
@@ -488,9 +488,9 @@ func TestIsEdgeCloser_3D(t *testing.T) {
 	v := model3d.NewVertex3D(10.0, 10.0, 0.0)
 
 	testCases := []struct {
-		candiate *model3d.Edge3D
-		current  *model3d.Edge3D
-		expected bool
+		candidate *model3d.Edge3D
+		current   *model3d.Edge3D
+		expected  bool
 	}{
 		{model3d.NewEdge3D(model3d.NewVertex3D(0.0, 0.0, 0.0), model3d.NewVertex3D(20.0, 0.0, 0.0)), model3d.NewEdge3D(model3d.NewVertex3D(0.0, 0.0, 0.0), model3d.NewVertex3D(20.0, 20.0, 0.0)), false},
 		{model3d.NewEdge3D(model3d.NewVertex3D(0.0, 0.0, 0.0), model3d.NewVertex3D(20.0, 20.0, 0.0)), model3d.NewEdge3D(model3d.NewVertex3D(0.0, 0.0, 0.0), model3d.NewVertex3D(20.0, 0.0, 0.0)), true},
@@ -503,7 +503,7 @@ func TestIsEdgeCloser_3D(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		assert.Equal(tc.expected, model.IsEdgeCloser(v, tc.candiate, tc.current), i)
+		assert.Equal(tc.expected, model.IsEdgeCloser(v, tc.candidate, tc.current), i)
 	}
 }
 

@@ -28,8 +28,8 @@ type GraphGenerator struct {
 	// This must be at least 3.
 	NumVertices uint32
 
-	// Seed is used to initialize the random algoritm.
-	// This should be used to reproduce the same graph accross multiple tests.
+	// Seed is used to initialize the random algorithm.
+	// This should be used to reproduce the same graph across multiple tests.
 	// If this is nil, a seed will be automatically generated.
 	Seed *int64
 }

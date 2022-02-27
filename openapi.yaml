@@ -433,6 +433,7 @@ components:
             * GEOMETRIC -  t'=t*X
       required:
       - algorithmType
+      - maxIterations
     Point2D:
       type: object
       description: "A point in 2-dimensional space"

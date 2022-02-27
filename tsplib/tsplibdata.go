@@ -32,7 +32,7 @@ func (data *TspLibData) GetBestRoute() []*model2d.Vertex2D {
 	return bestRouteCopy
 }
 
-// GetBestRouteLength returns the length of the best known route accoring to the source file (if an optimal tour file is supplied).
+// GetBestRouteLength returns the length of the best known route according to the source file (if an optimal tour file is supplied).
 // This is not dynamic, it is reliant on the source having accurate data.
 func (data *TspLibData) GetBestRouteLength() float64 {
 	return data.bestRouteLength

@@ -7,6 +7,49 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
+// ClosestClonable behaves similarly to Closest Greedy, in that it first builds a convex hull, then selects interior points to attach to the hull based on whichever point has the minimum distance increase.
+//  Unlike Closest Greedy, this clones the entire circuit either whenever a point would be attached to a location, or whenever an attached point would be reattached at a different location.
+//  This allows this algorithm to explore possibilities that would be missed by the greedy algorithm.
+//
+// This algorithm performs the following steps after generating the convex hull:
+// 1. Initializes metadata for each point:
+//     * whether the point is unattached,
+//     * whether the point is part of the initial convex hull,
+//     * the distance increase for the point, if it is attached and not part of the convex hull.
+// 2. Determines, and tracks, the distance increase for each point and each edge.
+//     * Unlike Closest Greedy this tracks all points and edge combinations, to allow for points to attach to their 2nd, 3rd, ..., Nth edges.
+//     * The distance increase can be calculated as:
+//       ```go
+//       start.EdgeTo(point).GetLength() + point.EdgeTo(end).GetLength() - start.EdgeTo(end).GetLength()
+//       ```
+//     * Internally, this uses a heap to store the points + edge distances to avoid reevaluating all edges each iteration.
+// 3.  Initializes the set of clones with an initial clone containing the convex hull, interior points, closest edges, and metadata.
+//     * Internally, this uses a heap to store the clones, sorted so that the shortest circuit is at the head of the heap.
+// 4. Selects the clone to update by choosing the one with the shortest circuit.
+// 5. Selects the next point and edge to attach to the clone's circuit by finding the point with the next smallest distance increase.
+// 6. Attaches the point to the edge:
+//     * If `cloneOnFirstAttach` is `true`, this will:
+//         1. create a clone,
+//         2. attach the point, to the edge from 5, in the clone,
+//         3. update the metadata for the attached point and the two points in the split edge (attached, distance increase),
+//         4. remove any point+edge combinations with the attached point from the heap,
+//         5. replace any point+edge combinations containing the split edge in the heap, with two point+edge combinations for the two new edges, and
+//         6. update the heap distance increases for all of the affected points.
+//     * If `cloneOnFirstAttach` is `false`, and this is the first time the point is attached, this will:
+//         1. attach the point, to the edge from 5,
+//         2. update the metadata for the attached point and the two points in the split edge (attached, distance increase),
+//         3. replace any point+edge combinations containing the split edge in the heap, with two point+edge combinations for the two new edges, and
+//         4. update the heap distance increases for all of the affected points.
+//     * If `cloneOnFirstAttach` is `false`, and the point has been attached previously, this will:
+//         1. create a clone,
+//         2. detach the point from its current edge in the clone, by merging the two edges that the point was a part of,
+//         3. attach the point, to the edge from 5, in the clone,
+//         4. update the metadata for the attached point, the two points in the split edge, and the two points in the merged edge (attached, distance increase),
+//         5. remove any point+edge combinations with the attached point from the heap
+//         6. replace any point+edge combinations containing the split edge in the heap, with two point+edge combinations for the two new edges,
+//         7. replace any point+edge combinations containing either of the merged edges in the heap, with one entry for the merged edge, and
+//         8. update the heap distance increases for all of the affected points.
+// 7. If `maxClones` is configured, and the number of clones exceeds the maximum, discard the clone with the worst length per attached point.
 type ClosestClonable struct {
 	circuitEdges       []model.CircuitEdge
 	cloneOnFirstAttach bool
@@ -22,6 +65,7 @@ type vertexStatus struct {
 	distanceIncrease float64
 }
 
+// Creates a new ClosestClonable, builds the convex hull, and initializes the metadata.
 func NewClosestClonable(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder) *ClosestClonable {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 

@@ -8,12 +8,27 @@ import (
 	"github.com/heustis/tsp-solver-go/model"
 )
 
+// DisparityGreedy generates the convex hull, then performs the following steps:
+// 1. Determines, and tracks, the closest two edges to each point, based on the distance increase from inserting the point along that edge.
+// 2. For each point, determines the disparity between the two closest edges:
+//     * If `useRelativeDisparity` is true, this calculates the disparity by dividing the larger distance increase by the smaller.
+//     * If `useRelativeDisparity` is false, this calculates the disparity by subtracting the smaller distance increase from the larger.
+// 3. Selects the next point to attach to the circuit, by finding the point with the largest disparity between its two closest edges.
+//     * If two points have the same disparity, the point that is closer to its closest edge is chosen.
+// 4. Attaches the selected point to its closest edge.
+// 5. Updates the remaining unattached points, by comparing their previous closest two edges to the newly created edges (after the split), and updating their disparity if they are updated.
+// 6. Repeats 3-5 until all points are attached to the circuit.
+// This algorithm greedily attaches points to the convex hull by prioritizing points that have the smallest impact on the length of the circuit. In other words, it prefers the point, that when attached to its closest edge (by distance increase), increases the length of the circuit by the least.
+//
+// Complexity:
+// * This algorithm is O(n^2) because it needs to attach each interior point to the circuit, and each time it attaches an interior point it needs to check if the newly created edges are closer to each remaining interior point than their current closest edges, so that it can update their disparity and select the correct point + edge in subsequent iterations.
 type DisparityGreedy struct {
 	circuitEdges  []model.CircuitEdge
 	edgeDistances map[model.CircuitVertex]*vertexDisparity
 	length        float64
 }
 
+// NewDisparityGreedy creates a new DisparityGreedy, builds the convex hull, and prepares the disparity metadata.
 func NewDisparityGreedy(vertices []model.CircuitVertex, perimeterBuilder model.PerimeterBuilder, useRelativeDisparity bool) *DisparityGreedy {
 	circuitEdges, unattachedVertices := perimeterBuilder(vertices)
 

@@ -23,7 +23,7 @@ func TestValidateAlgorithm(t *testing.T) {
 	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING}), "Key: 'Algorithm.MaxIterations' Error:Field validation for 'MaxIterations' failed on the 'required_if' tag")
 	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: -5}), "Key: 'Algorithm.MaxIterations' Error:Field validation for 'MaxIterations' failed on the 'isdefault|min=1' tag")
 	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, TemperatureFunction: "OTHER"}), "Key: 'Algorithm.TemperatureFunction' Error:Field validation for 'TemperatureFunction' failed on the 'oneof' tag")
-	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, PrecursorAlgorithm: &modelapi.Algorithm{AlgorithmType: "UNKOWN"}}), "Key: 'Algorithm.PrecursorAlgorithm.AlgorithmType' Error:Field validation for 'AlgorithmType' failed on the 'oneof' tag")
+	assert.EqualError(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, PrecursorAlgorithm: &modelapi.Algorithm{AlgorithmType: "UNKNOWN"}}), "Key: 'Algorithm.PrecursorAlgorithm.AlgorithmType' Error:Field validation for 'AlgorithmType' failed on the 'oneof' tag")
 	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000}))
 	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, TemperatureFunction: "LINEAR"}))
 	assert.Nil(validate.Struct(modelapi.Algorithm{AlgorithmType: modelapi.ALG_ANNEALING, MaxIterations: 5000000, TemperatureFunction: "GEOMETRIC"}))

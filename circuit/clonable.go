@@ -30,7 +30,8 @@ type ClonableCircuit interface {
 	// This allows the solver to prioritize combinations that may reduce the length increase of detached vertices (due to new edges being closer to those vertices).
 	GetLengthWithNext() float64
 
-	// GetUnattachedVertices returns the set of vertices that have not been added to the circuit yet. (all of these points are internal to the perimeter)
+	// GetUnattachedVertices returns the set of vertices that have not been added to the circuit yet.
+	// For convex-concave algorithms, all of these points are internal to the perimeter.
 	GetUnattachedVertices() map[model.CircuitVertex]bool
 }
 
